@@ -1,65 +1,147 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+
+type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "YTD";
+
+interface StockResult {
+  ticker: string;
+  name: string;
+  price: number;
+  changePercent: number;
+  changeDollars: number;
+  volume: number;
+}
+
+const RANGES: { label: string; value: TimeRange }[] = [
+  { label: "1 Day", value: "1D" },
+  { label: "3 Days", value: "3D" },
+  { label: "1 Week", value: "1W" },
+  { label: "1 Month", value: "1M" },
+  { label: "3 Months", value: "3M" },
+  { label: "YTD", value: "YTD" },
+];
+
+function formatVolume(v: number): string {
+  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
+  return v.toString();
+}
 
 export default function Home() {
+  const [range, setRange] = useState<TimeRange>("1W");
+  const [stocks, setStocks] = useState<StockResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStocks = useCallback(async (r: TimeRange) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/top-performers?range=${r}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setStocks(data.results);
+    } catch {
+      setError("Could not load stock data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStocks(range);
+  }, [range, fetchStocks]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gray-950 px-4 py-10 font-[family-name:var(--font-geist-mono)]">
+      <div className="mx-auto max-w-5xl">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-white tracking-tight">S&P 500 Top Performers</h1>
+          <p className="mt-1 text-sm text-gray-400">Best performing stocks from the S&P 500 index</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Time range selector */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          {RANGES.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => setRange(r.value)}
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                range === r.value
+                  ? "bg-emerald-500 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
         </div>
-      </main>
+
+        {/* Table */}
+        {error ? (
+          <div className="rounded-lg bg-red-900/30 border border-red-700 p-4 text-red-300 text-sm">
+            {error}
+          </div>
+        ) : loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="h-12 rounded-lg bg-gray-800/50 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-gray-800">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-800 bg-gray-900 text-gray-400 text-xs uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left w-8">#</th>
+                  <th className="px-4 py-3 text-left">Ticker</th>
+                  <th className="px-4 py-3 text-left">Company</th>
+                  <th className="px-4 py-3 text-right">Price</th>
+                  <th className="px-4 py-3 text-right">Change</th>
+                  <th className="px-4 py-3 text-right">% Change</th>
+                  <th className="px-4 py-3 text-right hidden md:table-cell">Volume</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stocks.map((stock, i) => (
+                  <tr
+                    key={stock.ticker}
+                    className="border-b border-gray-800/50 bg-gray-900/30 transition-colors hover:bg-gray-800/50"
+                  >
+                    <td className="px-4 py-3 text-gray-500">{i + 1}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-bold text-white">{stock.ticker}</span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-300 max-w-[160px] truncate">{stock.name}</td>
+                    <td className="px-4 py-3 text-right text-white">
+                      ${stock.price.toFixed(2)}
+                    </td>
+                    <td className={`px-4 py-3 text-right ${stock.changeDollars >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {stock.changeDollars >= 0 ? "+" : ""}
+                      {stock.changeDollars.toFixed(2)}
+                    </td>
+                    <td className={`px-4 py-3 text-right font-semibold ${stock.changePercent >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs ${stock.changePercent >= 0 ? "bg-emerald-400/10" : "bg-red-400/10"}`}>
+                        {stock.changePercent >= 0 ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">
+                      {formatVolume(stock.volume)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <p className="mt-4 text-xs text-gray-600">
+          Data from Polygon.io · EOD prices · Top 25 gainers shown
+        </p>
+      </div>
     </div>
   );
 }
