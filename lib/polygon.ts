@@ -115,7 +115,7 @@ export async function getTopPerformers(range: TimeRange, sp500Tickers: Set<strin
     });
   }
 
-  return results.sort((a, b) => b.changePercent - a.changePercent).slice(0, 100);
+  return results.sort((a, b) => b.changePercent - a.changePercent);
 }
 
 export interface ChartPoint {
