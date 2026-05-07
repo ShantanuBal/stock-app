@@ -22,7 +22,7 @@ interface GroupedDailyResult {
   t: number;  // timestamp
 }
 
-function formatDate(date: Date): string {
+export function formatDate(date: Date): string {
   return date.toISOString().split("T")[0];
 }
 
@@ -36,7 +36,7 @@ function getPreviousTradingDay(date: Date, daysBack: number): Date {
   return d;
 }
 
-function getStartDate(range: TimeRange, today: Date): Date {
+export function getStartDate(range: TimeRange, today: Date): Date {
   const d = new Date(today);
   switch (range) {
     case "1D":
@@ -116,4 +116,21 @@ export async function getTopPerformers(range: TimeRange, sp500Tickers: Set<strin
   }
 
   return results.sort((a, b) => b.changePercent - a.changePercent).slice(0, 100);
+}
+
+export interface ChartPoint {
+  date: string;
+  close: number;
+}
+
+export async function getIndexBars(ticker: string, from: string, to: string): Promise<ChartPoint[]> {
+  const url = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`;
+  const res = await fetch(url, { next: { revalidate: 3600 } });
+  if (!res.ok) throw new Error(`Polygon error: ${res.status}`);
+  const data = await res.json();
+  const bars: Array<{ t: number; c: number }> = data.results ?? [];
+  return bars.map((b) => ({
+    date: new Date(b.t).toISOString().split("T")[0],
+    close: b.c,
+  }));
 }

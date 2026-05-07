@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useTransition } from "react";
+import type { IndexKey } from "./api/top-performers/route";
+import IndexChart, { type ChartData } from "./components/IndexChart";
 
 type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "YTD";
 
@@ -22,6 +24,13 @@ const RANGES: { label: string; value: TimeRange }[] = [
   { label: "YTD", value: "YTD" },
 ];
 
+const INDICES: { label: string; value: IndexKey }[] = [
+  { label: "S&P 500", value: "sp500" },
+  { label: "Nasdaq 100", value: "nasdaq100" },
+  { label: "Dow Jones", value: "djia" },
+  { label: "Russell 2000", value: "russell2000" },
+];
+
 function formatVolume(v: number): string {
   if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
@@ -30,37 +39,64 @@ function formatVolume(v: number): string {
 }
 
 export default function Home() {
+  const [index, setIndex] = useState<IndexKey>("sp500");
   const [range, setRange] = useState<TimeRange>("1W");
-  const [stocks, setStocks] = useState<StockResult[]>([]);
-  const [loading, setLoading] = useState(true);
+  // null = never loaded yet (show skeleton); [] = loaded but empty
+  const [stocks, setStocks] = useState<StockResult[] | null>(null);
+  const [chartData, setChartData] = useState<ChartData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  const fetchStocks = useCallback(async (r: TimeRange) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/top-performers?range=${r}`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setStocks(data.results);
-    } catch {
-      setError("Could not load stock data. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const currentLabel = INDICES.find((i) => i.value === index)?.label ?? "";
+  // Show skeleton on first load (null) or while a transition is in flight
+  const loading = stocks === null || isPending;
 
   useEffect(() => {
-    fetchStocks(range);
-  }, [range, fetchStocks]);
+    startTransition(async () => {
+      setError(null);
+      try {
+        const [stocksRes, chartRes] = await Promise.all([
+          fetch(`/api/top-performers?range=${range}&index=${index}`),
+          fetch(`/api/index-chart?range=${range}&index=${index}`),
+        ]);
+        if (!stocksRes.ok) throw new Error("Failed to fetch");
+        const [stocksJson, chartJson] = await Promise.all([
+          stocksRes.json(),
+          chartRes.ok ? chartRes.json() : null,
+        ]);
+        setStocks(stocksJson.results);
+        setChartData(chartJson);
+      } catch {
+        setError("Could not load stock data. Please try again.");
+        setStocks((prev) => prev ?? []); // exit null so skeleton clears
+      }
+    });
+  }, [index, range]);
 
   return (
     <div className="min-h-screen bg-gray-950 px-4 py-10 font-[family-name:var(--font-geist-mono)]">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white tracking-tight">S&P 500 Top Performers</h1>
-          <p className="mt-1 text-sm text-gray-400">Best performing stocks from the S&P 500 index</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Market Top Performers</h1>
+          <p className="mt-1 text-sm text-gray-400">Best performing stocks by index</p>
+        </div>
+
+        {/* Index selector */}
+        <div className="mb-5 flex flex-wrap gap-1 rounded-xl bg-gray-900 p-1 w-fit">
+          {INDICES.map((idx) => (
+            <button
+              key={idx.value}
+              onClick={() => setIndex(idx.value)}
+              className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                index === idx.value
+                  ? "bg-gray-700 text-white shadow"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              {idx.label}
+            </button>
+          ))}
         </div>
 
         {/* Time range selector */}
@@ -80,7 +116,14 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Table */}
+        {/* Index chart */}
+        <IndexChart data={chartData} label={currentLabel} loading={loading} />
+
+        {/* Top performers table */}
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          Top Performers
+        </h2>
+
         {error ? (
           <div className="rounded-lg bg-red-900/30 border border-red-700 p-4 text-red-300 text-sm">
             {error}
@@ -106,7 +149,7 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {stocks.map((stock, i) => (
+                {(stocks ?? []).map((stock, i) => (
                   <tr
                     key={stock.ticker}
                     className="border-b border-gray-800/50 bg-gray-900/30 transition-colors hover:bg-gray-800/50"
@@ -119,13 +162,26 @@ export default function Home() {
                     <td className="px-4 py-3 text-right text-white">
                       ${stock.price.toFixed(2)}
                     </td>
-                    <td className={`px-4 py-3 text-right ${stock.changeDollars >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    <td
+                      className={`px-4 py-3 text-right ${
+                        stock.changeDollars >= 0 ? "text-emerald-400" : "text-red-400"
+                      }`}
+                    >
                       {stock.changeDollars >= 0 ? "+" : ""}
                       {stock.changeDollars.toFixed(2)}
                     </td>
-                    <td className={`px-4 py-3 text-right font-semibold ${stock.changePercent >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                      <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs ${stock.changePercent >= 0 ? "bg-emerald-400/10" : "bg-red-400/10"}`}>
-                        {stock.changePercent >= 0 ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%
+                    <td
+                      className={`px-4 py-3 text-right font-semibold ${
+                        stock.changePercent >= 0 ? "text-emerald-400" : "text-red-400"
+                      }`}
+                    >
+                      <span
+                        className={`inline-flex items-center rounded px-2 py-0.5 text-xs ${
+                          stock.changePercent >= 0 ? "bg-emerald-400/10" : "bg-red-400/10"
+                        }`}
+                      >
+                        {stock.changePercent >= 0 ? "▲" : "▼"}{" "}
+                        {Math.abs(stock.changePercent).toFixed(2)}%
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">
@@ -139,7 +195,7 @@ export default function Home() {
         )}
 
         <p className="mt-4 text-xs text-gray-600">
-          Data from Polygon.io · EOD prices · Top 25 gainers shown
+          Data from Polygon.io · EOD prices · Top gainers shown
         </p>
       </div>
     </div>
