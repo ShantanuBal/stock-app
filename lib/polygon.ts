@@ -1,8 +1,12 @@
-import { BatchWriteCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { BatchGetCommand, BatchWriteCommand, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAME } from "./dynamodb";
 
 const API_KEY = process.env.POLYGON_API_KEY!;
 const BASE_URL = "https://api.polygon.io";
+
+// Sentinel SK written after a full grouped-daily batch is persisted.
+// Its presence means the date's data is complete and trustworthy.
+const COMPLETE_SENTINEL = "__complete__";
 
 export type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "YTD";
 
@@ -66,41 +70,48 @@ async function batchWrite(items: Record<string, unknown>[]): Promise<void> {
   for (let i = 0; i < items.length; i += 25) {
     chunks.push(items.slice(i, i + 25));
   }
-  await Promise.all(
+  // Process 5 chunks at a time to avoid overwhelming DynamoDB's initial partition capacity.
+  // Firing all ~320 chunks simultaneously causes ThrottlingException on PAY_PER_REQUEST tables.
+  const CONCURRENCY = 5;
+  for (let i = 0; i < chunks.length; i += CONCURRENCY) {
+    await Promise.all(
+      chunks.slice(i, i + CONCURRENCY).map((chunk) =>
+        docClient.send(
+          new BatchWriteCommand({
+            RequestItems: {
+              [TABLE_NAME]: chunk.map((item) => ({ PutRequest: { Item: item } })),
+            },
+          }),
+        ),
+      ),
+    );
+  }
+}
+
+// Fetches only the requested tickers for a date using BatchGetItem (max 100 keys per call).
+async function batchGetTickers(date: string, tickers: Set<string>): Promise<GroupedDailyResult[]> {
+  const tickerList = Array.from(tickers);
+  const chunks: string[][] = [];
+  for (let i = 0; i < tickerList.length; i += 100) {
+    chunks.push(tickerList.slice(i, i + 100));
+  }
+
+  const responses = await Promise.all(
     chunks.map((chunk) =>
       docClient.send(
-        new BatchWriteCommand({
+        new BatchGetCommand({
           RequestItems: {
-            [TABLE_NAME]: chunk.map((item) => ({ PutRequest: { Item: item } })),
+            [TABLE_NAME]: {
+              Keys: chunk.map((ticker) => ({ date, ticker })),
+            },
           },
         }),
       ),
     ),
   );
-}
 
-async function fetchGroupedDaily(date: string): Promise<GroupedDailyResult[]> {
-  // Check DynamoDB first — a date's EOD data never changes once published.
-  const existing = await docClient.send(
-    new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "#d = :date",
-      ExpressionAttributeNames: { "#d": "date" },
-      ExpressionAttributeValues: { ":date": date },
-      Limit: 1,
-    }),
-  );
-
-  if (existing.Items && existing.Items.length > 0) {
-    const all = await docClient.send(
-      new QueryCommand({
-        TableName: TABLE_NAME,
-        KeyConditionExpression: "#d = :date",
-        ExpressionAttributeNames: { "#d": "date" },
-        ExpressionAttributeValues: { ":date": date },
-      }),
-    );
-    return (all.Items ?? []).map((item) => ({
+  return responses.flatMap((r) =>
+    (r.Responses?.[TABLE_NAME] ?? []).map((item) => ({
       T: item.ticker as string,
       c: item.c as number,
       o: item.o as number,
@@ -108,10 +119,24 @@ async function fetchGroupedDaily(date: string): Promise<GroupedDailyResult[]> {
       l: item.l as number,
       v: item.v as number,
       t: item.t as number,
-    }));
+    })),
+  );
+}
+
+async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<GroupedDailyResult[]> {
+  // Sentinel check — only trust DynamoDB if the full write completed successfully.
+  const sentinel = await docClient.send(
+    new GetCommand({
+      TableName: TABLE_NAME,
+      Key: { date, ticker: COMPLETE_SENTINEL },
+    }),
+  );
+
+  if (sentinel.Item) {
+    return batchGetTickers(date, tickers);
   }
 
-  // Not in DB — fetch from Polygon then persist.
+  // Not in DB (or write was incomplete) — fetch from Polygon, persist all tickers, then write sentinel.
   const url = `${BASE_URL}/v2/aggs/grouped/locale/us/market/stocks/${date}?adjusted=true&apiKey=${API_KEY}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
@@ -134,18 +159,28 @@ async function fetchGroupedDaily(date: string): Promise<GroupedDailyResult[]> {
         t: r.t,
       })),
     );
+    // Sentinel written last — signals that all batch writes completed successfully.
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: { date, ticker: COMPLETE_SENTINEL },
+      }),
+    );
   }
 
-  return results;
+  return results.filter((r) => tickers.has(r.T));
 }
 
-async function findMostRecentTradingData(date: Date): Promise<{ date: string; results: GroupedDailyResult[] }> {
+async function findMostRecentTradingData(
+  date: Date,
+  tickers: Set<string>,
+): Promise<{ date: string; results: GroupedDailyResult[] }> {
   for (let i = 0; i < 7; i++) {
     const d = new Date(date);
     d.setDate(d.getDate() - i);
     if (d.getDay() === 0 || d.getDay() === 6) continue;
     const dateStr = formatDate(d);
-    const results = await fetchGroupedDaily(dateStr);
+    const results = await fetchGroupedDaily(dateStr, tickers);
     if (results.length > 0) return { date: dateStr, results };
   }
   throw new Error("Could not find recent trading data");
@@ -153,7 +188,7 @@ async function findMostRecentTradingData(date: Date): Promise<{ date: string; re
 
 export async function getTopPerformers(
   range: TimeRange,
-  sp500Tickers: Set<string>,
+  tickers: Set<string>,
   tickerNames: Record<string, string>,
 ): Promise<StockResult[]> {
   // Always use the most recent completed trading day (free tier can't fetch today's data until after close)
@@ -162,20 +197,17 @@ export async function getTopPerformers(
   const startDate = getStartDate(range, yesterday);
 
   const [currentData, startData] = await Promise.all([
-    findMostRecentTradingData(yesterday),
-    findMostRecentTradingData(startDate),
+    findMostRecentTradingData(yesterday, tickers),
+    findMostRecentTradingData(startDate, tickers),
   ]);
 
   const startPriceMap = new Map<string, number>();
   for (const item of startData.results) {
-    if (sp500Tickers.has(item.T)) {
-      startPriceMap.set(item.T, item.c);
-    }
+    startPriceMap.set(item.T, item.c);
   }
 
   const stocks: StockResult[] = [];
   for (const item of currentData.results) {
-    if (!sp500Tickers.has(item.T)) continue;
     const startPrice = startPriceMap.get(item.T);
     if (!startPrice || startPrice === 0) continue;
 
