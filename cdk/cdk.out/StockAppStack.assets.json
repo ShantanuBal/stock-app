@@ -1,0 +1,21 @@
+{
+  "version": "53.0.0",
+  "files": {
+    "46263e847735771fe48650ffb712fe288a357a378165961bbf87ca9493384003": {
+      "displayName": "StockAppStack Template",
+      "source": {
+        "path": "StockAppStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "228130335524-us-west-2-d4446a40": {
+          "bucketName": "cdk-hnb659fds-assets-228130335524-us-west-2",
+          "objectKey": "46263e847735771fe48650ffb712fe288a357a378165961bbf87ca9493384003.json",
+          "region": "us-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::228130335524:role/cdk-hnb659fds-file-publishing-role-228130335524-us-west-2"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

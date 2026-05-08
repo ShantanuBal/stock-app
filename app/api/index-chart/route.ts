@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   const { ticker, scale } = INDEX_CONFIG[index];
 
   try {
-    const { points: raw, fromCache } = await getIndexBars(ticker, formatDate(startDate), formatDate(yesterday));
+    const raw = await getIndexBars(ticker, formatDate(startDate), formatDate(yesterday));
     const points = scale === 1 ? raw : raw.map((p) => ({ ...p, close: p.close * scale }));
 
     const changePercent =
@@ -45,7 +45,6 @@ export async function GET(req: NextRequest) {
       points,
       changePercent,
       currentValue: points[points.length - 1]?.close ?? 0,
-      fromCache,
     });
   } catch (err) {
     console.error(err);

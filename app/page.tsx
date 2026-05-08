@@ -62,7 +62,6 @@ export default function Home() {
   const [topStocks, setTopStocks] = useState<StockResult[] | null>(null);
   const [worstStocks, setWorstStocks] = useState<StockResult[] | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
-  const [fromCache, setFromCache] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [infoOpen, setInfoOpen] = useState(false);
@@ -87,7 +86,6 @@ export default function Home() {
         setTopStocks(stocksJson.top);
         setWorstStocks(stocksJson.worst);
         setChartData(chartJson);
-        setFromCache(stocksJson.fromCache || chartJson?.fromCache || false);
       } catch {
         setError("Could not load stock data. Please try again.");
         setTopStocks((prev) => prev ?? []);
@@ -148,14 +146,6 @@ export default function Home() {
             </button>
           ))}
         </div>
-
-        {/* Stale data warning */}
-        {fromCache && !loading && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-700/50 bg-amber-900/20 px-4 py-2.5 text-sm text-amber-400">
-            <span>⚠</span>
-            <span>Live data unavailable — showing last known values</span>
-          </div>
-        )}
 
         {/* Index chart */}
         <IndexChart data={chartData} label={currentIndex.label} loading={loading} />

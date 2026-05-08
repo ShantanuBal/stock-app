@@ -1,0 +1,173 @@
+{
+  "/StockAppStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/StockAppStack/StockDailyPrices": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "StockDailyPricesBDD5A14C"
+      }
+    }
+  ],
+  "/StockAppStack/StockAppAccessKey": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "StockAppAccessKey"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:33:23)",
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/StockAppStack/TableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "TableName"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:37:5)",
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/StockAppStack/Region": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Region"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:38:5)",
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/StockAppStack/AccessKeyId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AccessKeyId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:39:5)",
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/StockAppStack/SecretAccessKey": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SecretAccessKey"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:40:5)",
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/StockAppStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/StockAppStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/StockAppStack/StockDailyPrices/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "StockDailyPricesBDD5A14C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:10:19)",
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/StockAppStack/StockAppUser/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "StockAppUser74FDF517"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new User2 in aws-cdk-lib...",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:28:21)",
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/StockAppStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/StockAppStack/StockAppUser/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "StockAppUserDefaultPolicy6D7144CC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.grantReadWriteData in aws-cdk-lib...",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:31:11)",
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ]
+}
