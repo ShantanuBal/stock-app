@@ -30,12 +30,12 @@ export async function GET(req: NextRequest) {
 
   const { tickers, names } = INDEX_DATA[index];
   try {
-    const all = await getTopPerformers(range, new Set(tickers), names);
+    const { stocks: all, fromCache } = await getTopPerformers(range, new Set(tickers), names);
     // Avoid overlap when the index has few constituents (e.g. DJIA = 30 stocks)
     const n = Math.min(25, Math.floor(all.length / 2));
     const top = all.slice(0, n);
     const worst = all.slice(-n).reverse();
-    return NextResponse.json({ top, worst, range, index });
+    return NextResponse.json({ top, worst, range, index, fromCache });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });

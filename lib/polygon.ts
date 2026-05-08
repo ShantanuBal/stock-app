@@ -22,6 +22,10 @@ interface GroupedDailyResult {
   t: number;  // timestamp
 }
 
+// Fallback stores: populated on success, served when Polygon returns an error.
+const groupedDailyFallback = new Map<string, GroupedDailyResult[]>();
+const indexBarsFallback = new Map<string, ChartPoint[]>();
+
 export function formatDate(date: Date): string {
   return date.toISOString().split("T")[0];
 }
@@ -58,27 +62,42 @@ export function getStartDate(range: TimeRange, today: Date): Date {
   }
 }
 
-async function fetchGroupedDaily(date: string): Promise<GroupedDailyResult[]> {
+async function fetchGroupedDaily(date: string): Promise<{ results: GroupedDailyResult[]; fromCache: boolean }> {
   const url = `${BASE_URL}/v2/aggs/grouped/locale/us/market/stocks/${date}?adjusted=true&apiKey=${API_KEY}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) throw new Error(`Polygon error: ${res.status}`);
-  const data = await res.json();
-  return data.results ?? [];
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Polygon grouped daily error ${res.status}: ${body}`);
+    }
+    const data = await res.json();
+    const results: GroupedDailyResult[] = data.results ?? [];
+    if (results.length > 0) groupedDailyFallback.set(date, results);
+    return { results, fromCache: false };
+  } catch (err) {
+    const cached = groupedDailyFallback.get(date);
+    if (cached) return { results: cached, fromCache: true };
+    throw err;
+  }
 }
 
-async function findMostRecentTradingData(date: Date): Promise<{ date: string; results: GroupedDailyResult[] }> {
+async function findMostRecentTradingData(date: Date): Promise<{ date: string; results: GroupedDailyResult[]; fromCache: boolean }> {
   for (let i = 0; i < 7; i++) {
     const d = new Date(date);
     d.setDate(d.getDate() - i);
     if (d.getDay() === 0 || d.getDay() === 6) continue;
     const dateStr = formatDate(d);
-    const results = await fetchGroupedDaily(dateStr);
-    if (results.length > 0) return { date: dateStr, results };
+    const { results, fromCache } = await fetchGroupedDaily(dateStr);
+    if (results.length > 0) return { date: dateStr, results, fromCache };
   }
   throw new Error("Could not find recent trading data");
 }
 
-export async function getTopPerformers(range: TimeRange, sp500Tickers: Set<string>, tickerNames: Record<string, string>): Promise<StockResult[]> {
+export async function getTopPerformers(
+  range: TimeRange,
+  sp500Tickers: Set<string>,
+  tickerNames: Record<string, string>,
+): Promise<{ stocks: StockResult[]; fromCache: boolean }> {
   // Always use the most recent completed trading day (free tier can't fetch today's data until after close)
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -89,6 +108,8 @@ export async function getTopPerformers(range: TimeRange, sp500Tickers: Set<strin
     findMostRecentTradingData(startDate),
   ]);
 
+  const fromCache = currentData.fromCache || startData.fromCache;
+
   const startPriceMap = new Map<string, number>();
   for (const item of startData.results) {
     if (sp500Tickers.has(item.T)) {
@@ -96,7 +117,7 @@ export async function getTopPerformers(range: TimeRange, sp500Tickers: Set<strin
     }
   }
 
-  const results: StockResult[] = [];
+  const stocks: StockResult[] = [];
   for (const item of currentData.results) {
     if (!sp500Tickers.has(item.T)) continue;
     const startPrice = startPriceMap.get(item.T);
@@ -105,7 +126,7 @@ export async function getTopPerformers(range: TimeRange, sp500Tickers: Set<strin
     const changePercent = ((item.c - startPrice) / startPrice) * 100;
     const changeDollars = item.c - startPrice;
 
-    results.push({
+    stocks.push({
       ticker: item.T,
       name: tickerNames[item.T] ?? item.T,
       price: item.c,
@@ -115,7 +136,7 @@ export async function getTopPerformers(range: TimeRange, sp500Tickers: Set<strin
     });
   }
 
-  return results.sort((a, b) => b.changePercent - a.changePercent);
+  return { stocks: stocks.sort((a, b) => b.changePercent - a.changePercent), fromCache };
 }
 
 export interface ChartPoint {
@@ -123,14 +144,27 @@ export interface ChartPoint {
   close: number;
 }
 
-export async function getIndexBars(ticker: string, from: string, to: string): Promise<ChartPoint[]> {
+export async function getIndexBars(
+  ticker: string,
+  from: string,
+  to: string,
+): Promise<{ points: ChartPoint[]; fromCache: boolean }> {
+  const key = `${ticker}:${from}:${to}`;
   const url = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) throw new Error(`Polygon error: ${res.status}`);
-  const data = await res.json();
-  const bars: Array<{ t: number; c: number }> = data.results ?? [];
-  return bars.map((b) => ({
-    date: new Date(b.t).toISOString().split("T")[0],
-    close: b.c,
-  }));
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Polygon error: ${res.status}`);
+    const data = await res.json();
+    const bars: Array<{ t: number; c: number }> = data.results ?? [];
+    const points = bars.map((b) => ({
+      date: new Date(b.t).toISOString().split("T")[0],
+      close: b.c,
+    }));
+    if (points.length > 0) indexBarsFallback.set(key, points);
+    return { points, fromCache: false };
+  } catch (err) {
+    const cached = indexBarsFallback.get(key);
+    if (cached) return { points: cached, fromCache: true };
+    throw err;
+  }
 }
