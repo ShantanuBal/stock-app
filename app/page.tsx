@@ -95,9 +95,9 @@ export default function Home() {
   const [index, setIndex] = useState<IndexKey>("sp500");
   const [range, setRange] = useState<TimeRange>("1W");
   const [sector, setSector] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(30);
   // null = never loaded yet (show skeleton); [] = loaded but empty
   const [topStocks, setTopStocks] = useState<StockResult[] | null>(null);
-  const [worstStocks, setWorstStocks] = useState<StockResult[] | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -115,19 +115,16 @@ export default function Home() {
   }[index]), [index]);
 
   const availableSectors = useMemo(() => {
-    const sectors = new Set(Object.values(sectorMap));
+    const sectors = new Set(
+      (topStocks ?? []).map((s) => sectorMap[s.ticker]).filter(Boolean)
+    );
     return ["All", ...Array.from(sectors).sort()];
-  }, [sectorMap]);
+  }, [topStocks, sectorMap]);
 
   const filteredTop = useMemo(() => {
     if (!topStocks || sector === "All") return topStocks;
     return topStocks.filter((s) => sectorMap[s.ticker] === sector);
   }, [topStocks, sector, sectorMap]);
-
-  const filteredWorst = useMemo(() => {
-    if (!worstStocks || sector === "All") return worstStocks;
-    return worstStocks.filter((s) => sectorMap[s.ticker] === sector);
-  }, [worstStocks, sector, sectorMap]);
 
   useEffect(() => {
     startTransition(async () => {
@@ -142,13 +139,13 @@ export default function Home() {
           stocksRes.json(),
           chartRes.ok ? chartRes.json() : null,
         ]);
-        setTopStocks(stocksJson.top);
-        setWorstStocks(stocksJson.worst);
+        setTopStocks(stocksJson.all);
         setChartData(chartJson);
+        setSector("All");
+        setVisibleCount(30);
       } catch {
         setError("Could not load stock data. Please try again.");
         setTopStocks((prev) => prev ?? []);
-        setWorstStocks((prev) => prev ?? []);
       }
     });
   }, [index, range]);
@@ -256,12 +253,12 @@ export default function Home() {
         <IndexChart data={chartData} label={currentIndex.label} loading={loading} />
 
         {/* Sector filter tabs */}
-        <div className="mb-5 overflow-x-auto">
-          <div className="flex gap-2 pb-1" style={{ minWidth: "max-content" }}>
+        <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
+          <div className="flex flex-wrap gap-2">
             {availableSectors.map((s) => (
               <button
                 key={s}
-                onClick={() => setSector(s)}
+                onClick={() => { setSector(s); setVisibleCount(30); }}
                 className={`rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
                   sector === s
                     ? "bg-emerald-500 text-white"
@@ -279,29 +276,29 @@ export default function Home() {
             {error}
           </div>
         ) : loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[0, 1].map((col) => (
-              <div key={col} className="space-y-2">
-                <div className="h-5 w-36 rounded bg-gray-200 dark:bg-gray-800/50 animate-pulse mb-3" />
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="h-11 rounded-lg bg-gray-200 dark:bg-gray-800/50 animate-pulse" />
-                ))}
-              </div>
+          <div className="space-y-2">
+            <div className="h-5 w-36 rounded bg-gray-200 dark:bg-gray-800/50 animate-pulse mb-3" />
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="h-11 rounded-lg bg-gray-200 dark:bg-gray-800/50 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <>
             <PerformerTable
-              title="Top Performers"
+              title="Companies"
               accent="emerald"
-              stocks={filteredTop ?? []}
+              stocks={(filteredTop ?? []).slice(0, visibleCount)}
+              sectors={sectorMap}
             />
-            <PerformerTable
-              title="Worst Performers"
-              accent="red"
-              stocks={filteredWorst ?? []}
-            />
-          </div>
+            {(filteredTop ?? []).length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount((c) => c + 30)}
+                className="mt-3 w-full rounded-lg border border-gray-200 dark:border-gray-800 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                Show more ({(filteredTop ?? []).length - visibleCount} remaining)
+              </button>
+            )}
+          </>
         )}
 
         <p className="mt-4 text-xs text-gray-400 dark:text-gray-600">

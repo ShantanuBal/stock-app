@@ -4,6 +4,7 @@ interface Props {
   title: string;
   accent: "emerald" | "red";
   stocks: StockResult[];
+  sectors?: Record<string, string>;
 }
 
 function formatVolume(v: number): string {
@@ -13,7 +14,7 @@ function formatVolume(v: number): string {
   return v.toString();
 }
 
-export default function PerformerTable({ title, accent, stocks }: Props) {
+export default function PerformerTable({ title, accent, stocks, sectors }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
 
   return (
@@ -28,6 +29,7 @@ export default function PerformerTable({ title, accent, stocks }: Props) {
               <th className="px-3 py-3 text-left w-7">#</th>
               <th className="px-3 py-3 text-left">Ticker</th>
               <th className="px-3 py-3 text-left hidden lg:table-cell">Company</th>
+              <th className="px-3 py-3 text-left hidden xl:table-cell">Sector</th>
               <th className="px-3 py-3 text-right">Price</th>
               <th className="px-3 py-3 text-right">% Change</th>
               <th className="px-3 py-3 text-right hidden xl:table-cell">Volume</th>
@@ -47,6 +49,9 @@ export default function PerformerTable({ title, accent, stocks }: Props) {
                   <td className="px-3 py-3 font-bold text-gray-900 dark:text-white">{stock.ticker}</td>
                   <td className="px-3 py-3 text-gray-500 dark:text-gray-300 max-w-[140px] truncate hidden lg:table-cell">
                     {stock.name}
+                  </td>
+                  <td className="px-3 py-3 text-gray-500 dark:text-gray-400 max-w-[140px] truncate hidden xl:table-cell text-xs">
+                    {sectors?.[stock.ticker] ?? "—"}
                   </td>
                   <td className="px-3 py-3 text-right text-gray-900 dark:text-white tabular-nums">
                     ${stock.price.toFixed(2)}

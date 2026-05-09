@@ -9,8 +9,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stock Tracker",
-  description: "Top performing S&P 500 stocks",
+  title: "Market Watch",
+  description: "Tracks market performance",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistMono.variable} h-full antialiased dark`}>
+    <html lang="en" suppressHydrationWarning className={`${geistMono.variable} h-full antialiased`}>
       <head>
         {/* Set theme class before first paint to avoid flash */}
         <script
