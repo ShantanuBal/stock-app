@@ -99,8 +99,8 @@ export default function Home() {
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Market Top Performers</h1>
-          <p className="mt-1 text-sm text-gray-400">Best performing stocks by index</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Market Performance</h1>
+          <p className="mt-1 text-sm text-gray-400">because your finance bro friends shouldn&apos;t be your only source of market news</p>
         </div>
 
         {/* Index selector */}
@@ -183,6 +183,22 @@ export default function Home() {
         <p className="mt-4 text-xs text-gray-600">
           Data from Polygon.io · EOD prices · Top gainers shown
         </p>
+
+        <div className="mt-12 border-t border-gray-800 pt-6 text-center text-xs text-gray-500">
+          <p>
+            Built with questionable amounts of caffeine by{" "}
+            <span className="text-gray-300 font-medium">Shantanu Bal</span> 🤓
+          </p>
+          <p className="mt-1">
+            Got feedback? Complaints? A hot stock tip?{" "}
+            <a
+              href="mailto:shantanu.r.bal@gmail.com"
+              className="text-emerald-500 hover:text-emerald-400 transition-colors"
+            >
+              shantanu.r.bal@gmail.com
+            </a>
+          </p>
+        </div>
       </div>
 
       {infoOpen && (
