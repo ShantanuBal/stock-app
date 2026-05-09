@@ -16,6 +16,14 @@
       }
     }
   ],
+  "/StockAppStack/AiSummaries": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "AiSummariesF8673348"
+      }
+    }
+  ],
   "/StockAppStack/StockAppAccessKey": [
     {
       "type": "aws:cdk:logicalId",
@@ -24,7 +32,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:33:23)",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:42:23)",
         "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
         "...node internals, ts-node, ts-node, ts-node..."
       ]
@@ -38,7 +46,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:37:5)",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:46:5)",
         "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
         "...node internals, ts-node, ts-node, ts-node..."
       ]
@@ -52,7 +60,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:38:5)",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:47:5)",
         "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
         "...node internals, ts-node, ts-node, ts-node..."
       ]
@@ -66,7 +74,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:39:5)",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:48:5)",
         "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
         "...node internals, ts-node, ts-node, ts-node..."
       ]
@@ -80,7 +88,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:40:5)",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:49:5)",
         "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
         "...node internals, ts-node, ts-node, ts-node..."
       ]
@@ -127,6 +135,21 @@
       ]
     }
   ],
+  "/StockAppStack/AiSummaries/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AiSummariesF8673348"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:27:28)",
+        "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
   "/StockAppStack/StockAppUser/Resource": [
     {
       "type": "aws:cdk:logicalId",
@@ -136,7 +159,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new User2 in aws-cdk-lib...",
-        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:28:21)",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:36:21)",
         "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
         "...node internals, ts-node, ts-node, ts-node..."
       ]
@@ -164,7 +187,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...WrappedClass.grantReadWriteData in aws-cdk-lib...",
-        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:31:11)",
+        "new StockAppStack (/Users/shantanubal/Desktop/stock-app/cdk/lib/stock-app-stack.ts:39:11)",
         "<anonymous> (/Users/shantanubal/Desktop/stock-app/cdk/bin/cdk.ts:6:1)",
         "...node internals, ts-node, ts-node, ts-node..."
       ]

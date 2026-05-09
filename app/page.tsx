@@ -102,6 +102,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [infoOpen, setInfoOpen] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
 
   const currentIndex = INDICES.find((i) => i.value === index)!;
   // Show skeleton on first load (null) or while a transition is in flight
@@ -125,6 +128,24 @@ export default function Home() {
     if (!topStocks || sector === "All") return topStocks;
     return topStocks.filter((s) => sectorMap[s.ticker] === sector);
   }, [topStocks, sector, sectorMap]);
+
+  useEffect(() => {
+    if (!topStocks || topStocks.length === 0) return;
+    setSummary(null);
+    setSummaryLoading(true);
+    const controller = new AbortController();
+    fetch("/api/ai-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ index, range, stocks: topStocks.slice(0, 20) }),
+      signal: controller.signal,
+    })
+      .then((r) => r.json())
+      .then((d) => { setSummary(d.summary ?? null); setSummaryExpanded(false); })
+      .catch((e) => { if (e.name !== "AbortError") setSummary(null); })
+      .finally(() => setSummaryLoading(false));
+    return () => controller.abort();
+  }, [topStocks, index, range]);
 
   useEffect(() => {
     startTransition(async () => {
@@ -251,6 +272,34 @@ export default function Home() {
 
         {/* Index chart */}
         <IndexChart data={chartData} label={currentIndex.label} loading={loading} />
+
+        {/* AI Summary */}
+        {summaryLoading ? (
+          <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 space-y-2">
+            <div className="h-3.5 w-20 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-3 w-5/6 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-3 w-4/6 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="mt-2 h-3 w-full rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          </div>
+        ) : summary ? (
+          <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
+            <div className="flex items-center gap-2 mb-2.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Summary</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">· Claude · Not financial advice</span>
+            </div>
+            <p className={`text-sm text-gray-700 dark:text-gray-300 leading-relaxed ${summaryExpanded ? "" : "line-clamp-5"}`}>
+              {summary}
+            </p>
+            <button
+              onClick={() => setSummaryExpanded((e) => !e)}
+              className="mt-2 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+            >
+              {summaryExpanded ? "Show less" : "Read more"}
+            </button>
+          </div>
+        ) : null}
 
         {/* Sector filter tabs */}
         <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
