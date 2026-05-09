@@ -14,3 +14,14 @@ export const DJIA_NAMES: Record<string, string> = {
   PG: "Procter & Gamble", SHW: "Sherwin-Williams", TRV: "Travelers",
   UNH: "UnitedHealth Group", V: "Visa", WMT: "Walmart",
 };
+
+export const DJIA_SECTORS: Record<string, string> = {
+  AAPL: "Tech Hardware", AMGN: "Pharma & Biotech", AMZN: "Retail", AXP: "Financial Services",
+  BA: "Capital Goods", CAT: "Capital Goods", CRM: "Software", CSCO: "Tech Hardware",
+  CVX: "Energy", DIS: "Media", DOW: "Materials", GS: "Financial Services",
+  HD: "Retail", HON: "Capital Goods", IBM: "Software", JNJ: "Pharma & Biotech",
+  JPM: "Banks", KO: "Food & Beverage", MCD: "Consumer Services", MMM: "Capital Goods",
+  MRK: "Pharma & Biotech", MSFT: "Software", NKE: "Consumer Goods", NVDA: "Semiconductors",
+  PG: "Household Products", SHW: "Materials", TRV: "Insurance", UNH: "Health Services",
+  V: "Financial Services", WMT: "Food & Beverage",
+};

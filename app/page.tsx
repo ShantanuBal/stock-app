@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useMemo } from "react";
 import type { IndexKey } from "./api/top-performers/route";
 import IndexChart, { type ChartData } from "./components/IndexChart";
 import InfoModal from "./components/InfoModal";
 import PerformerTable from "./components/PerformerTable";
 import { useTheme } from "./components/ThemeProvider";
 import type { StockResult } from "@/lib/polygon";
+import { TICKER_SECTORS } from "@/lib/sp500";
+import { NASDAQ100_SECTORS } from "@/lib/nasdaq100";
+import { DJIA_SECTORS } from "@/lib/djia";
+import { RUSSELL2000_SECTORS } from "@/lib/russell2000";
 
 type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "YTD";
 
@@ -90,6 +94,7 @@ export default function Home() {
   const isDark = theme === "dark";
   const [index, setIndex] = useState<IndexKey>("sp500");
   const [range, setRange] = useState<TimeRange>("1W");
+  const [sector, setSector] = useState("All");
   // null = never loaded yet (show skeleton); [] = loaded but empty
   const [topStocks, setTopStocks] = useState<StockResult[] | null>(null);
   const [worstStocks, setWorstStocks] = useState<StockResult[] | null>(null);
@@ -101,6 +106,28 @@ export default function Home() {
   const currentIndex = INDICES.find((i) => i.value === index)!;
   // Show skeleton on first load (null) or while a transition is in flight
   const loading = topStocks === null || isPending;
+
+  const sectorMap = useMemo<Record<string, string>>(() => ({
+    sp500: TICKER_SECTORS,
+    nasdaq100: NASDAQ100_SECTORS,
+    djia: DJIA_SECTORS,
+    russell2000: RUSSELL2000_SECTORS,
+  }[index]), [index]);
+
+  const availableSectors = useMemo(() => {
+    const sectors = new Set(Object.values(sectorMap));
+    return ["All", ...Array.from(sectors).sort()];
+  }, [sectorMap]);
+
+  const filteredTop = useMemo(() => {
+    if (!topStocks || sector === "All") return topStocks;
+    return topStocks.filter((s) => sectorMap[s.ticker] === sector);
+  }, [topStocks, sector, sectorMap]);
+
+  const filteredWorst = useMemo(() => {
+    if (!worstStocks || sector === "All") return worstStocks;
+    return worstStocks.filter((s) => sectorMap[s.ticker] === sector);
+  }, [worstStocks, sector, sectorMap]);
 
   useEffect(() => {
     startTransition(async () => {
@@ -132,7 +159,7 @@ export default function Home() {
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Market Performance</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Market Watch</h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">because your finance bro friends shouldn&apos;t be your only source of market news</p>
           </div>
           {/* Theme toggle */}
@@ -169,7 +196,7 @@ export default function Home() {
             {INDICES.map((idx) => (
               <button
                 key={idx.value}
-                onClick={() => setIndex(idx.value)}
+                onClick={() => { setIndex(idx.value); setSector("All"); }}
                 className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
                   index === idx.value
                     ? "bg-emerald-500 text-white shadow"
@@ -228,6 +255,25 @@ export default function Home() {
         {/* Index chart */}
         <IndexChart data={chartData} label={currentIndex.label} loading={loading} />
 
+        {/* Sector filter tabs */}
+        <div className="mb-5 overflow-x-auto">
+          <div className="flex gap-2 pb-1" style={{ minWidth: "max-content" }}>
+            {availableSectors.map((s) => (
+              <button
+                key={s}
+                onClick={() => setSector(s)}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                  sector === s
+                    ? "bg-emerald-500 text-white"
+                    : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {error ? (
           <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
             {error}
@@ -248,12 +294,12 @@ export default function Home() {
             <PerformerTable
               title="Top Performers"
               accent="emerald"
-              stocks={topStocks ?? []}
+              stocks={filteredTop ?? []}
             />
             <PerformerTable
               title="Worst Performers"
               accent="red"
-              stocks={worstStocks ?? []}
+              stocks={filteredWorst ?? []}
             />
           </div>
         )}
