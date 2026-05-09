@@ -23,6 +23,7 @@ const INDICES: {
   value: IndexKey;
   description: string;
   wikiUrl: string;
+  meta: { label: string; value: string }[];
 }[] = [
   {
     label: "S&P 500",
@@ -30,6 +31,13 @@ const INDICES: {
     description:
       "The S&P 500 tracks 500 of the largest US-listed companies by market capitalization, spanning every major sector of the economy. Introduced in 1957 by Standard & Poor's, it is widely considered the single best gauge of large-cap US equities and serves as the benchmark for trillions of dollars in index funds worldwide.",
     wikiUrl: "https://en.wikipedia.org/wiki/S%26P_500",
+    meta: [
+      { label: "Stocks", value: "503" },
+      { label: "Weighting", value: "Market-cap" },
+      { label: "Founded", value: "1957" },
+      { label: "Rebalance", value: "Quarterly" },
+      { label: "Covers", value: "~80% of US market" },
+    ],
   },
   {
     label: "Nasdaq 100",
@@ -37,6 +45,13 @@ const INDICES: {
     description:
       "The Nasdaq-100 comprises the 100 largest non-financial companies listed on the Nasdaq exchange, with a heavy concentration in technology, consumer discretionary, and healthcare. It includes household names like Apple, Microsoft, and NVIDIA, making it a widely watched barometer for the tech industry's health.",
     wikiUrl: "https://en.wikipedia.org/wiki/Nasdaq-100",
+    meta: [
+      { label: "Stocks", value: "101" },
+      { label: "Weighting", value: "Market-cap" },
+      { label: "Founded", value: "1985" },
+      { label: "Rebalance", value: "Annual" },
+      { label: "Focus", value: "Tech & Growth" },
+    ],
   },
   {
     label: "Dow Jones",
@@ -44,6 +59,13 @@ const INDICES: {
     description:
       "The Dow Jones Industrial Average is one of the world's oldest and most-recognized stock indices, tracking 30 blue-chip US companies hand-picked by editors at S&P Dow Jones Indices. Unlike most indices, it is price-weighted — meaning higher-priced stocks exert more influence regardless of company size.",
     wikiUrl: "https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average",
+    meta: [
+      { label: "Stocks", value: "30" },
+      { label: "Weighting", value: "Price-weighted" },
+      { label: "Founded", value: "1896" },
+      { label: "Rebalance", value: "As needed" },
+      { label: "Focus", value: "Blue-chip" },
+    ],
   },
   {
     label: "Russell 2000",
@@ -51,6 +73,13 @@ const INDICES: {
     description:
       "The Russell 2000 measures the performance of the 2,000 smallest stocks in the Russell 3000 Index, representing roughly 7% of the total US market capitalization. It is the most widely cited benchmark for US small-cap stocks and is often used as a leading indicator of domestic economic health.",
     wikiUrl: "https://en.wikipedia.org/wiki/Russell_2000_Index",
+    meta: [
+      { label: "Stocks", value: "2,000" },
+      { label: "Weighting", value: "Market-cap" },
+      { label: "Founded", value: "1984" },
+      { label: "Rebalance", value: "Annual" },
+      { label: "Focus", value: "Small-cap" },
+    ],
   },
 ];
 
@@ -144,6 +173,16 @@ export default function Home() {
             >
               {r.label}
             </button>
+          ))}
+        </div>
+
+        {/* Index metadata */}
+        <div className="mb-5 flex flex-wrap gap-2">
+          {currentIndex.meta.map((item) => (
+            <div key={item.label} className="rounded-lg bg-gray-900 border border-gray-800 px-3 py-2">
+              <p className="text-xs text-gray-500 uppercase tracking-wider">{item.label}</p>
+              <p className="text-sm font-semibold text-white mt-0.5">{item.value}</p>
+            </div>
           ))}
         </div>
 

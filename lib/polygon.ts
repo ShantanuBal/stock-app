@@ -133,10 +133,12 @@ async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<Gr
   );
 
   if (sentinel.Item) {
+    console.log(`Stock data for ${date} already in database — skipping Polygon call`);
     return batchGetTickers(date, tickers);
   }
 
   // Not in DB (or write was incomplete) — fetch from Polygon, persist all tickers, then write sentinel.
+  console.log(`No data found for ${date} — fetching from Polygon`);
   const url = `${BASE_URL}/v2/aggs/grouped/locale/us/market/stocks/${date}?adjusted=true&apiKey=${API_KEY}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
@@ -147,6 +149,7 @@ async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<Gr
   const results: GroupedDailyResult[] = data.results ?? [];
 
   if (results.length > 0) {
+    console.log(`Saving ${results.length} stocks for ${date} to database so we don't need to call Polygon again`);
     await batchWrite(
       results.map((r) => ({
         date,
@@ -166,6 +169,7 @@ async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<Gr
         Item: { date, ticker: COMPLETE_SENTINEL },
       }),
     );
+    console.log(`All stock data for ${date} saved — future requests will be served from database`);
   }
 
   return results.filter((r) => tickers.has(r.T));
@@ -249,6 +253,7 @@ export async function getIndexBars(
   );
 
   if (existing.Items && existing.Items.length > 0) {
+    console.log(`Chart data for ${ticker} already in database (${existing.Items.length} trading days) — skipping Polygon call`);
     return existing.Items.map((item) => ({
       date: item.date as string,
       close: item.c as number,
@@ -256,6 +261,7 @@ export async function getIndexBars(
   }
 
   // Not in DB — fetch from Polygon then persist.
+  console.log(`No chart data found for ${ticker} — fetching from Polygon`);
   const url = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Polygon error: ${res.status}`);
@@ -283,6 +289,7 @@ export async function getIndexBars(
         ),
       ),
     );
+    console.log(`Saved ${bars.length} days of chart data for ${ticker} — future requests will be served from database`);
   }
 
   return bars.map((b) => ({
