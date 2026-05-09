@@ -228,7 +228,7 @@ export default function Home() {
         )}
 
         <p className="mt-4 text-xs text-gray-600">
-          Data from Polygon.io · EOD prices · Top gainers shown
+          Data from Polygon.io · EOD prices
         </p>
 
         <div className="mt-12 border-t border-gray-800 pt-6 text-center text-xs text-gray-500">
