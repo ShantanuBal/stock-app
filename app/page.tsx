@@ -141,7 +141,7 @@ export default function Home() {
                 onClick={() => setIndex(idx.value)}
                 className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
                   index === idx.value
-                    ? "bg-gray-700 text-white shadow"
+                    ? "bg-emerald-500 text-white shadow"
                     : "text-gray-400 hover:text-white"
                 }`}
               >
@@ -177,11 +177,16 @@ export default function Home() {
         </div>
 
         {/* Index metadata */}
-        <div className="mb-5 flex flex-wrap gap-2">
-          {currentIndex.meta.map((item) => (
-            <div key={item.label} className="rounded-lg bg-gray-900 border border-gray-800 px-3 py-2">
-              <p className="text-xs text-gray-500 uppercase tracking-wider">{item.label}</p>
-              <p className="text-sm font-semibold text-white mt-0.5">{item.value}</p>
+        <div className="mb-5 flex flex-wrap gap-x-6 gap-y-3">
+          {currentIndex.meta.map((item, i) => (
+            <div key={item.label} className="flex items-center gap-6">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">{item.label}</p>
+                <p className="text-sm font-semibold text-white mt-0.5">{item.value}</p>
+              </div>
+              {i < currentIndex.meta.length - 1 && (
+                <div className="h-8 w-px bg-gray-800" />
+              )}
             </div>
           ))}
         </div>
