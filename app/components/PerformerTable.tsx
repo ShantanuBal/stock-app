@@ -14,17 +14,17 @@ function formatVolume(v: number): string {
 }
 
 export default function PerformerTable({ title, accent, stocks }: Props) {
-  const accentColor = accent === "emerald" ? "text-emerald-400" : "text-red-400";
+  const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
 
   return (
     <div>
       <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${accentColor}`}>
         {title}
       </h2>
-      <div className="overflow-hidden rounded-xl border border-gray-800">
+      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-800 bg-gray-900 text-gray-400 text-xs uppercase tracking-wider">
+            <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
               <th className="px-3 py-3 text-left w-7">#</th>
               <th className="px-3 py-3 text-left">Ticker</th>
               <th className="px-3 py-3 text-left hidden lg:table-cell">Company</th>
@@ -36,19 +36,19 @@ export default function PerformerTable({ title, accent, stocks }: Props) {
           <tbody>
             {stocks.map((stock, i) => {
               const isPos = stock.changePercent >= 0;
-              const color = isPos ? "text-emerald-400" : "text-red-400";
-              const bg = isPos ? "bg-emerald-400/10" : "bg-red-400/10";
+              const color = isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
+              const bg = isPos ? "bg-emerald-500/10" : "bg-red-500/10";
               return (
                 <tr
                   key={stock.ticker}
-                  className="border-b border-gray-800/50 bg-gray-900/30 transition-colors hover:bg-gray-800/50"
+                  className="border-b border-gray-100 dark:border-gray-800/50 bg-white dark:bg-gray-900/30 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                 >
-                  <td className="px-3 py-3 text-gray-500">{i + 1}</td>
-                  <td className="px-3 py-3 font-bold text-white">{stock.ticker}</td>
-                  <td className="px-3 py-3 text-gray-300 max-w-[140px] truncate hidden lg:table-cell">
+                  <td className="px-3 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
+                  <td className="px-3 py-3 font-bold text-gray-900 dark:text-white">{stock.ticker}</td>
+                  <td className="px-3 py-3 text-gray-500 dark:text-gray-300 max-w-[140px] truncate hidden lg:table-cell">
                     {stock.name}
                   </td>
-                  <td className="px-3 py-3 text-right text-white tabular-nums">
+                  <td className="px-3 py-3 text-right text-gray-900 dark:text-white tabular-nums">
                     ${stock.price.toFixed(2)}
                   </td>
                   <td className={`px-3 py-3 text-right font-semibold ${color}`}>
@@ -56,7 +56,7 @@ export default function PerformerTable({ title, accent, stocks }: Props) {
                       {isPos ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-right text-gray-400 hidden xl:table-cell tabular-nums">
+                  <td className="px-3 py-3 text-right text-gray-500 dark:text-gray-400 hidden xl:table-cell tabular-nums">
                     {formatVolume(stock.volume)}
                   </td>
                 </tr>

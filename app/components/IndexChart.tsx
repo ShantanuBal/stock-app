@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { useTheme } from "./ThemeProvider";
 
 export interface ChartData {
   points: { date: string; close: number }[];
@@ -38,11 +39,11 @@ function fmtYAxis(v: number): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, label, color }: any) {
+function CustomTooltip({ active, payload, label, color, isDark }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-xs shadow-lg">
-      <p className="text-gray-400 mb-1">{fmtAxisDate(label)}</p>
+    <div className={`rounded-lg border px-3 py-2 text-xs shadow-lg ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"}`}>
+      <p className={`mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{fmtAxisDate(label)}</p>
       <p style={{ color }} className="font-semibold">
         {fmtValue(payload[0].value)}
       </p>
@@ -51,15 +52,21 @@ function CustomTooltip({ active, payload, label, color }: any) {
 }
 
 export default function IndexChart({ data, label, loading }: Props) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const tickColor = isDark ? "#4b5563" : "#9ca3af";
+  const gridColor = isDark ? "#1f2937" : "#e5e7eb";
+
   if (loading) {
-    return <div className="rounded-xl border border-gray-800 bg-gray-900/50 h-56 animate-pulse mb-6" />;
+    return <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900/50 h-56 animate-pulse mb-6" />;
   }
 
   if (!data || data.points.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6 flex flex-col items-center justify-center h-56 gap-2">
-        <p className="text-sm text-gray-400">{label}</p>
-        <p className="text-xs text-gray-600">No chart data available for this period</p>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900/50 p-6 mb-6 flex flex-col items-center justify-center h-56 gap-2">
+        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-600">No chart data available for this period</p>
       </div>
     );
   }
@@ -69,16 +76,16 @@ export default function IndexChart({ data, label, loading }: Props) {
   const color = isUp ? "#10b981" : "#f87171";
 
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-6 mb-6">
       {/* Summary header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">{label}</p>
-          <p className="text-3xl font-bold text-white tabular-nums">{fmtValue(currentValue)}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">{label}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{fmtValue(currentValue)}</p>
         </div>
         <span
           className={`mt-1 text-sm font-semibold px-3 py-1.5 rounded-full ${
-            isUp ? "bg-emerald-400/10 text-emerald-400" : "bg-red-400/10 text-red-400"
+            isUp ? "bg-emerald-400/10 text-emerald-600 dark:text-emerald-400" : "bg-red-400/10 text-red-600 dark:text-red-400"
           }`}
         >
           {isUp ? "▲" : "▼"} {Math.abs(changePercent).toFixed(2)}%
@@ -94,24 +101,24 @@ export default function IndexChart({ data, label, loading }: Props) {
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
           <XAxis
             dataKey="date"
             tickFormatter={fmtAxisDate}
-            tick={{ fill: "#4b5563", fontSize: 11 }}
+            tick={{ fill: tickColor, fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             interval="preserveStartEnd"
           />
           <YAxis
             domain={["auto", "auto"]}
-            tick={{ fill: "#4b5563", fontSize: 11 }}
+            tick={{ fill: tickColor, fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={fmtYAxis}
             width={48}
           />
-          <Tooltip content={<CustomTooltip color={color} />} />
+          <Tooltip content={<CustomTooltip color={color} isDark={isDark} />} />
           <Area
             type="monotone"
             dataKey="close"

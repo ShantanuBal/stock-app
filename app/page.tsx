@@ -5,6 +5,7 @@ import type { IndexKey } from "./api/top-performers/route";
 import IndexChart, { type ChartData } from "./components/IndexChart";
 import InfoModal from "./components/InfoModal";
 import PerformerTable from "./components/PerformerTable";
+import { useTheme } from "./components/ThemeProvider";
 import type { StockResult } from "@/lib/polygon";
 
 type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "YTD";
@@ -85,6 +86,8 @@ const INDICES: {
 
 
 export default function Home() {
+  const { toggle, theme } = useTheme();
+  const isDark = theme === "dark";
   const [index, setIndex] = useState<IndexKey>("sp500");
   const [range, setRange] = useState<TimeRange>("1W");
   // null = never loaded yet (show skeleton); [] = loaded but empty
@@ -124,17 +127,45 @@ export default function Home() {
   }, [index, range]);
 
   return (
-    <div className="min-h-screen bg-gray-950 px-4 py-10 font-[family-name:var(--font-geist-mono)]">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 px-4 py-10 font-[family-name:var(--font-geist-mono)]">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Market Performance</h1>
-          <p className="mt-1 text-sm text-gray-400">because your finance bro friends shouldn&apos;t be your only source of market news</p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Market Performance</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">because your finance bro friends shouldn&apos;t be your only source of market news</p>
+          </div>
+          {/* Theme toggle */}
+          <button
+            onClick={toggle}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            className="mt-1 flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          >
+            {isDark ? (
+              /* Sun icon */
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4" />
+                <line x1="12" y1="2" x2="12" y2="6" />
+                <line x1="12" y1="18" x2="12" y2="22" />
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+                <line x1="2" y1="12" x2="6" y2="12" />
+                <line x1="18" y1="12" x2="22" y2="12" />
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+              </svg>
+            ) : (
+              /* Moon icon */
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </button>
         </div>
 
         {/* Index selector */}
         <div className="mb-5 flex items-center gap-3">
-          <div className="flex flex-wrap gap-1 rounded-xl bg-gray-900 p-1">
+          <div className="flex flex-wrap gap-1 rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
             {INDICES.map((idx) => (
               <button
                 key={idx.value}
@@ -142,7 +173,7 @@ export default function Home() {
                 className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
                   index === idx.value
                     ? "bg-emerald-500 text-white shadow"
-                    : "text-gray-400 hover:text-white"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
                 {idx.label}
@@ -153,7 +184,7 @@ export default function Home() {
             onClick={() => setInfoOpen(true)}
             aria-label={`About ${currentIndex.label}`}
             title={`About ${currentIndex.label}`}
-            className="flex items-center justify-center w-7 h-7 rounded-full border border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300 transition-colors"
+            className="flex items-center justify-center w-7 h-7 rounded-full border border-gray-300 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="16" x2="12" y2="12" />
@@ -171,7 +202,7 @@ export default function Home() {
               className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                 range === r.value
                   ? "bg-emerald-500 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+                  : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
               {r.label}
@@ -184,11 +215,11 @@ export default function Home() {
           {currentIndex.meta.map((item, i) => (
             <div key={item.label} className="flex items-center gap-6">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">{item.label}</p>
-                <p className="text-sm font-semibold text-white mt-0.5">{item.value}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">{item.label}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{item.value}</p>
               </div>
               {i < currentIndex.meta.length - 1 && (
-                <div className="h-8 w-px bg-gray-800" />
+                <div className="h-8 w-px bg-gray-200 dark:bg-gray-800" />
               )}
             </div>
           ))}
@@ -198,16 +229,16 @@ export default function Home() {
         <IndexChart data={chartData} label={currentIndex.label} loading={loading} />
 
         {error ? (
-          <div className="rounded-lg bg-red-900/30 border border-red-700 p-4 text-red-300 text-sm">
+          <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
             {error}
           </div>
         ) : loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[0, 1].map((col) => (
               <div key={col} className="space-y-2">
-                <div className="h-5 w-36 rounded bg-gray-800/50 animate-pulse mb-3" />
+                <div className="h-5 w-36 rounded bg-gray-200 dark:bg-gray-800/50 animate-pulse mb-3" />
                 {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="h-11 rounded-lg bg-gray-800/50 animate-pulse" />
+                  <div key={i} className="h-11 rounded-lg bg-gray-200 dark:bg-gray-800/50 animate-pulse" />
                 ))}
               </div>
             ))}
@@ -227,14 +258,14 @@ export default function Home() {
           </div>
         )}
 
-        <p className="mt-4 text-xs text-gray-600">
+        <p className="mt-4 text-xs text-gray-400 dark:text-gray-600">
           Data from Polygon.io · EOD prices
         </p>
 
-        <div className="mt-12 border-t border-gray-800 pt-6 text-center text-xs text-gray-500">
+        <div className="mt-12 border-t border-gray-200 dark:border-gray-800 pt-6 text-center text-xs text-gray-400 dark:text-gray-500">
           <p>
             Built with questionable amounts of caffeine by{" "}
-            <span className="text-gray-300 font-medium">Shantanu Bal</span> 🤓
+            <span className="text-gray-700 dark:text-gray-300 font-medium">Shantanu Bal</span> 🤓
           </p>
           <p className="mt-1">
             Got feedback? Complaints? A hot stock tip?{" "}
