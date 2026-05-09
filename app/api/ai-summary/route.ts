@@ -53,8 +53,10 @@ export async function POST(req: NextRequest) {
 
   const cached = await getCachedSummary(pk);
   if (cached) {
+    console.log(`AI summary for ${pk} found in DynamoDB — skipping Claude call`);
     return NextResponse.json({ summary: cached, cached: true });
   }
+  console.log(`No AI summary found for ${pk} — generating with Claude`);
 
   const sectorMap = SECTOR_MAPS[index];
   const top = (stocks as StockResult[]).slice(0, 15);
@@ -86,7 +88,9 @@ Be direct and specific. Professional but accessible tone. No disclaimers.`;
   const summary = (message.content[0] as { type: string; text: string }).text;
 
   // Fire-and-forget cache write — don't block the response
-  saveSummary(pk, summary).catch(console.error);
+  saveSummary(pk, summary)
+    .then(() => console.log(`AI summary for ${pk} saved to DynamoDB — future requests will be served from cache`))
+    .catch(console.error);
 
   return NextResponse.json({ summary, cached: false });
 }
