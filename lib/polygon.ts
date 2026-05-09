@@ -236,6 +236,20 @@ export interface ChartPoint {
   close: number;
 }
 
+// Counts weekdays between two date strings (inclusive). Used to estimate
+// expected trading days so we can detect incomplete chart data in DynamoDB.
+function countWeekdays(from: string, to: string): number {
+  const d = new Date(from);
+  const end = new Date(to);
+  let count = 0;
+  while (d <= end) {
+    const day = d.getDay();
+    if (day !== 0 && day !== 6) count++;
+    d.setDate(d.getDate() + 1);
+  }
+  return count;
+}
+
 export async function getIndexBars(
   ticker: string,
   from: string,
@@ -252,15 +266,25 @@ export async function getIndexBars(
     }),
   );
 
-  if (existing.Items && existing.Items.length > 0) {
-    console.log(`Chart data for ${ticker} already in database (${existing.Items.length} trading days) — skipping Polygon call`);
-    return existing.Items.map((item) => ({
+  // Allow an 80% threshold to account for market holidays (~10/year).
+  // If stored rows fall below it, the range has expanded (e.g. 1W → 1M) and
+  // we need a fresh Polygon fetch to fill the gap.
+  const expectedDays = countWeekdays(from, to);
+  const hasCompleteData = (existing.Items?.length ?? 0) >= expectedDays * 0.8;
+
+  if (hasCompleteData) {
+    console.log(`Chart data for ${ticker} already in database (${existing.Items!.length}/${expectedDays} trading days) — skipping Polygon call`);
+    return existing.Items!.map((item) => ({
       date: item.date as string,
       close: item.c as number,
     })).sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  // Not in DB — fetch from Polygon then persist.
+  if (existing.Items && existing.Items.length > 0) {
+    console.log(`Incomplete chart data for ${ticker} in database (${existing.Items.length}/${expectedDays} trading days) — fetching full range from Polygon`);
+  }
+
+  // Not in DB (or incomplete) — fetch from Polygon then persist.
   console.log(`No chart data found for ${ticker} — fetching from Polygon`);
   const url = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`;
   const res = await fetch(url, { cache: "no-store" });
