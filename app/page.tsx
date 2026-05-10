@@ -107,6 +107,7 @@ export default function Home() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [industryInfoOpen, setIndustryInfoOpen] = useState(false);
+  const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
 
   const currentIndex = INDICES.find((i) => i.value === index)!;
   // Show skeleton on first load (null) or while a transition is in flight
@@ -130,6 +131,20 @@ export default function Home() {
     if (!topStocks || sectors.length === 0) return topStocks;
     return topStocks.filter((s) => sectors.includes(sectorMap[s.ticker]));
   }, [topStocks, sectors, sectorMap]);
+
+  useEffect(() => {
+    if (!topStocks || topStocks.length === 0) return;
+    setBetas(undefined);
+    const tickers = topStocks.map((s) => s.ticker);
+    fetch("/api/beta", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tickers }),
+    })
+      .then((r) => r.json())
+      .then((d) => setBetas(d.betas ?? {}))
+      .catch(() => setBetas({}));
+  }, [topStocks]);
 
   useEffect(() => {
     if (!topStocks || topStocks.length === 0) return;
@@ -367,6 +382,7 @@ export default function Home() {
               accent="emerald"
               stocks={(filteredTop ?? []).slice(0, visibleCount)}
               sectors={sectorMap}
+              betas={betas}
             />
             {(filteredTop ?? []).length > visibleCount && (
               <button

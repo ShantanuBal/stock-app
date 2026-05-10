@@ -123,6 +123,32 @@ async function batchGetTickers(date: string, tickers: Set<string>): Promise<Grou
   );
 }
 
+// Returns number of stocks stored, or null if the date was already in DynamoDB.
+export async function fetchGroupedDailyForBackfill(date: string): Promise<number | null> {
+  const sentinel = await docClient.send(
+    new GetCommand({ TableName: TABLE_NAME, Key: { date, ticker: COMPLETE_SENTINEL } }),
+  );
+  if (sentinel.Item) return null;
+
+  const url = `${BASE_URL}/v2/aggs/grouped/locale/us/market/stocks/${date}?adjusted=true&apiKey=${API_KEY}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Polygon grouped daily error ${res.status}: ${body}`);
+  }
+  const data = await res.json();
+  const results: GroupedDailyResult[] = data.results ?? [];
+
+  if (results.length > 0) {
+    await batchWrite(
+      results.map((r) => ({ date, ticker: r.T, c: r.c, o: r.o, h: r.h, l: r.l, v: r.v, t: r.t })),
+    );
+    await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: { date, ticker: COMPLETE_SENTINEL } }));
+  }
+
+  return results.length;
+}
+
 async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<GroupedDailyResult[]> {
   // Sentinel check — only trust DynamoDB if the full write completed successfully.
   const sentinel = await docClient.send(
