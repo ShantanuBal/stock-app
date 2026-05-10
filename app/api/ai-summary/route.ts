@@ -73,11 +73,11 @@ export async function POST(req: NextRequest) {
 
 ${stockLines}
 
-Write a 2–3 paragraph market summary covering:
-- Which stocks and industry groups led the gains
-- Likely macro or sector-specific reasons for the outperformance, drawing on your knowledge of market conditions and economic context for this period
+Write exactly 2 paragraphs separated by a blank line:
+- Paragraph 1: which stocks and industry groups led the gains
+- Paragraph 2: likely macro or sector-specific reasons for the outperformance, drawing on your knowledge of market conditions and economic context for this period
 
-Be direct and specific. Professional but accessible tone. No disclaimers.`;
+Be direct and specific. Professional but accessible tone. No disclaimers. Plain text only — no markdown, no headers, no bullet points, no bold.`;
 
   const message = await client.messages.create({
     model: "claude-haiku-4-5-20251001",

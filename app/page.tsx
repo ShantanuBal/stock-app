@@ -288,9 +288,13 @@ export default function Home() {
               <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Summary</span>
               <span className="text-xs text-gray-400 dark:text-gray-500">· Claude · Not financial advice</span>
             </div>
-            <p className={`text-sm text-gray-700 dark:text-gray-300 leading-relaxed ${summaryExpanded ? "" : "line-clamp-5"}`}>
-              {summary}
-            </p>
+            <div className={`space-y-3 ${summaryExpanded ? "" : "line-clamp-5"}`}>
+              {summary.split("\n\n").map((para, i) => (
+                <p key={i} className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-[family-name:var(--font-inter)]">
+                  {para.trim()}
+                </p>
+              ))}
+            </div>
             <button
               onClick={() => setSummaryExpanded((e) => !e)}
               className="mt-2 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
