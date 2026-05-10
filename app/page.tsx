@@ -180,7 +180,7 @@ export default function Home() {
         <div className="mb-8 flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Market Watch</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">because your finance bro friends shouldn&apos;t be your only source of market news</p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Clear market data and insights to help everyone make informed financial decisions</p>
           </div>
           {/* Theme toggle */}
           <button
@@ -385,11 +385,12 @@ export default function Home() {
 
         <div className="mt-12 border-t border-gray-200 dark:border-gray-800 pt-6 text-center text-xs text-gray-400 dark:text-gray-500">
           <p>
-            Built with questionable amounts of caffeine by{" "}
-            <span className="text-gray-700 dark:text-gray-300 font-medium">Shantanu Bal</span> 🤓
+            Built by{" "}
+            <span className="text-gray-700 dark:text-gray-300 font-medium">Shantanu Bal</span>
+            {" "}with a mission to make financial markets accessible to everyone
           </p>
           <p className="mt-1">
-            Got feedback? Complaints? A hot stock tip?{" "}
+            Questions or feedback?{" "}
             <a
               href="mailto:shantanu.r.bal@gmail.com"
               className="text-emerald-500 hover:text-emerald-400 transition-colors"
