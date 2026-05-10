@@ -33,7 +33,7 @@ export function formatDate(date: Date): string {
   return date.toISOString().split("T")[0];
 }
 
-function getPreviousTradingDay(date: Date, daysBack: number): Date {
+export function getPreviousTradingDay(date: Date, daysBack: number): Date {
   const d = new Date(date);
   d.setDate(d.getDate() - daysBack);
   // Skip weekends
@@ -196,8 +196,7 @@ export async function getTopPerformers(
   tickerNames: Record<string, string>,
 ): Promise<StockResult[]> {
   // Always use the most recent completed trading day (free tier can't fetch today's data until after close)
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterday = getPreviousTradingDay(new Date(), 1);
   const startDate = getStartDate(range, yesterday);
 
   const [currentData, startData] = await Promise.all([

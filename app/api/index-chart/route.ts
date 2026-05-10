@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getIndexBars, getStartDate, formatDate, TimeRange } from "@/lib/polygon";
+import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay } from "@/lib/polygon";
 import type { IndexKey } from "../top-performers/route";
 
 // I:NDX is freely available on Polygon's free tier.
@@ -26,8 +26,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid index" }, { status: 400 });
   }
 
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterday = getPreviousTradingDay(new Date(), 1);
   const startDate = getStartDate(range, yesterday);
 
   const { ticker, scale } = INDEX_CONFIG[index];
