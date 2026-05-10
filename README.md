@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Market Watch
 
-## Getting Started
+A stock market tracker that shows top performers across major US indices, with AI-generated market summaries.
 
-First, run the development server:
+**Live:** [stock-app-one-khaki.vercel.app](https://stock-app-one-khaki.vercel.app)
+
+## Features
+
+- **4 indices** — S&P 500, Nasdaq 100, Dow Jones, Russell 2000
+- **6 time ranges** — 1D, 3D, 1W, 1M, 3M, YTD
+- **Industry filter** — multi-select filter by GICS industry group
+- **AI summary** — Claude-generated market commentary, cached daily in DynamoDB
+- **Index chart** — historical performance chart for the selected index and range
+- **Dark / light mode**
+
+## Stack
+
+- [Next.js 16](https://nextjs.org) (App Router)
+- [Tailwind CSS v4](https://tailwindcss.com)
+- [Polygon.io](https://polygon.io) — EOD stock data
+- [AWS DynamoDB](https://aws.amazon.com/dynamodb) — data cache
+- [Anthropic Claude](https://anthropic.com) — AI summaries
+- [Vercel](https://vercel.com) — hosting
+
+## Running locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create a `.env.local` with:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+POLYGON_API_KEY=...
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_REGION=...
+DYNAMODB_TABLE_NAME=StockDailyPrices
+AI_SUMMARIES_TABLE_NAME=AiSummaries
+ANTHROPIC_API_KEY=...
+```
