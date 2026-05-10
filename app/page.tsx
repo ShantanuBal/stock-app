@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition, useMemo } from "react";
 import type { IndexKey } from "./api/top-performers/route";
 import IndexChart, { type ChartData } from "./components/IndexChart";
 import InfoModal from "./components/InfoModal";
+import IndustryModal from "./components/IndustryModal";
 import PerformerTable from "./components/PerformerTable";
 import { useTheme } from "./components/ThemeProvider";
 import type { StockResult } from "@/lib/polygon";
@@ -94,7 +95,7 @@ export default function Home() {
   const isDark = theme === "dark";
   const [index, setIndex] = useState<IndexKey>("sp500");
   const [range, setRange] = useState<TimeRange>("1W");
-  const [sector, setSector] = useState("All");
+  const [sectors, setSectors] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(30);
   // null = never loaded yet (show skeleton); [] = loaded but empty
   const [topStocks, setTopStocks] = useState<StockResult[] | null>(null);
@@ -105,6 +106,7 @@ export default function Home() {
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [industryInfoOpen, setIndustryInfoOpen] = useState(false);
 
   const currentIndex = INDICES.find((i) => i.value === index)!;
   // Show skeleton on first load (null) or while a transition is in flight
@@ -125,9 +127,9 @@ export default function Home() {
   }, [topStocks, sectorMap]);
 
   const filteredTop = useMemo(() => {
-    if (!topStocks || sector === "All") return topStocks;
-    return topStocks.filter((s) => sectorMap[s.ticker] === sector);
-  }, [topStocks, sector, sectorMap]);
+    if (!topStocks || sectors.length === 0) return topStocks;
+    return topStocks.filter((s) => sectors.includes(sectorMap[s.ticker]));
+  }, [topStocks, sectors, sectorMap]);
 
   useEffect(() => {
     if (!topStocks || topStocks.length === 0) return;
@@ -162,7 +164,7 @@ export default function Home() {
         ]);
         setTopStocks(stocksJson.all);
         setChartData(chartJson);
-        setSector("All");
+        setSectors([]);
         setVisibleCount(30);
       } catch {
         setError("Could not load stock data. Please try again.");
@@ -214,7 +216,7 @@ export default function Home() {
             {INDICES.map((idx) => (
               <button
                 key={idx.value}
-                onClick={() => { setIndex(idx.value); setSector("All"); }}
+                onClick={() => { setIndex(idx.value); setSectors([]); }}
                 className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
                   index === idx.value
                     ? "bg-emerald-500 text-white shadow"
@@ -306,20 +308,44 @@ export default function Home() {
 
         {/* Sector filter tabs */}
         <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Industry</p>
+            <button
+              onClick={() => setIndustryInfoOpen(true)}
+              aria-label="About industry groups"
+              className="flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:border-gray-400 dark:hover:border-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {availableSectors.map((s) => (
-              <button
-                key={s}
-                onClick={() => { setSector(s); setVisibleCount(30); }}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
-                  sector === s
-                    ? "bg-emerald-500 text-white"
-                    : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
+            {availableSectors.map((s) => {
+              const isAll = s === "All";
+              const isActive = isAll ? sectors.length === 0 : sectors.includes(s);
+              return (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setVisibleCount(30);
+                    if (isAll) { setSectors([]); return; }
+                    setSectors((prev) => {
+                      const next = prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s];
+                      return next;
+                    });
+                  }}
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                    isActive
+                      ? "bg-emerald-500 text-white"
+                      : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  {s}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -381,6 +407,9 @@ export default function Home() {
           wikiUrl={currentIndex.wikiUrl}
           onClose={() => setInfoOpen(false)}
         />
+      )}
+      {industryInfoOpen && (
+        <IndustryModal onClose={() => setIndustryInfoOpen(false)} />
       )}
     </div>
   );

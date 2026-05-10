@@ -29,7 +29,7 @@ export default function PerformerTable({ title, accent, stocks, sectors }: Props
               <th className="px-3 py-3 text-left w-7">#</th>
               <th className="px-3 py-3 text-left">Ticker</th>
               <th className="px-3 py-3 text-left hidden lg:table-cell">Company</th>
-              <th className="px-3 py-3 text-left hidden xl:table-cell">Sector</th>
+              <th className="px-3 py-3 text-left hidden xl:table-cell">Industry</th>
               <th className="px-3 py-3 text-right">Price</th>
               <th className="px-3 py-3 text-right">% Change</th>
               <th className="px-3 py-3 text-right hidden xl:table-cell">Volume</th>
