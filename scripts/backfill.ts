@@ -39,13 +39,14 @@ function getTradingDays(count: number): string[] {
         console.log(`already in DynamoDB — skipped`);
       } else if (count === 0) {
         console.log(`no data returned (market closed or holiday)`);
+        await sleep(DELAY_MS);
       } else {
         console.log(`stored ${count} stocks ✓`);
+        await sleep(DELAY_MS);
       }
     } catch (err) {
       console.log(`ERROR: ${err}`);
     }
-    await sleep(DELAY_MS);
   }
 
   console.log("\nBackfill complete.");

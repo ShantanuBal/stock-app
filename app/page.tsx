@@ -3,8 +3,7 @@
 import { useState, useEffect, useTransition, useMemo } from "react";
 import type { IndexKey } from "./api/top-performers/route";
 import IndexChart, { type ChartData } from "./components/IndexChart";
-import InfoModal from "./components/InfoModal";
-import IndustryModal from "./components/IndustryModal";
+import InfoTooltip from "./components/InfoTooltip";
 import PerformerTable from "./components/PerformerTable";
 import { useTheme } from "./components/ThemeProvider";
 import type { StockResult } from "@/lib/polygon";
@@ -90,6 +89,20 @@ const INDICES: {
 ];
 
 
+const GICS = [
+  { sector: "Information Technology", groups: ["Software", "Semiconductors", "Tech Hardware"] },
+  { sector: "Health Care",            groups: ["Pharma & Biotech", "Health Services"] },
+  { sector: "Financials",             groups: ["Banks", "Financial Services", "Insurance"] },
+  { sector: "Industrials",            groups: ["Capital Goods", "Transportation", "Prof. Services"] },
+  { sector: "Consumer Discretionary", groups: ["Consumer Services", "Retail", "Consumer Goods"] },
+  { sector: "Consumer Staples",       groups: ["Food & Beverage", "Household Products"] },
+  { sector: "Communication Services", groups: ["Media", "Telecom"] },
+  { sector: "Energy",                 groups: ["Energy"] },
+  { sector: "Materials",              groups: ["Materials"] },
+  { sector: "Real Estate",            groups: ["REITs"] },
+  { sector: "Utilities",              groups: ["Utilities"] },
+];
+
 export default function Home() {
   const { toggle, theme } = useTheme();
   const isDark = theme === "dark";
@@ -102,11 +115,9 @@ export default function Home() {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [infoOpen, setInfoOpen] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
-  const [industryInfoOpen, setIndustryInfoOpen] = useState(false);
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
 
   const currentIndex = INDICES.find((i) => i.value === index)!;
@@ -242,17 +253,19 @@ export default function Home() {
               </button>
             ))}
           </div>
-          <button
-            onClick={() => setInfoOpen(true)}
-            aria-label={`About ${currentIndex.label}`}
-            title={`About ${currentIndex.label}`}
-            className="flex items-center justify-center w-7 h-7 rounded-full border border-gray-300 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="16" x2="12" y2="12" />
-              <line x1="12" y1="8" x2="12.01" y2="8" />
-            </svg>
-          </button>
+          <InfoTooltip>
+            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{currentIndex.label}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{currentIndex.description}</p>
+            <a
+              href={currentIndex.wikiUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+            >
+              Read more on Wikipedia ↗
+            </a>
+          </InfoTooltip>
         </div>
 
         {/* Time range selector */}
@@ -325,16 +338,24 @@ export default function Home() {
         <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
           <div className="flex items-center gap-1.5 mb-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Industry</p>
-            <button
-              onClick={() => setIndustryInfoOpen(true)}
-              aria-label="About industry groups"
-              className="flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:border-gray-400 dark:hover:border-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="16" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12.01" y2="8" />
-              </svg>
-            </button>
+            <InfoTooltip>
+              <p className="text-sm font-bold text-gray-900 dark:text-white mb-1">Industry Groups</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
+                Companies are classified using <span className="font-medium text-gray-700 dark:text-gray-300">GICS Industry Groups</span> — one level below the 11 broad sectors, giving a more granular view without being overwhelming.
+              </p>
+              <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                {GICS.map(({ sector, groups }) => (
+                  <div key={sector}>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">{sector}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {groups.map((g) => (
+                        <span key={g} className="rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-300">{g}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </InfoTooltip>
           </div>
           <div className="flex flex-wrap gap-2">
             {availableSectors.map((s) => {
@@ -417,17 +438,6 @@ export default function Home() {
         </div>
       </div>
 
-      {infoOpen && (
-        <InfoModal
-          name={currentIndex.label}
-          description={currentIndex.description}
-          wikiUrl={currentIndex.wikiUrl}
-          onClose={() => setInfoOpen(false)}
-        />
-      )}
-      {industryInfoOpen && (
-        <IndustryModal onClose={() => setIndustryInfoOpen(false)} />
-      )}
     </div>
   );
 }
