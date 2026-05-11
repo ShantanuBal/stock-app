@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
+import SiteHeader from "./components/SiteHeader";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -34,7 +35,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full bg-slate-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <div className="mx-auto max-w-5xl px-4 py-10 font-[family-name:var(--font-geist-mono)]">
+            <SiteHeader />
+            {children}
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
