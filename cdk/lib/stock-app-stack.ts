@@ -32,6 +32,14 @@ export class StockAppStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
+    const economyCacheTable = new dynamodb.Table(this, "EconomyCache", {
+      tableName: "EconomyCache",
+      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      timeToLiveAttribute: "ttl",
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
     const tickerDetailsTable = new dynamodb.Table(this, "TickerDetails", {
       tableName: "TickerDetails",
       partitionKey: { name: "ticker", type: dynamodb.AttributeType.STRING },
@@ -44,9 +52,36 @@ export class StockAppStack extends cdk.Stack {
     const appUser = new iam.User(this, "StockAppUser", {
       userName: "stock-app-vercel",
     });
-    table.grantReadWriteData(appUser);
-    summariesTable.grantReadWriteData(appUser);
-    tickerDetailsTable.grantReadWriteData(appUser);
+
+    // Single managed policy covering all tables — avoids the 2048-byte inline policy limit
+    const appPolicy = new iam.ManagedPolicy(this, "StockAppPolicy", {
+      users: [appUser],
+      statements: [
+        new iam.PolicyStatement({
+          actions: [
+            "dynamodb:BatchGetItem",
+            "dynamodb:Query",
+            "dynamodb:GetItem",
+            "dynamodb:Scan",
+            "dynamodb:ConditionCheckItem",
+            "dynamodb:BatchWriteItem",
+            "dynamodb:PutItem",
+            "dynamodb:UpdateItem",
+            "dynamodb:DeleteItem",
+            "dynamodb:DescribeTable",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          resources: [
+            table.tableArn,
+            `${table.tableArn}/index/*`,
+            summariesTable.tableArn,
+            economyCacheTable.tableArn,
+            tickerDetailsTable.tableArn,
+          ],
+        }),
+      ],
+    });
 
     const accessKey = new iam.CfnAccessKey(this, "StockAppAccessKey", {
       userName: appUser.userName,

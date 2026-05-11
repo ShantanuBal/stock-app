@@ -1,7 +1,7 @@
 import { docClient } from "./dynamodb";
 import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 
-const CACHE_TABLE = process.env.AI_SUMMARIES_TABLE_NAME ?? "AiSummaries";
+const CACHE_TABLE = process.env.ECONOMY_CACHE_TABLE_NAME ?? "EconomyCache";
 const CACHE_TTL = 24 * 60 * 60; // 24 hours
 
 export interface IndicatorPoint {
@@ -158,7 +158,7 @@ async function fetchFromFred(config: IndicatorConfig): Promise<IndicatorResult |
 }
 
 export async function getIndicator(config: IndicatorConfig): Promise<IndicatorResult | null> {
-  const pk = `econ#${config.id}`;
+  const pk = config.id;
 
   try {
     const cached = await docClient.send(new GetCommand({ TableName: CACHE_TABLE, Key: { pk } }));
