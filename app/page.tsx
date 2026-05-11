@@ -205,29 +205,29 @@ export default function Home() {
               <button
                 key={idx.value}
                 onClick={() => { setIndex(idx.value); setSectors([]); }}
-                className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
                   index === idx.value
                     ? "bg-emerald-500 text-white shadow"
                     : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
                 {idx.label}
+                <InfoTooltip element="span">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{idx.description}</p>
+                  <a
+                    href={idx.wikiUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                  >
+                    Read more on Wikipedia ↗
+                  </a>
+                </InfoTooltip>
               </button>
             ))}
           </div>
-          <InfoTooltip>
-            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
-            <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{currentIndex.label}</p>
-            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{currentIndex.description}</p>
-            <a
-              href={currentIndex.wikiUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
-            >
-              Read more on Wikipedia ↗
-            </a>
-          </InfoTooltip>
         </div>
 
         {/* Time range selector */}

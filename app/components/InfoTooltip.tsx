@@ -5,10 +5,11 @@ import { useRef, useState } from "react";
 interface Props {
   children: React.ReactNode;
   width?: string;
+  element?: "button" | "span";
 }
 
-export default function InfoTooltip({ children, width = "w-96" }: Props) {
-  const ref = useRef<HTMLButtonElement>(null);
+export default function InfoTooltip({ children, width = "w-96", element = "button" }: Props) {
+  const ref = useRef<HTMLButtonElement | HTMLSpanElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -21,9 +22,10 @@ export default function InfoTooltip({ children, width = "w-96" }: Props) {
     hideTimer.current = setTimeout(() => setRect(null), 150);
   }
 
+  const Tag = element;
   return (
-    <button
-      ref={ref}
+    <Tag
+      ref={ref as never}
       onMouseEnter={show}
       onMouseLeave={hide}
       className="flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:border-gray-400 dark:hover:border-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -46,6 +48,6 @@ export default function InfoTooltip({ children, width = "w-96" }: Props) {
           {children}
         </div>
       )}
-    </button>
+    </Tag>
   );
 }
