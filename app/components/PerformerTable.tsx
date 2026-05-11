@@ -2,6 +2,7 @@
 
 import type { StockResult } from "@/lib/polygon";
 import InfoTooltip from "./InfoTooltip";
+import TickerTooltip from "./TickerTooltip";
 
 interface Props {
   title: string;
@@ -77,7 +78,9 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas }
                   className="border-b border-gray-100 dark:border-gray-800/50 bg-white dark:bg-gray-900/30 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                 >
                   <td className="px-3 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
-                  <td className="px-3 py-3 font-bold text-gray-900 dark:text-white">{stock.ticker}</td>
+                  <td className="px-3 py-3 font-bold text-gray-900 dark:text-white">
+                    <TickerTooltip ticker={stock.ticker} />
+                  </td>
                   <td className="px-3 py-3 text-gray-500 dark:text-gray-300 max-w-[140px] truncate hidden lg:table-cell">
                     {stock.name}
                   </td>

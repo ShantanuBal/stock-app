@@ -1,16 +1,16 @@
 {
   "version": "53.0.0",
   "files": {
-    "4b13cb1549db8b72798dcac0b5969c7f002ab636ae5b677a746c328d2f0a4c2d": {
+    "8769db33c9d36cec9cb47d16bf490a6b14b45e58b0921907fa23e8efbd5cee3b": {
       "displayName": "StockAppStack Template",
       "source": {
         "path": "StockAppStack.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "228130335524-us-west-2-d84abb5f": {
+        "228130335524-us-west-2-e31acf49": {
           "bucketName": "cdk-hnb659fds-assets-228130335524-us-west-2",
-          "objectKey": "4b13cb1549db8b72798dcac0b5969c7f002ab636ae5b677a746c328d2f0a4c2d.json",
+          "objectKey": "8769db33c9d36cec9cb47d16bf490a6b14b45e58b0921907fa23e8efbd5cee3b.json",
           "region": "us-west-2",
           "assumeRoleArn": "arn:${AWS::Partition}:iam::228130335524:role/cdk-hnb659fds-file-publishing-role-228130335524-us-west-2"
         }

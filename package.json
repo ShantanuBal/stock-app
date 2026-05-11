@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "backfill": "tsx --env-file=.env.local scripts/backfill.ts"
+    "backfill": "tsx --env-file=.env.local scripts/backfill.ts",
+    "backfill:details": "tsx --env-file=.env.local scripts/backfill-ticker-details.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",

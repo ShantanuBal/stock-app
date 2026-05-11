@@ -32,12 +32,21 @@ export class StockAppStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
+    const tickerDetailsTable = new dynamodb.Table(this, "TickerDetails", {
+      tableName: "TickerDetails",
+      partitionKey: { name: "ticker", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      timeToLiveAttribute: "ttl",
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
     // IAM user whose credentials will be stored as Vercel environment variables
     const appUser = new iam.User(this, "StockAppUser", {
       userName: "stock-app-vercel",
     });
     table.grantReadWriteData(appUser);
     summariesTable.grantReadWriteData(appUser);
+    tickerDetailsTable.grantReadWriteData(appUser);
 
     const accessKey = new iam.CfnAccessKey(this, "StockAppAccessKey", {
       userName: appUser.userName,
