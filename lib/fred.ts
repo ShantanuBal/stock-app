@@ -110,6 +110,19 @@ export const INDICATOR_CONFIGS: IndicatorConfig[] = [
     },
   },
   {
+    id: "T10Y2Y",
+    label: "Yield Curve (10Y–2Y)",
+    unitDisplay: "percentage points",
+    framing: "positive",
+    changeLabel: "vs prev month",
+    fetchLimit: 24,
+    tooltip: {
+      what: "The difference between the 10-year and 2-year US Treasury yields. When positive, long-term rates are higher than short-term — the normal state. When negative, the curve is 'inverted.'",
+      why: "An inverted yield curve (below 0) has preceded every US recession since the 1950s, typically by 6–18 months. It signals that investors expect the economy to weaken and the Fed to cut rates in the future. Banks also borrow short and lend long, so inversion squeezes their margins and reduces lending.",
+      good: "Positive means the curve is normal and healthy. A deeply negative reading (below -0.5) is a strong recession warning. The curve re-steepening after an inversion — especially turning positive again — has historically signaled the recession is near or already underway.",
+    },
+  },
+  {
     id: "UMCSENT",
     label: "Consumer Sentiment",
     unitDisplay: "index (1966=100)",

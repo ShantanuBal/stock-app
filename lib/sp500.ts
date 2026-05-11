@@ -145,7 +145,7 @@ export const TICKER_NAMES: Record<string, string> = {
   XEL: "Xcel Energy", XYL: "Xylem", YUM: "Yum! Brands", ZBRA: "Zebra Technologies", ZBH: "Zimmer Biomet", ZTS: "Zoetis",
 };
 
-export const TICKER_SECTORS: Record<string, string> = {
+export const SP500_SECTORS: Record<string, string> = {
   MMM: "Capital Goods", AOS: "Capital Goods", ABT: "Health Services", ABBV: "Pharma & Biotech",
   ACN: "Software", ADBE: "Software", AMD: "Semiconductors", AES: "Utilities",
   AFL: "Insurance", A: "Health Services", APD: "Materials", ABNB: "Consumer Services",

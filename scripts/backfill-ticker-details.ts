@@ -7,7 +7,7 @@
  *   npm run backfill:details
  */
 
-import { TICKER_SECTORS } from "../lib/sp500";
+import { SP500_SECTORS } from "../lib/sp500";
 import { NASDAQ100_SECTORS } from "../lib/nasdaq100";
 import { DJIA_SECTORS } from "../lib/djia";
 import { RUSSELL2000_SECTORS } from "../lib/russell2000";
@@ -22,7 +22,7 @@ function sleep(ms: number) {
 function uniqueTickers(): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
-  const sources = [TICKER_SECTORS, NASDAQ100_SECTORS, DJIA_SECTORS, RUSSELL2000_SECTORS];
+  const sources = [SP500_SECTORS, NASDAQ100_SECTORS, DJIA_SECTORS, RUSSELL2000_SECTORS];
   for (const source of sources) {
     for (const ticker of Object.keys(source)) {
       if (!seen.has(ticker)) {

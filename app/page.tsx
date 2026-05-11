@@ -6,7 +6,7 @@ import IndexChart, { type ChartData } from "./components/IndexChart";
 import InfoTooltip from "./components/InfoTooltip";
 import PerformerTable from "./components/PerformerTable";
 import type { StockResult } from "@/lib/polygon";
-import { TICKER_SECTORS } from "@/lib/sp500";
+import { SP500_SECTORS } from "@/lib/sp500";
 import { NASDAQ100_SECTORS } from "@/lib/nasdaq100";
 import { DJIA_SECTORS } from "@/lib/djia";
 import { RUSSELL2000_SECTORS } from "@/lib/russell2000";
@@ -122,7 +122,7 @@ export default function Home() {
   const loading = topStocks === null || isPending;
 
   const sectorMap = useMemo<Record<string, string>>(() => ({
-    sp500: TICKER_SECTORS,
+    sp500: SP500_SECTORS,
     nasdaq100: NASDAQ100_SECTORS,
     djia: DJIA_SECTORS,
     russell2000: RUSSELL2000_SECTORS,

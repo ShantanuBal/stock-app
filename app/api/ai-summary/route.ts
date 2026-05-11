@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getCachedSummary, saveSummary } from "@/lib/ai-summaries";
-import { TICKER_SECTORS } from "@/lib/sp500";
+import { SP500_SECTORS } from "@/lib/sp500";
 import { NASDAQ100_SECTORS } from "@/lib/nasdaq100";
 import { DJIA_SECTORS } from "@/lib/djia";
 import { RUSSELL2000_SECTORS } from "@/lib/russell2000";
@@ -11,7 +11,7 @@ import type { StockResult } from "@/lib/polygon";
 const client = new Anthropic();
 
 const SECTOR_MAPS: Record<IndexKey, Record<string, string>> = {
-  sp500: TICKER_SECTORS,
+  sp500: SP500_SECTORS,
   nasdaq100: NASDAQ100_SECTORS,
   djia: DJIA_SECTORS,
   russell2000: RUSSELL2000_SECTORS,
