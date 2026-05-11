@@ -35,7 +35,7 @@ export default function TickerTooltip({ ticker }: { ticker: string }) {
       </span>
       {rect && (
         <div
-          className="fixed z-50 w-96 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-left shadow-xl font-normal normal-case tracking-normal"
+          className="fixed z-50 w-96 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-left shadow-xl font-normal normal-case tracking-normal font-[family-name:var(--font-inter)]"
           style={{ top: rect.bottom + 8, left: rect.left }}
           onMouseEnter={show}
           onMouseLeave={hide}

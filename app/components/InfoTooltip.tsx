@@ -34,7 +34,7 @@ export default function InfoTooltip({ children, width = "w-96" }: Props) {
       </svg>
       {rect && (
         <div
-          className={`fixed z-50 ${width} max-h-[70vh] overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-left shadow-xl font-normal normal-case tracking-normal text-gray-900 dark:text-white`}
+          className={`fixed z-50 ${width} max-h-[70vh] overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-left shadow-xl font-normal normal-case tracking-normal text-gray-900 dark:text-white font-[family-name:var(--font-inter)]`}
           style={
             rect.bottom > window.innerHeight * 0.65
               ? { bottom: window.innerHeight - rect.top + 8, left: Math.min(rect.left, window.innerWidth - 384 - 8) }
