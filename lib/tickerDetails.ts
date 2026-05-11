@@ -16,15 +16,25 @@ export interface TickerDetails {
 
 export async function getTickerDetails(ticker: string): Promise<TickerDetails | null> {
   const cached = await dynamo.send(new GetCommand({ TableName: TABLE, Key: { ticker } }));
-  if (cached.Item?.description) return cached.Item as TickerDetails;
+  if (cached.Item?.description) {
+    console.log(`[ticker-details] ${ticker} — served from DynamoDB cache`);
+    return cached.Item as TickerDetails;
+  }
 
+  console.log(`[ticker-details] ${ticker} — not in cache, fetching from Polygon`);
   const res = await fetch(
     `https://api.polygon.io/v3/reference/tickers/${ticker}?apiKey=${process.env.POLYGON_API_KEY}`
   );
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.log(`[ticker-details] ${ticker} — Polygon returned ${res.status}`);
+    return null;
+  }
 
   const { results } = await res.json();
-  if (!results?.description) return null;
+  if (!results?.description) {
+    console.log(`[ticker-details] ${ticker} — no description in Polygon response`);
+    return null;
+  }
 
   const details: TickerDetails = {
     ticker,
@@ -35,6 +45,7 @@ export async function getTickerDetails(ticker: string): Promise<TickerDetails | 
 
   const ttl = Math.floor(Date.now() / 1000) + TTL_DAYS * 24 * 60 * 60;
   await dynamo.send(new PutCommand({ TableName: TABLE, Item: { ...details, ttl } }));
+  console.log(`[ticker-details] ${ticker} — fetched from Polygon and cached in DynamoDB`);
 
   return details;
 }
