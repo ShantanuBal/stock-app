@@ -46,6 +46,7 @@ function getTradingDays(count: number): string[] {
       }
     } catch (err) {
       console.log(`ERROR: ${err}`);
+      await sleep(DELAY_MS);
     }
   }
 
