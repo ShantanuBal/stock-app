@@ -59,23 +59,19 @@ export default function IndicatorCard({ config, result }: Props) {
         <span className="text-xs text-gray-400 dark:text-gray-600">{lastDate}</span>
       </div>
 
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
-            {result.value.toFixed(result.value < 100 ? 2 : 1)}
-            <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">{config.unitDisplay}</span>
-          </p>
-          <div className="mt-1.5 flex items-center gap-2">
-            <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${badge.color}`}>
-              {badge.label}
-            </span>
-            <span className="text-xs text-gray-400 dark:text-gray-600">{config.changeLabel}</span>
-          </div>
-        </div>
-        <div className="w-28 shrink-0">
-          <Sparkline points={result.points} color={color} />
+      <div className="mb-3">
+        <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
+          {result.value.toFixed(result.value < 100 ? 2 : 1)}
+          <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">{config.unitDisplay}</span>
+        </p>
+        <div className="mt-1.5 flex items-center gap-2">
+          <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${badge.color}`}>
+            {badge.label}
+          </span>
+          <span className="text-xs text-gray-400 dark:text-gray-600">{config.changeLabel}</span>
         </div>
       </div>
+      <Sparkline points={result.points} color={color} />
     </div>
   );
 }

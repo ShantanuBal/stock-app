@@ -382,22 +382,6 @@ export default function Home() {
           Data from Polygon.io · EOD prices
         </p>
 
-        <div className="mt-12 border-t border-gray-200 dark:border-gray-800 pt-6 text-center text-xs text-gray-400 dark:text-gray-500">
-          <p>
-            Built by{" "}
-            <span className="text-gray-700 dark:text-gray-300 font-medium">Shantanu Bal</span>
-            {" "}with a mission to make financial markets accessible to everyone
-          </p>
-          <p className="mt-1">
-            Questions or feedback?{" "}
-            <a
-              href="mailto:shantanu.r.bal@gmail.com"
-              className="text-emerald-500 hover:text-emerald-400 transition-colors"
-            >
-              shantanu.r.bal@gmail.com
-            </a>
-          </p>
-        </div>
     </div>
   );
 }
