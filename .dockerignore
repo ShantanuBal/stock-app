@@ -1,0 +1,8 @@
+.next
+node_modules
+cdk
+.git
+.env*
+*.md
+app
+public

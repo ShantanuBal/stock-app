@@ -5,7 +5,6 @@ const dynamo = DynamoDBDocumentClient.from(
   new DynamoDBClient({ region: process.env.AWS_REGION ?? "us-east-1" })
 );
 const TABLE = process.env.TICKER_DETAILS_TABLE_NAME!;
-const TTL_DAYS = 30;
 
 export interface TickerDetails {
   ticker: string;
@@ -43,9 +42,28 @@ export async function getTickerDetails(ticker: string): Promise<TickerDetails | 
     homepageUrl: results.homepage_url ?? "",
   };
 
-  const ttl = Math.floor(Date.now() / 1000) + TTL_DAYS * 24 * 60 * 60;
-  await dynamo.send(new PutCommand({ TableName: TABLE, Item: { ...details, ttl } }));
+  await dynamo.send(new PutCommand({ TableName: TABLE, Item: details }));
   console.log(`[ticker-details] ${ticker} — fetched from Polygon and cached in DynamoDB`);
 
+  return details;
+}
+
+export async function refreshTickerDetails(ticker: string): Promise<TickerDetails | null> {
+  const res = await fetch(
+    `https://api.polygon.io/v3/reference/tickers/${ticker}?apiKey=${process.env.POLYGON_API_KEY}`
+  );
+  if (!res.ok) return null;
+
+  const { results } = await res.json();
+  if (!results?.description) return null;
+
+  const details: TickerDetails = {
+    ticker,
+    name: results.name ?? ticker,
+    description: results.description,
+    homepageUrl: results.homepage_url ?? "",
+  };
+
+  await dynamo.send(new PutCommand({ TableName: TABLE, Item: details }));
   return details;
 }
