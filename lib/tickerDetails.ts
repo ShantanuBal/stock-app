@@ -12,6 +12,7 @@ export interface TickerDetails {
   description: string;
   homepageUrl: string;
   sharesOutstanding?: number;
+  weightedSharesOutstanding?: number;
 }
 
 export async function getTickerDetails(ticker: string): Promise<TickerDetails | null> {
@@ -42,6 +43,7 @@ export async function getTickerDetails(ticker: string): Promise<TickerDetails | 
     description: results.description,
     homepageUrl: results.homepage_url ?? "",
     sharesOutstanding: results.share_class_shares_outstanding ?? undefined,
+    weightedSharesOutstanding: results.weighted_shares_outstanding ?? undefined,
   };
 
   await dynamo.send(new PutCommand({ TableName: TABLE, Item: details }));
@@ -65,6 +67,7 @@ export async function refreshTickerDetails(ticker: string): Promise<TickerDetail
     description: results.description,
     homepageUrl: results.homepage_url ?? "",
     sharesOutstanding: results.share_class_shares_outstanding ?? undefined,
+    weightedSharesOutstanding: results.weighted_shares_outstanding ?? undefined,
   };
 
   await dynamo.send(new PutCommand({ TableName: TABLE, Item: details }));

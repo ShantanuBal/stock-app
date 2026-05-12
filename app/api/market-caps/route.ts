@@ -20,27 +20,30 @@ export async function POST(req: NextRequest) {
       chunks.push(tickers.slice(i, i + 100));
     }
 
-    const results: Record<string, number | null> = {};
+    const results: Record<string, { weighted: number | null; shares: number | null }> = {};
     for (const chunk of chunks) {
       const res = await dynamo.send(new BatchGetCommand({
         RequestItems: {
           [TABLE]: {
             Keys: chunk.map((ticker) => ({ ticker })),
-            ProjectionExpression: "ticker, sharesOutstanding",
+            ProjectionExpression: "ticker, sharesOutstanding, weightedSharesOutstanding",
           },
         },
       }));
       for (const item of res.Responses?.[TABLE] ?? []) {
-        results[item.ticker] = item.sharesOutstanding ?? null;
+        results[item.ticker] = {
+          weighted: item.weightedSharesOutstanding ?? null,
+          shares: item.sharesOutstanding ?? null,
+        };
       }
     }
 
     // Fill in nulls for any tickers not found
     for (const ticker of tickers) {
-      if (!(ticker in results)) results[ticker] = null;
+      if (!(ticker in results)) results[ticker] = { weighted: null, shares: null };
     }
 
-    return NextResponse.json({ sharesOutstanding: results });
+    return NextResponse.json({ marketCapShares: results });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Failed to fetch market caps" }, { status: 500 });

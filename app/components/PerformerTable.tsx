@@ -14,7 +14,7 @@ interface Props {
   stocks: StockResult[];
   sectors?: Record<string, string>;
   betas?: Record<string, number | null>;
-  sharesOutstanding?: Record<string, number | null>;
+  marketCapShares?: Record<string, { weighted: number | null; shares: number | null }>;
 }
 
 function formatVolume(v: number): string {
@@ -99,10 +99,11 @@ function SimpleColHeader({
   );
 }
 
-export default function PerformerTable({ title, accent, stocks, sectors, betas, sharesOutstanding }: Props) {
+export default function PerformerTable({ title, accent, stocks, sectors, betas, marketCapShares }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const [sortCol, setSortCol] = useState<SortCol | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [visibleCount, setVisibleCount] = useState(30);
 
   function handleSort(col: SortCol) {
     if (sortCol === col) {
@@ -125,17 +126,19 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
         av = betas?.[a.ticker] ?? null;
         bv = betas?.[b.ticker] ?? null;
       } else if (sortCol === "marketCap") {
-        const sa = sharesOutstanding?.[a.ticker];
-        const sb = sharesOutstanding?.[b.ticker];
-        av = sa != null ? sa * a.price : null;
-        bv = sb != null ? sb * b.price : null;
+        const da = marketCapShares?.[a.ticker];
+        const db = marketCapShares?.[b.ticker];
+        av = da ? (da.weighted ?? da.shares) != null ? (da.weighted ?? da.shares)! * a.price : null : null;
+        bv = db ? (db.weighted ?? db.shares) != null ? (db.weighted ?? db.shares)! * b.price : null : null;
       }
       if (av == null && bv == null) return 0;
       if (av == null) return 1;
       if (bv == null) return -1;
       return sortDir === "desc" ? bv - av : av - bv;
     });
-  }, [stocks, sortCol, sortDir, betas, sharesOutstanding]);
+  }, [stocks, sortCol, sortDir, betas, marketCapShares]);
+
+  const visibleStocks = sortedStocks.slice(0, visibleCount);
 
   return (
     <div>
@@ -176,13 +179,14 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
             </tr>
           </thead>
           <tbody>
-            {sortedStocks.map((stock, i) => {
+            {visibleStocks.map((stock, i) => {
               const isPos = stock.changePercent >= 0;
               const color = isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
               const bg = isPos ? "bg-emerald-500/10" : "bg-red-500/10";
               const beta = betas?.[stock.ticker];
-              const shares = sharesOutstanding?.[stock.ticker];
-              const marketCap = shares != null ? shares * stock.price : null;
+              const capData = marketCapShares?.[stock.ticker];
+              const capShares = capData ? (capData.weighted ?? capData.shares) : null;
+              const marketCap = capShares != null ? capShares * stock.price : null;
               return (
                 <tr
                   key={stock.ticker}
@@ -207,7 +211,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                     </span>
                   </td>
                   <td className="px-3 py-3 text-right hidden xl:table-cell tabular-nums text-gray-600 dark:text-gray-300">
-                    {sharesOutstanding === undefined ? (
+                    {marketCapShares === undefined ? (
                       <span className="text-gray-300 dark:text-gray-600">···</span>
                     ) : marketCap == null ? (
                       <span className="text-gray-400 dark:text-gray-600">—</span>
@@ -233,6 +237,14 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
           </tbody>
         </table>
       </div>
+      {sortedStocks.length > visibleCount && (
+        <button
+          onClick={() => setVisibleCount((c) => c + 30)}
+          className="mt-3 w-full rounded-lg border border-gray-200 dark:border-gray-800 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          Show more ({sortedStocks.length - visibleCount} remaining)
+        </button>
+      )}
     </div>
   );
 }

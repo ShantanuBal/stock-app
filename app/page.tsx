@@ -106,7 +106,6 @@ export default function Home() {
   const [index, setIndex] = useState<IndexKey>("sp500");
   const [range, setRange] = useState<TimeRange>("1W");
   const [sectors, setSectors] = useState<string[]>([]);
-  const [visibleCount, setVisibleCount] = useState(30);
   // null = never loaded yet (show skeleton); [] = loaded but empty
   const [topStocks, setTopStocks] = useState<StockResult[] | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
@@ -116,7 +115,7 @@ export default function Home() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
-  const [sharesOutstanding, setSharesOutstanding] = useState<Record<string, number | null> | undefined>(undefined);
+  const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null }> | undefined>(undefined);
 
   const currentIndex = INDICES.find((i) => i.value === index)!;
   // Show skeleton on first load (null) or while a transition is in flight
@@ -144,7 +143,7 @@ export default function Home() {
   useEffect(() => {
     if (!topStocks || topStocks.length === 0) return;
     setBetas(undefined);
-    setSharesOutstanding(undefined);
+    setMarketCapShares(undefined);
     const tickers = topStocks.map((s) => s.ticker);
     const body = JSON.stringify({ tickers });
     fetch("/api/beta", {
@@ -161,8 +160,8 @@ export default function Home() {
       body,
     })
       .then((r) => r.json())
-      .then((d) => setSharesOutstanding(d.sharesOutstanding ?? {}))
-      .catch(() => setSharesOutstanding({}));
+      .then((d) => setMarketCapShares(d.marketCapShares ?? {}))
+      .catch(() => setMarketCapShares({}));
   }, [topStocks]);
 
   useEffect(() => {
@@ -199,7 +198,6 @@ export default function Home() {
         setTopStocks(stocksJson.all);
         setChartData(chartJson);
         setSectors([]);
-        setVisibleCount(30);
       } catch {
         setError("Could not load stock data. Please try again.");
         setTopStocks((prev) => prev ?? []);
@@ -338,7 +336,6 @@ export default function Home() {
                 <button
                   key={s}
                   onClick={() => {
-                    setVisibleCount(30);
                     if (isAll) { setSectors([]); return; }
                     setSectors((prev) => {
                       const next = prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s];
@@ -372,21 +369,14 @@ export default function Home() {
         ) : (
           <>
             <PerformerTable
+              key={`${index}-${range}-${sectors.join(",")}`}
               title="Companies"
               accent="emerald"
-              stocks={(filteredTop ?? []).slice(0, visibleCount)}
+              stocks={filteredTop ?? []}
               sectors={sectorMap}
               betas={betas}
-              sharesOutstanding={sharesOutstanding}
+              marketCapShares={marketCapShares}
             />
-            {(filteredTop ?? []).length > visibleCount && (
-              <button
-                onClick={() => setVisibleCount((c) => c + 30)}
-                className="mt-3 w-full rounded-lg border border-gray-200 dark:border-gray-800 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                Show more ({(filteredTop ?? []).length - visibleCount} remaining)
-              </button>
-            )}
           </>
         )}
 
