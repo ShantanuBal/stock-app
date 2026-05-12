@@ -7,6 +7,7 @@ import { useTheme } from "./ThemeProvider";
 const NAV_TABS = [
   { label: "Markets", href: "/" },
   { label: "Economy", href: "/economy" },
+  { label: "About", href: "/about" },
 ];
 
 export default function SiteHeader() {
@@ -18,8 +19,8 @@ export default function SiteHeader() {
     <div className="mb-8">
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Market Watch</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Clear market data and insights to help everyone make informed financial decisions</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Horizon</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Financial foresight for everyone</p>
         </div>
         <button
           onClick={toggle}

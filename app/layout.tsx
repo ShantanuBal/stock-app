@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Market Watch",
-  description: "Tracks market performance",
+  title: "Horizon",
+  description: "Financial foresight for everyone — track markets, the economy, and more.",
 };
 
 export default function RootLayout({
@@ -40,15 +40,17 @@ export default function RootLayout({
             <SiteHeader />
             {children}
             <div className="mt-12 border-t border-gray-200 dark:border-gray-800 pt-6 text-center text-xs text-gray-400 dark:text-gray-500">
+              <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">Horizon</p>
               <p>
                 Built by{" "}
-                <span className="text-gray-700 dark:text-gray-300 font-medium">Shantanu Bal</span>
-                {" "}with a mission to make financial markets accessible to everyone
-              </p>
-              <p className="mt-1">
-                Questions or feedback?{" "}
+                <span className="text-gray-600 dark:text-gray-400 font-medium">Shantanu Bal</span>
+                {" "}·{" "}
                 <a href="mailto:shantanu.r.bal@gmail.com" className="text-emerald-500 hover:text-emerald-400 transition-colors">
                   shantanu.r.bal@gmail.com
+                </a>
+                {" "}·{" "}
+                <a href="/about" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                  About
                 </a>
               </p>
             </div>
