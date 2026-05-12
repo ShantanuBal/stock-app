@@ -109,7 +109,11 @@ export class StockAppStack extends cdk.Stack {
       "polygon-api-key"
     );
 
-    const vpc = ec2.Vpc.fromLookup(this, "DefaultVpc", { isDefault: true });
+    const vpc = ec2.Vpc.fromVpcAttributes(this, "DefaultVpc", {
+      vpcId: "vpc-dcaf7cb9",
+      availabilityZones: ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"],
+      publicSubnetIds: ["subnet-13e24b76", "subnet-1778b460", "subnet-c1f81498", "subnet-b467349c"],
+    });
 
     const cluster = new ecs.Cluster(this, "RefreshCluster", {
       clusterName: "ticker-refresh",
