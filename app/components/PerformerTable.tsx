@@ -10,6 +10,7 @@ interface Props {
   stocks: StockResult[];
   sectors?: Record<string, string>;
   betas?: Record<string, number | null>;
+  sharesOutstanding?: Record<string, number | null>;
 }
 
 function formatVolume(v: number): string {
@@ -17,6 +18,12 @@ function formatVolume(v: number): string {
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
   return v.toString();
+}
+
+function formatMarketCap(v: number): string {
+  if (v >= 1_000_000_000_000) return `$${(v / 1_000_000_000_000).toFixed(2)}T`;
+  if (v >= 1_000_000_000) return `$${(v / 1_000_000_000).toFixed(1)}B`;
+  return `$${(v / 1_000_000).toFixed(0)}M`;
 }
 
 function ColHeader({ label, children }: { label: string; children: React.ReactNode }) {
@@ -30,7 +37,7 @@ function ColHeader({ label, children }: { label: string; children: React.ReactNo
   );
 }
 
-export default function PerformerTable({ title, accent, stocks, sectors, betas }: Props) {
+export default function PerformerTable({ title, accent, stocks, sectors, betas, sharesOutstanding }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
 
   return (
@@ -48,6 +55,11 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas }
               <th className="px-3 py-3 text-left hidden xl:table-cell">Industry</th>
               <th className="px-3 py-3 text-right">Price</th>
               <th className="px-3 py-3 text-right">% Change</th>
+              <ColHeader label="Mkt Cap">
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                  Market capitalisation — the total value of all outstanding shares at the current price. Calculated as share price × shares outstanding.
+                </p>
+              </ColHeader>
               <ColHeader label="Beta">
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                   Beta measures how volatile a stock is relative to the overall market (S&P 500).
@@ -72,6 +84,8 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas }
               const color = isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
               const bg = isPos ? "bg-emerald-500/10" : "bg-red-500/10";
               const beta = betas?.[stock.ticker];
+              const shares = sharesOutstanding?.[stock.ticker];
+              const marketCap = shares != null ? shares * stock.price : null;
               return (
                 <tr
                   key={stock.ticker}
@@ -94,6 +108,15 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas }
                     <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs ${bg}`}>
                       {isPos ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%
                     </span>
+                  </td>
+                  <td className="px-3 py-3 text-right hidden xl:table-cell tabular-nums text-gray-600 dark:text-gray-300">
+                    {sharesOutstanding === undefined ? (
+                      <span className="text-gray-300 dark:text-gray-600">···</span>
+                    ) : marketCap == null ? (
+                      <span className="text-gray-400 dark:text-gray-600">—</span>
+                    ) : (
+                      formatMarketCap(marketCap)
+                    )}
                   </td>
                   <td className="px-3 py-3 text-right hidden xl:table-cell tabular-nums text-gray-600 dark:text-gray-300">
                     {betas === undefined ? (

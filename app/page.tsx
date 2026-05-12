@@ -116,6 +116,7 @@ export default function Home() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
+  const [sharesOutstanding, setSharesOutstanding] = useState<Record<string, number | null> | undefined>(undefined);
 
   const currentIndex = INDICES.find((i) => i.value === index)!;
   // Show skeleton on first load (null) or while a transition is in flight
@@ -143,15 +144,25 @@ export default function Home() {
   useEffect(() => {
     if (!topStocks || topStocks.length === 0) return;
     setBetas(undefined);
+    setSharesOutstanding(undefined);
     const tickers = topStocks.map((s) => s.ticker);
+    const body = JSON.stringify({ tickers });
     fetch("/api/beta", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tickers }),
+      body,
     })
       .then((r) => r.json())
       .then((d) => setBetas(d.betas ?? {}))
       .catch(() => setBetas({}));
+    fetch("/api/market-caps", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    })
+      .then((r) => r.json())
+      .then((d) => setSharesOutstanding(d.sharesOutstanding ?? {}))
+      .catch(() => setSharesOutstanding({}));
   }, [topStocks]);
 
   useEffect(() => {
@@ -366,6 +377,7 @@ export default function Home() {
               stocks={(filteredTop ?? []).slice(0, visibleCount)}
               sectors={sectorMap}
               betas={betas}
+              sharesOutstanding={sharesOutstanding}
             />
             {(filteredTop ?? []).length > visibleCount && (
               <button
