@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
   };
 
   if (!VALID_INDICES.includes(index) || !VALID_RANGES.includes(range)) {
+    console.error(`AI summary: invalid params — index=${index}, range=${range}`);
     return NextResponse.json({ error: "Invalid params" }, { status: 400 });
   }
 
