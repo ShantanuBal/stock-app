@@ -30,11 +30,13 @@ const RANGE_LABELS: Record<string, string> = {
   "1W": "1 week",
   "1M": "1 month",
   "3M": "3 months",
+  "6M": "6 months",
+  "1Y": "1 year",
   "YTD": "year to date",
 };
 
 const VALID_INDICES: IndexKey[] = ["sp500", "nasdaq100", "djia", "russell2000"];
-const VALID_RANGES = ["1D", "3D", "1W", "1M", "3M", "YTD"];
+const VALID_RANGES = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "YTD"];
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
