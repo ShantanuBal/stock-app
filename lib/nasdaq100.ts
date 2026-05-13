@@ -1,5 +1,5 @@
 export const NASDAQ100_TICKERS = [
-  "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "GOOG", "TSLA", "AVGO", "COST",
+  "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "TSLA", "AVGO", "COST",
   "NFLX", "AMD", "ADBE", "ASML", "PEP", "CSCO", "INTU", "CMCSA", "TXN", "AMGN",
   "QCOM", "HON", "AMAT", "ISRG", "BKNG", "VRTX", "ADP", "GILD", "MDLZ", "ADI",
   "PANW", "REGN", "MU", "LRCX", "SNPS", "KLAC", "CRWD", "MELI", "CDNS", "ORLY",
@@ -13,7 +13,7 @@ export const NASDAQ100_TICKERS = [
 
 export const NASDAQ100_NAMES: Record<string, string> = {
   AAPL: "Apple", MSFT: "Microsoft", NVDA: "NVIDIA", AMZN: "Amazon", META: "Meta Platforms",
-  GOOGL: "Alphabet A", GOOG: "Alphabet C", TSLA: "Tesla", AVGO: "Broadcom", COST: "Costco",
+  GOOGL: "Alphabet A", TSLA: "Tesla", AVGO: "Broadcom", COST: "Costco",
   NFLX: "Netflix", AMD: "Advanced Micro Devices", ADBE: "Adobe", ASML: "ASML Holding",
   PEP: "PepsiCo", CSCO: "Cisco", INTU: "Intuit", CMCSA: "Comcast", TXN: "Texas Instruments",
   AMGN: "Amgen", QCOM: "Qualcomm", HON: "Honeywell", AMAT: "Applied Materials",
@@ -41,7 +41,7 @@ export const NASDAQ100_NAMES: Record<string, string> = {
 
 export const NASDAQ100_SECTORS: Record<string, string> = {
   AAPL: "Tech Hardware", MSFT: "Software", NVDA: "Semiconductors", AMZN: "Retail",
-  META: "Media", GOOGL: "Media", GOOG: "Media", TSLA: "Consumer Goods", AVGO: "Semiconductors",
+  META: "Media", GOOGL: "Media", TSLA: "Consumer Goods", AVGO: "Semiconductors",
   COST: "Food & Beverage", NFLX: "Media", AMD: "Semiconductors", ADBE: "Software",
   ASML: "Semiconductors", PEP: "Food & Beverage", CSCO: "Tech Hardware", INTU: "Software",
   CMCSA: "Telecom", TXN: "Semiconductors", AMGN: "Pharma & Biotech", QCOM: "Semiconductors",
