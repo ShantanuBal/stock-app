@@ -7,6 +7,11 @@ import { useTheme } from "./ThemeProvider";
 const NAV_TABS = [
   { label: "Markets", href: "/" },
   { label: "Economy", href: "/economy" },
+  { label: "Futures", href: "/futures" },
+  { label: "Currencies", href: "/currencies" },
+  { label: "Options", href: "/options" },
+  { label: "Fixed Income", href: "/bonds" },
+  { label: "Global", href: "/global" },
   { label: "About", href: "/about" },
 ];
 
@@ -47,14 +52,14 @@ export default function SiteHeader() {
         </button>
       </div>
 
-      <div className="flex gap-1 rounded-xl bg-gray-100 dark:bg-gray-900 p-1 w-fit">
+      <div className="flex gap-1 rounded-xl bg-gray-100 dark:bg-gray-900 p-1 w-fit max-w-full overflow-x-auto scrollbar-hide">
         {NAV_TABS.map((tab) => {
           const isActive = pathname === tab.href;
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+              className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                 isActive
                   ? "bg-emerald-500 text-white shadow"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
