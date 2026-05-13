@@ -14,7 +14,7 @@ const INDEX_DATA: Record<IndexKey, { tickers: string[]; names: Record<string, st
   russell2000: { tickers: RUSSELL2000_TICKERS, names: RUSSELL2000_NAMES },
 };
 
-const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "YTD"];
+const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "YTD"];
 const VALID_INDICES = Object.keys(INDEX_DATA) as IndexKey[];
 
 export async function GET(req: NextRequest) {
