@@ -17,6 +17,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Horizon",
   description: "Financial foresight for everyone — track markets, the economy, and more.",
+  openGraph: {
+    title: "Horizon",
+    description: "Financial foresight for everyone — track markets, the economy, and more.",
+    url: "https://stock-app-one-khaki.vercel.app",
+    siteName: "Horizon",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Horizon",
+    description: "Financial foresight for everyone — track markets, the economy, and more.",
+  },
 };
 
 export default function RootLayout({
