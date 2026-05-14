@@ -205,6 +205,85 @@ export class StockAppStack extends cdk.Stack {
 
     failureAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alertTopic));
 
+    // ── Dashboard ─────────────────────────────────────────────────────────────
+
+    const refreshedMetric = new cloudwatch.Metric({
+      namespace: "Horizon/TickerRefresh",
+      metricName: "TickersRefreshed",
+      statistic: "Sum",
+      period: cdk.Duration.days(1),
+    });
+
+    const errorsMetric = new cloudwatch.Metric({
+      namespace: "Horizon/TickerRefresh",
+      metricName: "TickerErrors",
+      statistic: "Sum",
+      period: cdk.Duration.days(1),
+    });
+
+    const durationMetric = new cloudwatch.Metric({
+      namespace: "Horizon/TickerRefresh",
+      metricName: "RunDuration",
+      statistic: "Average",
+      period: cdk.Duration.days(1),
+    });
+
+    const dashboard = new cloudwatch.Dashboard(this, "RefreshDashboard", {
+      dashboardName: "Horizon-TickerRefresh",
+    });
+
+    dashboard.addWidgets(
+      new cloudwatch.SingleValueWidget({
+        title: "Last Run — Tickers Refreshed",
+        metrics: [refreshedMetric],
+        width: 8,
+        height: 3,
+      }),
+      new cloudwatch.SingleValueWidget({
+        title: "Last Run — Errors",
+        metrics: [errorsMetric],
+        width: 8,
+        height: 3,
+      }),
+      new cloudwatch.SingleValueWidget({
+        title: "Last Run — Duration (seconds)",
+        metrics: [durationMetric],
+        width: 8,
+        height: 3,
+      }),
+    );
+
+    dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: "Tickers Refreshed (daily)",
+        left: [refreshedMetric],
+        width: 12,
+        height: 6,
+        leftYAxis: { min: 0 },
+      }),
+      new cloudwatch.GraphWidget({
+        title: "Errors & Duration (daily)",
+        left: [errorsMetric],
+        right: [durationMetric],
+        width: 12,
+        height: 6,
+        leftYAxis: { min: 0 },
+      }),
+    );
+
+    dashboard.addWidgets(
+      new cloudwatch.AlarmWidget({
+        title: "Job Failed Alarm",
+        alarm: failureAlarm,
+        width: 24,
+        height: 4,
+      }),
+    );
+
+    new cdk.CfnOutput(this, "DashboardUrl", {
+      value: `https://${this.region}.console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=Horizon-TickerRefresh`,
+    });
+
     // ── Outputs ────────────────────────────────────────────────────────────────
 
     new cdk.CfnOutput(this, "TableName", { value: table.tableName });
