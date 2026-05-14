@@ -61,7 +61,7 @@ function ColHeader({
 }) {
   const isActive = sortCol === col;
   return (
-    <th className={`px-3 py-3 text-${align} hidden xl:table-cell`}>
+    <th className={`px-3 py-3 text-${align}`}>
       <span className={`inline-flex items-center justify-end gap-1`}>
         <button
           onClick={() => onSort(col)}
@@ -177,14 +177,14 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
           )}
         </div>
       </div>
-      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+        <table className="w-full min-w-[800px] text-sm">
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
               <th className="px-3 py-3 text-left w-7">#</th>
               <th className="px-3 py-3 text-left">Ticker</th>
-              <th className="px-3 py-3 text-left hidden lg:table-cell">Company</th>
-              <th className="px-3 py-3 text-left hidden xl:table-cell">Industry</th>
+              <th className="px-3 py-3 text-left">Company</th>
+              <th className="px-3 py-3 text-left">Industry</th>
               <SimpleColHeader label="Price" col="price" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               <SimpleColHeader label="% Change" col="change" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               <ColHeader label="Mkt Cap" col="marketCap" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
@@ -252,10 +252,10 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                       initialRange={range}
                     />
                   </td>
-                  <td className="px-3 py-3 text-gray-500 dark:text-gray-300 max-w-[140px] truncate hidden lg:table-cell">
+                  <td className="px-3 py-3 text-gray-500 dark:text-gray-300 max-w-[140px] truncate">
                     {stock.name}
                   </td>
-                  <td className="px-3 py-3 text-gray-500 dark:text-gray-400 max-w-[140px] truncate hidden xl:table-cell text-xs">
+                  <td className="px-3 py-3 text-gray-500 dark:text-gray-400 max-w-[140px] truncate text-xs">
                     {sectors?.[stock.ticker] ?? "—"}
                   </td>
                   <td className="px-3 py-3 text-right text-gray-900 dark:text-white tabular-nums">
@@ -266,7 +266,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                       {isPos ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-right hidden xl:table-cell tabular-nums text-gray-600 dark:text-gray-300">
+                  <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
                     {marketCapShares === undefined ? (
                       <span className="text-gray-300 dark:text-gray-600">···</span>
                     ) : marketCap == null ? (
@@ -275,7 +275,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                       formatMarketCap(marketCap)
                     )}
                   </td>
-                  <td className="px-3 py-3 text-right hidden xl:table-cell tabular-nums text-gray-600 dark:text-gray-300">
+                  <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
                     {marketCapShares === undefined ? (
                       <span className="text-gray-300 dark:text-gray-600">···</span>
                     ) : pe == null ? (
@@ -286,7 +286,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                       <span>{pe.toFixed(1)}x</span>
                     )}
                   </td>
-                  <td className="px-3 py-3 text-right hidden xl:table-cell tabular-nums text-gray-600 dark:text-gray-300">
+                  <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
                     {betas === undefined ? (
                       <span className="text-gray-300 dark:text-gray-600">···</span>
                     ) : beta === null || beta === undefined ? (
@@ -295,7 +295,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                       beta.toFixed(2)
                     )}
                   </td>
-                  <td className="px-3 py-3 text-right text-gray-500 dark:text-gray-400 hidden xl:table-cell tabular-nums">
+                  <td className="px-3 py-3 text-right text-gray-500 dark:text-gray-400 tabular-nums">
                     {formatVolume(stock.volume)}
                   </td>
                 </tr>
