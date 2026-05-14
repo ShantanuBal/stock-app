@@ -198,7 +198,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                 <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
                   <p><span className="font-medium text-gray-700 dark:text-gray-300">Low P/E (&lt;15)</span> — cheap relative to earnings, or slow growth expected</p>
                   <p><span className="font-medium text-gray-700 dark:text-gray-300">High P/E (&gt;30)</span> — expensive, or high growth expected</p>
-                  <p><span className="font-medium text-gray-700 dark:text-gray-300">Negative</span> — company is currently unprofitable</p>
+                  <p><span className="font-medium text-gray-700 dark:text-gray-300">N/A</span> — company is currently unprofitable (negative earnings)</p>
                 </div>
               </ColHeader>
               <ColHeader label="Beta" col="beta" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
@@ -273,8 +273,10 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                       <span className="text-gray-300 dark:text-gray-600">···</span>
                     ) : pe == null ? (
                       <span className="text-gray-400 dark:text-gray-600">—</span>
+                    ) : pe < 0 ? (
+                      <span className="text-gray-400 dark:text-gray-600">N/A</span>
                     ) : (
-                      <span className={pe < 0 ? "text-red-500 dark:text-red-400" : ""}>{pe.toFixed(1)}x</span>
+                      <span>{pe.toFixed(1)}x</span>
                     )}
                   </td>
                   <td className="px-3 py-3 text-right hidden xl:table-cell tabular-nums text-gray-600 dark:text-gray-300">
