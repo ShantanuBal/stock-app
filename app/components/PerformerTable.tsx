@@ -312,6 +312,9 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
           Show more ({sortedStocks.length - visibleCount} remaining)
         </button>
       )}
+      <p className="mt-3 text-xs text-gray-400 dark:text-gray-600">
+        Data from <a href="https://polygon.io" target="_blank" rel="noopener noreferrer" className="hover:text-gray-500 dark:hover:text-gray-500 transition-colors">Polygon.io</a> · EOD prices · 1 day delay
+      </p>
     </div>
   );
 }

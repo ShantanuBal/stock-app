@@ -383,10 +383,6 @@ export default function Home() {
           </>
         )}
 
-        <p className="mt-4 text-xs text-gray-400 dark:text-gray-600">
-          Data from Polygon.io · EOD prices
-        </p>
-
     </div>
   );
 }
