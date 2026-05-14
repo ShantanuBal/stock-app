@@ -378,6 +378,7 @@ export default function Home() {
               sectors={sectorMap}
               betas={betas}
               marketCapShares={marketCapShares}
+              range={range}
             />
           </>
         )}
