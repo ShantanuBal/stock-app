@@ -85,9 +85,11 @@ export default function TickerTooltip({ ticker, name, price, changePercent, init
   const displayChange = chartData?.changePercent ?? changePercent;
   const displayPrice = chartData?.currentValue ?? price;
 
-  const tooltipLeft = rect ? Math.min(rect.left, (typeof window !== "undefined" ? window.innerWidth : 1200) - TOOLTIP_WIDTH - 16) : 0;
+  const screenWidth = typeof window !== "undefined" ? window.innerWidth : 1200;
+  const effectiveWidth = Math.min(TOOLTIP_WIDTH, screenWidth - 32);
+  const tooltipLeft = rect ? Math.max(8, Math.min(rect.left, screenWidth - effectiveWidth - 8)) : 0;
   const spaceBelow = rect ? (typeof window !== "undefined" ? window.innerHeight : 800) - rect.bottom : 0;
-  const tooltipTop = rect ? (spaceBelow < 400 ? rect.top - 400 : rect.bottom + 8) : 0;
+  const tooltipTop = rect ? (spaceBelow < 400 ? Math.max(8, rect.top - 400) : rect.bottom + 8) : 0;
 
   return (
     <>
@@ -97,7 +99,7 @@ export default function TickerTooltip({ ticker, name, price, changePercent, init
       {rect && (
         <div
           className="fixed z-50 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl font-normal normal-case tracking-normal font-[family-name:var(--font-inter)] overflow-hidden"
-          style={{ top: tooltipTop, left: tooltipLeft, width: TOOLTIP_WIDTH }}
+          style={{ top: tooltipTop, left: tooltipLeft, width: effectiveWidth }}
           onMouseEnter={show}
           onMouseLeave={hide}
         >
