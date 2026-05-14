@@ -104,6 +104,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
   const [sortCol, setSortCol] = useState<SortCol | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [visibleCount, setVisibleCount] = useState(30);
+  const [search, setSearch] = useState("");
 
   function handleSort(col: SortCol) {
     if (sortCol === col) {
@@ -114,9 +115,15 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
     }
   }
 
+  const filteredStocks = useMemo(() => {
+    if (!search.trim()) return stocks;
+    const q = search.trim().toLowerCase();
+    return stocks.filter((s) => s.ticker.toLowerCase().includes(q) || s.name.toLowerCase().includes(q));
+  }, [stocks, search]);
+
   const sortedStocks = useMemo(() => {
-    if (!sortCol) return stocks;
-    return [...stocks].sort((a, b) => {
+    if (!sortCol) return filteredStocks;
+    return [...filteredStocks].sort((a, b) => {
       let av: number | null = null;
       let bv: number | null = null;
       if (sortCol === "price") { av = a.price; bv = b.price; }
@@ -143,15 +150,32 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
       if (bv == null) return -1;
       return sortDir === "desc" ? bv - av : av - bv;
     });
-  }, [stocks, sortCol, sortDir, betas, marketCapShares]);
+  }, [filteredStocks, sortCol, sortDir, betas, marketCapShares]);
 
   const visibleStocks = sortedStocks.slice(0, visibleCount);
 
   return (
     <div>
-      <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${accentColor}`}>
-        {title}
-      </h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className={`text-sm font-semibold uppercase tracking-wider ${accentColor}`}>{title}</h2>
+        <div className="relative">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search ticker or company..."
+            className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 w-52"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+          )}
+        </div>
+      </div>
       <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
         <table className="w-full text-sm">
           <thead>
@@ -196,6 +220,13 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
             </tr>
           </thead>
           <tbody>
+            {visibleStocks.length === 0 && (
+              <tr>
+                <td colSpan={9} className="px-3 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                  No results for &ldquo;{search}&rdquo;
+                </td>
+              </tr>
+            )}
             {visibleStocks.map((stock, i) => {
               const isPos = stock.changePercent >= 0;
               const color = isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
