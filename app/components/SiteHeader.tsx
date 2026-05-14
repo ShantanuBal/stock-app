@@ -12,7 +12,6 @@ const NAV_TABS = [
   { label: "Options", href: "/options" },
   { label: "Fixed Income", href: "/bonds" },
   { label: "Global", href: "/global" },
-  { label: "About", href: "/about" },
 ];
 
 export default function SiteHeader() {
