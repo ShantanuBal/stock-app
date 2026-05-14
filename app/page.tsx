@@ -117,7 +117,7 @@ export default function Home() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
-  const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null }> | undefined>(undefined);
+  const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }> | undefined>(undefined);
 
   const currentIndex = INDICES.find((i) => i.value === index)!;
   // Show skeleton on first load (null) or while a transition is in flight
