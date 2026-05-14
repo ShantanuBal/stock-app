@@ -151,9 +151,13 @@ export class StockAppStack extends cdk.Stack {
       }),
     });
 
-    // Grant task role access to DynamoDB and the secret
+    // Grant task role access to DynamoDB, the secret, and CloudWatch metrics
     tickerDetailsTable.grantReadWriteData(taskDef.taskRole);
     polygonSecret.grantRead(taskDef.taskRole);
+    taskDef.taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
+      actions: ["cloudwatch:PutMetricData"],
+      resources: ["*"],
+    }));
 
     // Run daily at midnight PST (8 AM UTC)
     const scheduleRule = new events.Rule(this, "MonthlyRefreshRule", {

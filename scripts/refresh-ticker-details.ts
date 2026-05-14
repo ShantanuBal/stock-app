@@ -5,11 +5,31 @@
  * Exits 1 and prints JOB_FAILED if errors exceed 10% of tickers.
  */
 
+import { CloudWatchClient, PutMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 import { SP500_SECTORS } from "../lib/sp500";
 import { NASDAQ100_SECTORS } from "../lib/nasdaq100";
 import { DJIA_SECTORS } from "../lib/djia";
 import { RUSSELL2000_SECTORS } from "../lib/russell2000";
 import { refreshTickerDetails } from "../lib/tickerDetails";
+
+const cw = new CloudWatchClient({ region: process.env.AWS_REGION ?? "us-west-2" });
+const CW_NAMESPACE = "Horizon/TickerRefresh";
+
+async function publishMetrics(refreshed: number, errors: number, durationSeconds: number) {
+  try {
+    await cw.send(new PutMetricDataCommand({
+      Namespace: CW_NAMESPACE,
+      MetricData: [
+        { MetricName: "TickersRefreshed", Value: refreshed, Unit: "Count" },
+        { MetricName: "TickerErrors",     Value: errors,    Unit: "Count" },
+        { MetricName: "RunDuration",      Value: durationSeconds, Unit: "Seconds" },
+      ],
+    }));
+    console.log(`[refresh] Metrics published to CloudWatch (${CW_NAMESPACE})`);
+  } catch (err) {
+    console.error(`[refresh] Failed to publish metrics: ${err}`);
+  }
+}
 
 const DELAY_MS = 15_000; // 15s after financials call before next ticker → 4 calls/min total
 
@@ -39,6 +59,7 @@ function uniqueTickers(): string[] {
   const tickers = limit ? allTickers.slice(0, limit) : allTickers;
   console.log(`[refresh] Starting ticker details refresh for ${tickers.length} tickers${limit ? ` (limited to ${limit})` : ""}`);
 
+  const startTime = Date.now();
   let refreshed = 0;
   let errors = 0;
 
@@ -61,8 +82,11 @@ function uniqueTickers(): string[] {
     await sleep(DELAY_MS);
   }
 
+  const durationSeconds = Math.round((Date.now() - startTime) / 1000);
   const errorRate = errors / tickers.length;
-  console.log(`\n[refresh] Done. Refreshed: ${refreshed} · Errors: ${errors}`);
+  console.log(`\n[refresh] Done. Refreshed: ${refreshed} · Errors: ${errors} · Duration: ${durationSeconds}s`);
+
+  await publishMetrics(refreshed, errors, durationSeconds);
 
   if (errorRate > 0.1) {
     console.log(`JOB_FAILED error rate ${(errorRate * 100).toFixed(1)}% exceeds threshold`);
