@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Horizon",
     description: "Financial foresight for everyone — track markets, the economy, and more.",
-    url: "https://stock-app-one-khaki.vercel.app",
+    url: "https://usehorizon.dev",
     siteName: "Horizon",
     type: "website",
   },

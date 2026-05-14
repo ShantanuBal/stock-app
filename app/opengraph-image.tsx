@@ -55,7 +55,7 @@ export default async function Image() {
 
         {/* URL */}
         <div style={{ position: "absolute", top: 44, right: 80, fontSize: 22, color: "#374151", display: "flex" }}>
-          stock-app-one-khaki.vercel.app
+          usehorizon.dev
         </div>
       </div>
     ),
