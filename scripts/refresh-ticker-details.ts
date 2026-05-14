@@ -1,7 +1,7 @@
 /**
- * Monthly refresh job for ticker details (description, homepage URL).
- * Runs in ECS Fargate, triggered by EventBridge Scheduler on the 1st of each month.
- * Always calls Polygon directly — bypasses the DynamoDB cache to force fresh data.
+ * Daily refresh job for ticker details and earnings (description, shares outstanding, net income).
+ * Runs in ECS Fargate, triggered by EventBridge Scheduler daily at midnight PST (8 AM UTC).
+ * Makes 2 sequential Polygon API calls per ticker with 15s between them (4 calls/min, under free tier limit).
  * Exits 1 and prints JOB_FAILED if errors exceed 10% of tickers.
  */
 
@@ -11,7 +11,7 @@ import { DJIA_SECTORS } from "../lib/djia";
 import { RUSSELL2000_SECTORS } from "../lib/russell2000";
 import { refreshTickerDetails } from "../lib/tickerDetails";
 
-const DELAY_MS = 12_000; // 5 calls/min free tier → 1 call every 12s
+const DELAY_MS = 15_000; // 15s after financials call before next ticker → 4 calls/min total
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -32,8 +32,12 @@ function uniqueTickers(): string[] {
 }
 
 (async () => {
-  const tickers = uniqueTickers();
-  console.log(`[refresh] Starting ticker details refresh for ${tickers.length} tickers`);
+  const limitArg = process.argv.find((a) => a.startsWith("--limit="));
+  const limit = limitArg ? parseInt(limitArg.split("=")[1], 10) : undefined;
+
+  const allTickers = uniqueTickers();
+  const tickers = limit ? allTickers.slice(0, limit) : allTickers;
+  console.log(`[refresh] Starting ticker details refresh for ${tickers.length} tickers${limit ? ` (limited to ${limit})` : ""}`);
 
   let refreshed = 0;
   let errors = 0;

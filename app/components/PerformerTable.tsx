@@ -5,7 +5,7 @@ import type { StockResult } from "@/lib/polygon";
 import InfoTooltip from "./InfoTooltip";
 import TickerTooltip from "./TickerTooltip";
 
-type SortCol = "price" | "change" | "marketCap" | "beta" | "volume";
+type SortCol = "price" | "change" | "marketCap" | "pe" | "beta" | "volume";
 type SortDir = "asc" | "desc";
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
   stocks: StockResult[];
   sectors?: Record<string, string>;
   betas?: Record<string, number | null>;
-  marketCapShares?: Record<string, { weighted: number | null; shares: number | null }>;
+  marketCapShares?: Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }>;
 }
 
 function formatVolume(v: number): string {
@@ -130,6 +130,13 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
         const db = marketCapShares?.[b.ticker];
         av = da ? (da.weighted ?? da.shares) != null ? (da.weighted ?? da.shares)! * a.price : null : null;
         bv = db ? (db.weighted ?? db.shares) != null ? (db.weighted ?? db.shares)! * b.price : null : null;
+      } else if (sortCol === "pe") {
+        const da = marketCapShares?.[a.ticker];
+        const db = marketCapShares?.[b.ticker];
+        const mcA = da ? (da.weighted ?? da.shares) != null ? (da.weighted ?? da.shares)! * a.price : null : null;
+        const mcB = db ? (db.weighted ?? db.shares) != null ? (db.weighted ?? db.shares)! * b.price : null : null;
+        av = mcA != null && da?.netIncome ? mcA / da.netIncome : null;
+        bv = mcB != null && db?.netIncome ? mcB / db.netIncome : null;
       }
       if (av == null && bv == null) return 0;
       if (av == null) return 1;
@@ -160,6 +167,16 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                   Market capitalisation — the total value of all outstanding shares at the current price. Calculated as share price × shares outstanding.
                 </p>
               </ColHeader>
+              <ColHeader label="P/E" col="pe" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2">
+                  Price-to-earnings ratio — how much investors are paying for each dollar of annual profit. Calculated as market cap ÷ trailing twelve months net income.
+                </p>
+                <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                  <p><span className="font-medium text-gray-700 dark:text-gray-300">Low P/E (&lt;15)</span> — cheap relative to earnings, or slow growth expected</p>
+                  <p><span className="font-medium text-gray-700 dark:text-gray-300">High P/E (&gt;30)</span> — expensive, or high growth expected</p>
+                  <p><span className="font-medium text-gray-700 dark:text-gray-300">Negative</span> — company is currently unprofitable</p>
+                </div>
+              </ColHeader>
               <ColHeader label="Beta" col="beta" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                   Beta measures how volatile a stock is relative to the overall market (S&P 500).
@@ -187,6 +204,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
               const capData = marketCapShares?.[stock.ticker];
               const capShares = capData ? (capData.weighted ?? capData.shares) : null;
               const marketCap = capShares != null ? capShares * stock.price : null;
+              const pe = marketCap != null && capData?.netIncome ? marketCap / capData.netIncome : null;
               return (
                 <tr
                   key={stock.ticker}
@@ -217,6 +235,15 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                       <span className="text-gray-400 dark:text-gray-600">—</span>
                     ) : (
                       formatMarketCap(marketCap)
+                    )}
+                  </td>
+                  <td className="px-3 py-3 text-right hidden xl:table-cell tabular-nums text-gray-600 dark:text-gray-300">
+                    {marketCapShares === undefined ? (
+                      <span className="text-gray-300 dark:text-gray-600">···</span>
+                    ) : pe == null ? (
+                      <span className="text-gray-400 dark:text-gray-600">—</span>
+                    ) : (
+                      <span className={pe < 0 ? "text-red-500 dark:text-red-400" : ""}>{pe.toFixed(1)}x</span>
                     )}
                   </td>
                   <td className="px-3 py-3 text-right hidden xl:table-cell tabular-nums text-gray-600 dark:text-gray-300">

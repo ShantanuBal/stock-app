@@ -155,10 +155,10 @@ export class StockAppStack extends cdk.Stack {
     tickerDetailsTable.grantReadWriteData(taskDef.taskRole);
     polygonSecret.grantRead(taskDef.taskRole);
 
-    // Run on the 1st of every month at 2am UTC
+    // Run daily at midnight PST (8 AM UTC)
     const scheduleRule = new events.Rule(this, "MonthlyRefreshRule", {
-      description: "Trigger ticker details refresh on the 1st of each month",
-      schedule: events.Schedule.cron({ minute: "0", hour: "2", day: "1", month: "*" }),
+      description: "Trigger ticker details and earnings refresh daily at midnight PST",
+      schedule: events.Schedule.cron({ minute: "0", hour: "8", day: "*", month: "*" }),
     });
 
     scheduleRule.addTarget(

@@ -13,6 +13,7 @@ export interface TickerDetails {
   homepageUrl: string;
   sharesOutstanding?: number;
   weightedSharesOutstanding?: number;
+  netIncome?: number;
 }
 
 export async function getTickerDetails(ticker: string): Promise<TickerDetails | null> {
@@ -52,14 +53,26 @@ export async function getTickerDetails(ticker: string): Promise<TickerDetails | 
   return details;
 }
 
-export async function refreshTickerDetails(ticker: string): Promise<TickerDetails | null> {
-  const res = await fetch(
+export async function refreshTickerDetails(ticker: string, delayMs = 15_000): Promise<TickerDetails | null> {
+  const detailsRes = await fetch(
     `https://api.polygon.io/v3/reference/tickers/${ticker}?apiKey=${process.env.POLYGON_API_KEY}`
   );
-  if (!res.ok) return null;
+  if (!detailsRes.ok) return null;
 
-  const { results } = await res.json();
+  const { results } = await detailsRes.json();
   if (!results?.description) return null;
+
+  // Wait before second API call to respect rate limits
+  await new Promise((resolve) => setTimeout(resolve, delayMs));
+
+  const financialsRes = await fetch(
+    `https://api.polygon.io/vX/reference/financials?ticker=${ticker}&limit=1&apiKey=${process.env.POLYGON_API_KEY}`
+  );
+  let netIncome: number | undefined;
+  if (financialsRes.ok) {
+    const financialsData = await financialsRes.json();
+    netIncome = financialsData.results?.[0]?.financials?.income_statement?.net_income_loss?.value ?? undefined;
+  }
 
   const details: TickerDetails = {
     ticker,
@@ -68,6 +81,7 @@ export async function refreshTickerDetails(ticker: string): Promise<TickerDetail
     homepageUrl: results.homepage_url ?? "",
     sharesOutstanding: results.share_class_shares_outstanding ?? undefined,
     weightedSharesOutstanding: results.weighted_shares_outstanding ?? undefined,
+    netIncome,
   };
 
   await dynamo.send(new PutCommand({ TableName: TABLE, Item: details }));

@@ -20,13 +20,13 @@ export async function POST(req: NextRequest) {
       chunks.push(tickers.slice(i, i + 100));
     }
 
-    const results: Record<string, { weighted: number | null; shares: number | null }> = {};
+    const results: Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }> = {};
     for (const chunk of chunks) {
       const res = await dynamo.send(new BatchGetCommand({
         RequestItems: {
           [TABLE]: {
             Keys: chunk.map((ticker) => ({ ticker })),
-            ProjectionExpression: "ticker, sharesOutstanding, weightedSharesOutstanding",
+            ProjectionExpression: "ticker, sharesOutstanding, weightedSharesOutstanding, netIncome",
           },
         },
       }));
@@ -34,13 +34,14 @@ export async function POST(req: NextRequest) {
         results[item.ticker] = {
           weighted: item.weightedSharesOutstanding ?? null,
           shares: item.sharesOutstanding ?? null,
+          netIncome: item.netIncome ?? null,
         };
       }
     }
 
     // Fill in nulls for any tickers not found
     for (const ticker of tickers) {
-      if (!(ticker in results)) results[ticker] = { weighted: null, shares: null };
+      if (!(ticker in results)) results[ticker] = { weighted: null, shares: null, netIncome: null };
     }
 
     return NextResponse.json({ marketCapShares: results });
