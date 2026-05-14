@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Horizon",
   description: "Financial foresight for everyone — track markets, the economy, and more.",
+  verification: {
+    google: "fPCaX7ISLWg7fwhoF1UN558s4e4R5c9SbcFLPJ5pGAg",
+  },
   openGraph: {
     title: "Horizon",
     description: "Financial foresight for everyone — track markets, the economy, and more.",
