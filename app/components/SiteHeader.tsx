@@ -23,7 +23,7 @@ export default function SiteHeader() {
     <div className="mb-8">
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Horizon</h1>
+          <Link href="/" className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight hover:opacity-80 transition-opacity">Horizon</Link>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Financial foresight for everyone</p>
         </div>
         <button
