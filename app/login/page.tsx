@@ -17,9 +17,6 @@ export default function LoginPage() {
   const [registerState, registerAction, registerPending] = useActionState<AuthState, FormData>(register, undefined);
 
   const isLogin = mode === "login";
-  const state = isLogin ? loginState : registerState;
-  const action = isLogin ? loginAction : registerAction;
-  const pending = isLogin ? loginPending : registerPending;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center px-4">
@@ -47,8 +44,8 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Username/password form */}
-          <form action={action} className="space-y-4">
+          {/* Sign in form */}
+          <form action={loginAction} className={`space-y-4 ${isLogin ? "" : "hidden"}`}>
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Username</label>
               <input
@@ -64,22 +61,54 @@ export default function LoginPage() {
               <input
                 name="password"
                 type="password"
-                autoComplete={isLogin ? "current-password" : "new-password"}
+                autoComplete="current-password"
                 placeholder="••••••••"
                 className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-500"
               />
             </div>
-
-            {state?.error && (
-              <p className="text-xs text-red-500 dark:text-red-400">{state.error}</p>
+            {loginState?.error && (
+              <p className="text-xs text-red-500 dark:text-red-400">{loginState.error}</p>
             )}
-
             <button
               type="submit"
-              disabled={pending}
+              disabled={loginPending}
               className="w-full py-2 text-sm font-semibold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-60"
             >
-              {pending ? "Please wait…" : isLogin ? "Sign in" : "Create account"}
+              {loginPending ? "Please wait…" : "Sign in"}
+            </button>
+          </form>
+
+          {/* Create account form */}
+          <form action={registerAction} className={`space-y-4 ${!isLogin ? "" : "hidden"}`}>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Username</label>
+              <input
+                name="username"
+                type="text"
+                autoComplete="username"
+                placeholder="your_username"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+              <input
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="••••••••"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-500"
+              />
+            </div>
+            {registerState?.error && (
+              <p className="text-xs text-red-500 dark:text-red-400">{registerState.error}</p>
+            )}
+            <button
+              type="submit"
+              disabled={registerPending}
+              className="w-full py-2 text-sm font-semibold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-60"
+            >
+              {registerPending ? "Please wait…" : "Create account"}
             </button>
           </form>
 
