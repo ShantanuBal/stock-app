@@ -10,22 +10,27 @@ export type AuthState = { error?: string } | undefined;
 export async function login(_state: AuthState, formData: FormData): Promise<AuthState> {
   const username = (formData.get("username") as string)?.trim().toLowerCase();
   const password = formData.get("password") as string;
+  console.log(`[login] called for username="${username}"`);
 
   if (!username || !password) return { error: "Username and password are required." };
 
   const user = await getUser(username);
+  console.log(`[login] getUser result: ${user ? "found" : "not found"}`);
   if (!user) return { error: "Invalid username or password." };
 
   const valid = await bcrypt.compare(password, user.passwordHash);
+  console.log(`[login] bcrypt.compare: ${valid}`);
   if (!valid) return { error: "Invalid username or password." };
 
   await createSession(username, "user");
+  console.log(`[login] session created, redirecting`);
   redirect("/");
 }
 
 export async function register(_state: AuthState, formData: FormData): Promise<AuthState> {
   const username = (formData.get("username") as string)?.trim().toLowerCase();
   const password = formData.get("password") as string;
+  console.log(`[register] called for username="${username}"`);
 
   if (!username || !password) return { error: "Username and password are required." };
   if (username.length < 3) return { error: "Username must be at least 3 characters." };
@@ -36,11 +41,13 @@ export async function register(_state: AuthState, formData: FormData): Promise<A
 
   try {
     await createUser(username, passwordHash);
-  } catch {
+  } catch (e) {
+    console.log(`[register] createUser failed: ${(e as Error).name} — ${(e as Error).message}`);
     return { error: "Username already taken." };
   }
 
   await createSession(username, "user");
+  console.log(`[register] user created and session set, redirecting`);
   redirect("/");
 }
 
