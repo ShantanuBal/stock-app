@@ -1,5 +1,6 @@
 import { getAllIndicators, INDICATOR_CONFIGS } from "@/lib/fred";
 import IndicatorCard from "../components/IndicatorCard";
+import EconomyAiSummary from "../components/EconomyAiSummary";
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
@@ -16,6 +17,8 @@ export default async function EconomyPage() {
           Key measures of macroeconomic health · Data from FRED (Federal Reserve Bank of St. Louis) · Updated monthly
         </p>
       </div>
+
+      <EconomyAiSummary />
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {INDICATOR_CONFIGS.map((config, i) => {
