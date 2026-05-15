@@ -53,11 +53,14 @@ function uniqueTickers(): string[] {
 
 (async () => {
   const limitArg = process.argv.find((a) => a.startsWith("--limit="));
+  const fromArg = process.argv.find((a) => a.startsWith("--from="));
   const limit = limitArg ? parseInt(limitArg.split("=")[1], 10) : undefined;
+  const from = fromArg ? parseInt(fromArg.split("=")[1], 10) : 0;
 
   const allTickers = uniqueTickers();
-  const tickers = limit ? allTickers.slice(0, limit) : allTickers;
-  console.log(`[refresh] Starting ticker details refresh for ${tickers.length} tickers${limit ? ` (limited to ${limit})` : ""}`);
+  const tickers = allTickers.slice(from, limit ? from + limit : undefined);
+  const suffix = [from > 0 ? `from index ${from}` : "", limit ? `limit ${limit}` : ""].filter(Boolean).join(", ");
+  console.log(`[refresh] Starting ticker details refresh for ${tickers.length} tickers${suffix ? ` (${suffix})` : ""}`);
 
   const startTime = Date.now();
   let refreshed = 0;
