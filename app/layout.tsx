@@ -56,18 +56,22 @@ export default async function RootLayout({
           <div className="mx-auto max-w-5xl px-4 pt-10 pb-16 font-[family-name:var(--font-geist-mono)]">
             <SiteHeader username={session?.username} role={session?.role} />
             {children}
-            <div className="mt-12 border-t border-gray-200 dark:border-gray-800 pt-6 text-center text-xs text-gray-400 dark:text-gray-500">
-              <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">Horizon</p>
+            <div className="mt-12 border-t border-gray-200 dark:border-gray-800 pt-6 text-center text-xs text-gray-400 dark:text-gray-500 space-y-1.5">
+              <p className="flex items-center justify-center gap-2">
+                <a href="/about" className="text-gray-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 font-medium underline underline-offset-2 transition-colors">
+                  About
+                </a>
+                <span className="text-gray-300 dark:text-gray-700">·</span>
+                <a href="/privacy" className="text-gray-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 font-medium underline underline-offset-2 transition-colors">
+                  Privacy Policy
+                </a>
+              </p>
               <p>
                 Built by{" "}
                 <span className="text-gray-600 dark:text-gray-400 font-medium">Shantanu Bal</span>
                 {" "}·{" "}
                 <a href="mailto:shantanu.r.bal@gmail.com" className="text-emerald-500 hover:text-emerald-400 transition-colors">
                   shantanu.r.bal@gmail.com
-                </a>
-                {" "}·{" "}
-                <a href="/about" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                  About
                 </a>
               </p>
             </div>
