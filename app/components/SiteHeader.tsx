@@ -6,7 +6,7 @@ import { useTheme } from "./ThemeProvider";
 import { logout } from "@/app/actions/auth";
 
 const NAV_TABS = [
-  { label: "Markets", href: "/" },
+  { label: "Equities", href: "/" },
   { label: "Economy", href: "/economy" },
   { label: "Futures", href: "/futures" },
   { label: "Currencies", href: "/currencies" },
