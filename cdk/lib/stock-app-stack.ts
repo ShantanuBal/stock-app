@@ -60,6 +60,13 @@ export class StockAppStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
+    const usersTable = new dynamodb.Table(this, "Users", {
+      tableName: "stock-app-users",
+      partitionKey: { name: "username", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
     // ── IAM user for Vercel ────────────────────────────────────────────────────
 
     const appUser = new iam.User(this, "StockAppUser", {
@@ -91,6 +98,7 @@ export class StockAppStack extends cdk.Stack {
             summariesTable.tableArn,
             economyCacheTable.tableArn,
             tickerDetailsTable.tableArn,
+            usersTable.tableArn,
           ],
         }),
       ],
