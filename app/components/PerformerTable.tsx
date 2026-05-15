@@ -104,7 +104,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const [sortCol, setSortCol] = useState<SortCol | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [visibleCount, setVisibleCount] = useState(30);
+  const [visibleCount, setVisibleCount] = useState(20);
   const [search, setSearch] = useState("");
   const tooltipRefs = useRef<Map<string, TickerTooltipHandle | null>>(new Map());
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -337,7 +337,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
         </button>
       )}
       <p className="mt-3 text-xs text-gray-400 dark:text-gray-600">
-        Data from <a href="https://polygon.io" target="_blank" rel="noopener noreferrer" className="hover:text-gray-500 dark:hover:text-gray-500 transition-colors">Polygon.io</a> · EOD prices · 1 day delay
+        Data from <a href="https://polygon.io" target="_blank" rel="noopener noreferrer" className="hover:text-gray-500 dark:hover:text-gray-500 transition-colors">Polygon.io</a> · EOD prices · 1 day delay · Real-time prices coming soon
       </p>
     </div>
   );
