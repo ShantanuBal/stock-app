@@ -108,11 +108,15 @@ export default function SiteHeader({ username, role }: Props) {
               Login
             </Link>
           )}
-          <button
-            onClick={toggle}
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-          >
+          <div className="relative group">
+            <button
+              onClick={toggle}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            >
+            <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-900 dark:bg-gray-700 text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {isDark ? "Light mode" : "Dark mode"}
+            </span>
             {isDark ? (
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
@@ -131,6 +135,7 @@ export default function SiteHeader({ username, role }: Props) {
               </svg>
             )}
           </button>
+          </div>
         </div>
       </div>
 
