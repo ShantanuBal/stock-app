@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import type { TickerDetails } from "@/lib/tickerDetails";
 import { useTheme } from "./ThemeProvider";
@@ -22,6 +22,11 @@ interface Props {
   initialRange?: string;
 }
 
+export interface TickerTooltipHandle {
+  show(): void;
+  hide(): void;
+}
+
 const TOOLTIP_WIDTH = 540;
 
 function fmtDate(dateStr: string) {
@@ -39,8 +44,11 @@ function ChartTooltip({ active, payload, label, color, isDark }: any) {
   );
 }
 
-export default function TickerTooltip({ ticker, name, price, changePercent, initialRange }: Props) {
-  const ref = useRef<HTMLSpanElement>(null);
+const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTooltip(
+  { ticker, name, price, changePercent, initialRange }: Props,
+  forwardedRef,
+) {
+  const spanRef = useRef<HTMLSpanElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [details, setDetails] = useState<TickerDetails | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
@@ -65,9 +73,11 @@ export default function TickerTooltip({ ticker, name, price, changePercent, init
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, rect !== null]);
 
+  useImperativeHandle(forwardedRef, () => ({ show, hide }));
+
   function show() {
     if (hideTimer.current) clearTimeout(hideTimer.current);
-    setRect(ref.current?.getBoundingClientRect() ?? null);
+    setRect(spanRef.current?.getBoundingClientRect() ?? null);
     if (!hasFetchedDetails.current) {
       hasFetchedDetails.current = true;
       fetch(`/api/ticker-details?ticker=${ticker}`)
@@ -93,7 +103,7 @@ export default function TickerTooltip({ ticker, name, price, changePercent, init
 
   return (
     <>
-      <span ref={ref} onMouseEnter={show} onMouseLeave={hide} className="cursor-help">
+      <span ref={spanRef} className="cursor-help">
         {ticker}
       </span>
       {rect && (
@@ -197,4 +207,6 @@ export default function TickerTooltip({ ticker, name, price, changePercent, init
       )}
     </>
   );
-}
+});
+
+export default TickerTooltip;

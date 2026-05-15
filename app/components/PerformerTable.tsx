@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import type { StockResult } from "@/lib/polygon";
 import InfoTooltip from "./InfoTooltip";
-import TickerTooltip from "./TickerTooltip";
+import TickerTooltip, { type TickerTooltipHandle } from "./TickerTooltip";
 
 type SortCol = "price" | "change" | "marketCap" | "pe" | "beta" | "volume";
 type SortDir = "asc" | "desc";
@@ -106,6 +106,28 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [visibleCount, setVisibleCount] = useState(30);
   const [search, setSearch] = useState("");
+  const tooltipRefs = useRef<Map<string, TickerTooltipHandle | null>>(new Map());
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeTicker = useRef<string | null>(null);
+
+  function getTooltipCallbacks(ticker: string) {
+    return {
+      onMouseEnter: () => {
+        if (hideTimer.current) clearTimeout(hideTimer.current);
+        if (activeTicker.current && activeTicker.current !== ticker) {
+          tooltipRefs.current.get(activeTicker.current)?.hide();
+        }
+        activeTicker.current = ticker;
+        tooltipRefs.current.get(ticker)?.show();
+      },
+      onMouseLeave: () => {
+        hideTimer.current = setTimeout(() => {
+          tooltipRefs.current.get(ticker)?.hide();
+          if (activeTicker.current === ticker) activeTicker.current = null;
+        }, 150);
+      },
+    };
+  }
 
   function handleSort(col: SortCol) {
     if (sortCol === col) {
@@ -240,11 +262,13 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
               return (
                 <tr
                   key={stock.ticker}
-                  className="border-b border-gray-100 dark:border-gray-800/50 bg-white dark:bg-gray-900/30 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  className="border-b border-gray-100 dark:border-gray-800/50 bg-white dark:bg-gray-900/30 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                  {...getTooltipCallbacks(stock.ticker)}
                 >
                   <td className="px-3 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
                   <td className="px-3 py-3 font-bold text-gray-900 dark:text-white">
                     <TickerTooltip
+                      ref={(el) => { tooltipRefs.current.set(stock.ticker, el); }}
                       ticker={stock.ticker}
                       name={stock.name}
                       price={stock.price}
