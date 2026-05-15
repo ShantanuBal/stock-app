@@ -61,18 +61,18 @@ export default async function RootLayout({
                 <a href="/about" className="text-gray-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 font-medium underline underline-offset-2 transition-colors">
                   About
                 </a>
-                <span className="text-gray-300 dark:text-gray-700">·</span>
+                <span className="text-gray-700 dark:text-gray-300">·</span>
                 <a href="/privacy" className="text-gray-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 font-medium underline underline-offset-2 transition-colors">
                   Privacy Policy
+                </a>
+                <span className="text-gray-700 dark:text-gray-300">·</span>
+                <a href="/contact" className="text-gray-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 font-medium underline underline-offset-2 transition-colors">
+                  Contact
                 </a>
               </p>
               <p>
                 Built by{" "}
                 <span className="text-gray-600 dark:text-gray-400 font-medium">Shantanu Bal</span>
-                {" "}·{" "}
-                <a href="/contact" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                  Contact
-                </a>
               </p>
             </div>
           </div>
