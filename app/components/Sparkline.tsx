@@ -8,6 +8,7 @@ interface Props {
   points: IndicatorPoint[];
   color: string;
   unit?: string;
+  height?: number;
 }
 
 function fmtDate(dateStr: string) {
@@ -26,7 +27,7 @@ function SparkTooltip({ active, payload, label, color, isDark }: any) {
   );
 }
 
-export default function Sparkline({ points, color }: Props) {
+export default function Sparkline({ points, color, height = 130 }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const tickColor = isDark ? "#4b5563" : "#9ca3af";
@@ -34,7 +35,7 @@ export default function Sparkline({ points, color }: Props) {
   const gradId = `spark-${color.replace("#", "")}`;
 
   return (
-    <ResponsiveContainer width="100%" height={130}>
+    <ResponsiveContainer width="100%" height={height}>
       <AreaChart data={points} margin={{ top: 4, right: 24, bottom: 0, left: 4 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
