@@ -176,6 +176,11 @@ async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<Gr
   const url = `${BASE_URL}/v2/aggs/grouped/locale/us/market/stocks/${date}?adjusted=true&apiKey=${API_KEY}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
+    if (res.status === 403) {
+      // Free tier: data not available until after US market close + processing. Caller will try the previous day.
+      console.log(`Polygon returned 403 for ${date} (data not yet available) — skipping to previous day`);
+      return [];
+    }
     const body = await res.text();
     throw new Error(`Polygon grouped daily error ${res.status}: ${body}`);
   }
