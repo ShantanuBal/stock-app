@@ -70,8 +70,8 @@ export default async function RootLayout({
                 Built by{" "}
                 <span className="text-gray-600 dark:text-gray-400 font-medium">Shantanu Bal</span>
                 {" "}·{" "}
-                <a href="mailto:shantanu.r.bal@gmail.com" className="text-emerald-500 hover:text-emerald-400 transition-colors">
-                  shantanu.r.bal@gmail.com
+                <a href="/contact" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                  Contact
                 </a>
               </p>
             </div>
