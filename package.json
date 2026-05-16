@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "backfill": "tsx --env-file=.env.local scripts/backfill.ts",
-    "refresh:details": "tsx --env-file=.env.local scripts/refresh-ticker-details.ts"
+    "refresh:details": "tsx --env-file=.env.local scripts/refresh-ticker-details.ts",
+    "backfill:forex": "tsx --env-file=.env.local scripts/backfill-forex.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",

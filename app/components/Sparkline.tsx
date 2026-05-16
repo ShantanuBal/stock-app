@@ -11,13 +11,25 @@ interface Props {
   height?: number;
 }
 
-function fmtDate(dateStr: string) {
-  const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+function makeFmtDate(points: { date: string }[]) {
+  if (points.length < 2) return (dateStr: string) => {
+    const d = new Date(dateStr + "T12:00:00");
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+  const first = new Date(points[0].date + "T12:00:00");
+  const last  = new Date(points[points.length - 1].date + "T12:00:00");
+  const spanDays = (last.getTime() - first.getTime()) / (1000 * 60 * 60 * 24);
+  const useMonthDay = spanDays < 90;
+  return (dateStr: string) => {
+    const d = new Date(dateStr + "T12:00:00");
+    return useMonthDay
+      ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      : d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+  };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function SparkTooltip({ active, payload, label, color, isDark }: any) {
+function SparkTooltip({ active, payload, label, color, isDark, fmtDate }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className={`rounded-lg border px-2.5 py-1.5 text-xs shadow-lg ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"}`}>
@@ -33,6 +45,7 @@ export default function Sparkline({ points, color, height = 130 }: Props) {
   const tickColor = isDark ? "#4b5563" : "#9ca3af";
   const gridColor = isDark ? "#1f2937" : "#f3f4f6";
   const gradId = `spark-${color.replace("#", "")}`;
+  const fmtDate = makeFmtDate(points);
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -60,7 +73,7 @@ export default function Sparkline({ points, color, height = 130 }: Props) {
           tickFormatter={(v) => v.toFixed(1)}
           width={38}
         />
-        <Tooltip content={<SparkTooltip color={color} isDark={isDark} />} />
+        <Tooltip content={<SparkTooltip color={color} isDark={isDark} fmtDate={fmtDate} />} />
         <Area
           type="monotone"
           dataKey="value"
