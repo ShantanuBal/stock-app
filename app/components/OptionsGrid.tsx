@@ -3,7 +3,7 @@
 import { useState } from "react";
 import OptionCard from "./OptionCard";
 import InfoTooltip from "./InfoTooltip";
-import type { OptionData } from "./OptionCard";
+import type { OptionData } from "@/lib/polygon-options";
 
 type Range = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
 

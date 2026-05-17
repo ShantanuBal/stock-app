@@ -3,19 +3,9 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Sparkline from "./Sparkline";
+import type { OptionData } from "@/lib/polygon-options";
 
-export interface OptionData {
-  ticker: string;
-  underlying: string;
-  name: string;
-  contractType: "call" | "put";
-  strike: number;
-  expiry: string;
-  premium: number;
-  change: number;
-  changePct: number;
-  points: { date: string; value: number }[];
-}
+export type { OptionData };
 
 type Range = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
 
