@@ -113,7 +113,7 @@ export class StockAppStack extends cdk.Stack {
       ],
     });
 
-    const accessKey = new iam.CfnAccessKey(this, "StockAppAccessKey", {
+    new iam.CfnAccessKey(this, "StockAppAccessKey", {
       userName: appUser.userName,
     });
 
@@ -305,9 +305,6 @@ export class StockAppStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "TableName", { value: table.tableName });
     new cdk.CfnOutput(this, "Region", { value: this.region });
-    new cdk.CfnOutput(this, "AccessKeyId", { value: accessKey.ref });
-    new cdk.CfnOutput(this, "SecretAccessKey", {
-      value: accessKey.attrSecretAccessKey,
-    });
+
   }
 }
