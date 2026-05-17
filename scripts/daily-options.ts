@@ -38,6 +38,12 @@ function daysFromNow(n: number): string {
   return new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 }
 
+// VIX is an index — Polygon uses the I: prefix for price lookups
+const PRICE_TICKER: Record<string, string> = { VIX: "I:VIX" };
+function priceTicker(underlying: string): string {
+  return PRICE_TICKER[underlying] ?? underlying;
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 interface Contract {
@@ -120,6 +126,22 @@ async function storePrices(ticker: string, rows: { t: number; o: number; h: numb
 
 // ── Polygon helpers ────────────────────────────────────────────────────────────
 
+async function fetchCurrentPrice(underlying: string, retries = 3): Promise<number> {
+  const ticker = priceTicker(underlying);
+  const url    = `${BASE_URL}/v2/aggs/ticker/${ticker}/prev?adjusted=true&apiKey=${API_KEY}`;
+  const res    = await fetch(url);
+  if (res.status === 429 && retries > 0) {
+    console.log(`  rate limited — waiting 60s (${retries} retries left)`);
+    await sleep(60_000);
+    return fetchCurrentPrice(underlying, retries - 1);
+  }
+  if (!res.ok) throw new Error(`Polygon prev aggs error for ${ticker}: ${res.status}`);
+  const data  = await res.json();
+  const close = data.results?.[0]?.c as number | undefined;
+  if (close == null) throw new Error(`No price data for ${ticker}`);
+  return close;
+}
+
 async function fetchContracts(underlying: string, contractType: "call" | "put", retries = 3): Promise<PolygonContract[]> {
   const from = daysFromNow(14);
   const to   = daysFromNow(90);
@@ -196,6 +218,17 @@ async function rotateExpired(contracts: Contract[]): Promise<Contract[]> {
 
     await sleep(DELAY_MS);
 
+    let currentPrice: number;
+    try {
+      currentPrice = await fetchCurrentPrice(contract.underlying);
+      console.log(`  current price: $${currentPrice}`);
+    } catch (err) {
+      console.log(`  ERROR fetching current price: ${err} — skipping`);
+      continue;
+    }
+
+    await sleep(DELAY_MS);
+
     let newContracts: PolygonContract[];
     try {
       newContracts = await fetchContracts(contract.underlying, contract.contractType);
@@ -204,7 +237,7 @@ async function rotateExpired(contracts: Contract[]): Promise<Contract[]> {
       continue;
     }
 
-    const best = findMonthlyATM(newContracts, contract.strike);
+    const best = findMonthlyATM(newContracts, currentPrice);
     if (!best) {
       console.log(`  no replacement found — skipping`);
       continue;
