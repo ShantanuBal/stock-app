@@ -1,4 +1,4 @@
-import { docClient } from "./dynamodb";
+import { docClient, TABLE_NAME as STOCK_PRICES_TABLE } from "./dynamodb";
 import { ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 const CONTRACTS_TABLE = process.env.OPTIONS_CONTRACTS_TABLE_NAME ?? "stock-app-options-contracts";
@@ -16,6 +16,7 @@ export interface OptionData {
   change: number;
   changePct: number;
   points: { date: string; value: number }[];
+  underlyingPrice?: number;
 }
 
 interface Contract {
@@ -67,7 +68,29 @@ async function getPriceHistory(ticker: string): Promise<{ date: string; close: n
   return (res.Items ?? []).map((item) => ({ date: item.date as string, close: item.close as number }));
 }
 
-async function contractToOptionData(contract: Contract): Promise<OptionData | null> {
+async function getUnderlyingPrices(underlyings: string[]): Promise<Map<string, number>> {
+  const priceMap = new Map<string, number>();
+  await Promise.all(underlyings.map(async (ticker) => {
+    try {
+      const res = await docClient.send(new QueryCommand({
+        TableName: STOCK_PRICES_TABLE,
+        IndexName: "ticker-date-index",
+        KeyConditionExpression: "ticker = :t AND #d <= :today",
+        ExpressionAttributeNames: { "#d": "date" },
+        ExpressionAttributeValues: { ":t": ticker, ":today": today() },
+        ScanIndexForward: false,
+        Limit: 1,
+      }));
+      const close = res.Items?.[0]?.c as number | undefined;
+      if (close != null) priceMap.set(ticker, close);
+    } catch {
+      // ticker not in StockDailyPrices (VIX, ETFs) — skip silently
+    }
+  }));
+  return priceMap;
+}
+
+async function contractToOptionData(contract: Contract, underlyingPrices: Map<string, number>): Promise<OptionData | null> {
   const history = await getPriceHistory(contract.ticker);
   if (history.length < 2) {
     console.log(`[options] insufficient history for ${contract.ticker}: ${history.length} rows`);
@@ -82,16 +105,17 @@ async function contractToOptionData(contract: Contract): Promise<OptionData | nu
   const points    = history.slice(-SPARKLINE_DAYS).map((h) => ({ date: h.date, value: h.close }));
 
   return {
-    ticker:       contract.ticker,
-    underlying:   contract.underlying,
-    name:         contract.name,
-    contractType: contract.contractType,
-    strike:       contract.strike,
-    expiry:       contract.expiry,
+    ticker:          contract.ticker,
+    underlying:      contract.underlying,
+    name:            contract.name,
+    contractType:    contract.contractType,
+    strike:          contract.strike,
+    expiry:          contract.expiry,
     premium,
     change,
     changePct,
     points,
+    underlyingPrice: underlyingPrices.get(contract.underlying),
   };
 }
 
@@ -106,7 +130,10 @@ export async function getAllOptionsData(): Promise<{
   const contracts = await getActiveContracts();
   console.log(`[options] found ${contracts.length} active contracts`);
 
-  const results = await Promise.all(contracts.map(contractToOptionData));
+  const underlyings      = [...new Set(contracts.map((c) => c.underlying))];
+  const underlyingPrices = await getUnderlyingPrices(underlyings);
+
+  const results = await Promise.all(contracts.map((c) => contractToOptionData(c, underlyingPrices)));
   const valid   = results.filter((d): d is OptionData => d !== null);
 
   const stocks     = valid

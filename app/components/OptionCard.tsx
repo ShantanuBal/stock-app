@@ -65,7 +65,9 @@ export default function OptionCard({ data, fullData }: { data: OptionData; fullD
         <div className="flex items-start justify-between mb-2">
           <div>
             <p className="text-sm font-bold text-gray-900 dark:text-white">{data.underlying}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${data.strike} strike · {fmtExpiry(data.expiry)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              ${data.strike} strike{data.underlyingPrice != null ? ` · ${data.underlying} $${data.underlyingPrice.toFixed(2)}` : ""} · {fmtExpiry(data.expiry)}
+            </p>
           </div>
           <span className={`text-xs font-semibold px-1.5 py-0.5 rounded uppercase ${typeColor}`}>
             {data.contractType}
@@ -101,7 +103,9 @@ export default function OptionCard({ data, fullData }: { data: OptionData; fullD
                   <p className="text-lg font-bold text-gray-900 dark:text-white">{data.underlying}</p>
                   <span className={`text-xs font-semibold px-1.5 py-0.5 rounded uppercase ${typeColor}`}>{data.contractType}</span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">${data.strike} strike · {fmtExpiry(data.expiry)}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  ${data.strike} strike{data.underlyingPrice != null ? ` · ${data.underlying} $${data.underlyingPrice.toFixed(2)}` : ""} · {fmtExpiry(data.expiry)}
+                </p>
                 <button
                   onClick={() => setExpanded(false)}
                   className="mt-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1"
