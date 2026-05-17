@@ -4,4 +4,5 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY lib/ ./lib/
 COPY scripts/refresh-ticker-details.ts ./scripts/
-CMD ["npx", "tsx", "scripts/refresh-ticker-details.ts"]
+COPY scripts/daily-options.ts ./scripts/
+CMD ["sh", "-c", "npx tsx scripts/refresh-ticker-details.ts && npx tsx scripts/daily-options.ts"]

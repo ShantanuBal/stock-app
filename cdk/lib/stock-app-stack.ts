@@ -175,7 +175,9 @@ export class StockAppStack extends cdk.Stack {
       image: ecs.ContainerImage.fromDockerImageAsset(refreshImage),
       environment: {
         AWS_REGION: this.region,
-        TICKER_DETAILS_TABLE_NAME: tickerDetailsTable.tableName,
+        TICKER_DETAILS_TABLE_NAME:      tickerDetailsTable.tableName,
+        OPTIONS_CONTRACTS_TABLE_NAME:   optionsContractsTable.tableName,
+        OPTIONS_PRICES_TABLE_NAME:      optionsPricesTable.tableName,
       },
       secrets: {
         POLYGON_API_KEY: ecs.Secret.fromSecretsManager(polygonSecret),
@@ -188,6 +190,8 @@ export class StockAppStack extends cdk.Stack {
 
     // Grant task role access to DynamoDB, the secret, and CloudWatch metrics
     tickerDetailsTable.grantReadWriteData(taskDef.taskRole);
+    optionsContractsTable.grantReadWriteData(taskDef.taskRole);
+    optionsPricesTable.grantReadWriteData(taskDef.taskRole);
     polygonSecret.grantRead(taskDef.taskRole);
     taskDef.taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
       actions: ["cloudwatch:PutMetricData"],
