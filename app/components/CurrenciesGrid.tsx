@@ -64,7 +64,13 @@ export default function CurrenciesGrid({ majorPairs, emPairs, crypto, majorRates
 
   function slicePoints(data: ForexRate | null): ForexRate | null {
     if (!data) return null;
-    return { ...data, points: data.points.slice(-days) };
+    const sliced = data.points.slice(-days);
+    if (sliced.length < 2) return { ...data, points: sliced };
+    const first = sliced[0].value;
+    const last = sliced[sliced.length - 1].value;
+    const change = last - first;
+    const changePct = (change / first) * 100;
+    return { ...data, points: sliced, change, changePct };
   }
 
   return (
