@@ -5,4 +5,4 @@ RUN npm ci
 COPY lib/ ./lib/
 COPY scripts/refresh-ticker-details.ts ./scripts/
 COPY scripts/daily-options.ts ./scripts/
-CMD ["sh", "-c", "npx tsx scripts/refresh-ticker-details.ts && npx tsx scripts/daily-options.ts"]
+CMD ["sh", "-c", "npx tsx scripts/refresh-ticker-details.ts; npx tsx scripts/daily-options.ts"]
