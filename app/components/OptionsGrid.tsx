@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import OptionCard from "./OptionCard";
 import InfoTooltip from "./InfoTooltip";
 import type { OptionData } from "@/lib/polygon-options";
@@ -62,6 +62,29 @@ interface Props {
 export default function OptionsGrid({ stocks, etfs, volatility }: Props) {
   const [range, setRange] = useState<Range>("1M");
   const [filter, setFilter] = useState<string>("All");
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
+
+  useEffect(() => {
+    const allContracts = [...volatility, ...etfs, ...stocks];
+    if (!allContracts.length) return;
+    setSummary(null);
+    setSummaryLoading(true);
+    const sliced = allContracts.map((c) => sliceData(c));
+    const controller = new AbortController();
+    fetch("/api/ai-options-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contracts: sliced, range }),
+      signal: controller.signal,
+    })
+      .then((r) => r.json())
+      .then((d) => { setSummary(d.summary ?? null); setSummaryExpanded(false); })
+      .catch((e) => { if (e.name !== "AbortError") setSummary(null); })
+      .finally(() => setSummaryLoading(false));
+    return () => controller.abort();
+  }, [range]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stockUnderlyings = ["All", ...Array.from(new Set(stocks.map((d) => d.underlying)))];
   const filteredStocks = filter === "All" ? stocks : stocks.filter((d) => d.underlying === filter);
@@ -97,6 +120,37 @@ export default function OptionsGrid({ stocks, etfs, volatility }: Props) {
           </button>
         ))}
       </div>
+
+      {/* AI Summary */}
+      {summaryLoading ? (
+        <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 flex items-center gap-3">
+          <svg className="animate-spin h-4 w-4 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-sm text-gray-500 dark:text-gray-400">Generating AI summary…</span>
+        </div>
+      ) : summary ? (
+        <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Summary</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">· Claude · Not financial advice</span>
+          </div>
+          <div className={`space-y-3 ${summaryExpanded ? "" : "line-clamp-5"}`}>
+            {summary.split("\n\n").map((para, i) => (
+              <p key={i} className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-[family-name:var(--font-inter)]">
+                {para.trim()}
+              </p>
+            ))}
+          </div>
+          <button
+            onClick={() => setSummaryExpanded((e) => !e)}
+            className="mt-2 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+          >
+            {summaryExpanded ? "Show less" : "Read more"}
+          </button>
+        </div>
+      ) : null}
 
       {/* Volatility */}
       <div className="mb-10">
