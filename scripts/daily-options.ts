@@ -38,10 +38,17 @@ function daysFromNow(n: number): string {
   return new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 }
 
-// VIX is an index — Polygon uses the I: prefix for price lookups
-const PRICE_TICKER: Record<string, string> = { VIX: "I:VIX" };
-function priceTicker(underlying: string): string {
-  return PRICE_TICKER[underlying] ?? underlying;
+// VIX is an index — Polygon free tier can't serve it; use FRED (series VIXCLS)
+async function fetchVixPrice(): Promise<number> {
+  const key = process.env.FRED_API_KEY;
+  if (!key) throw new Error("FRED_API_KEY not set");
+  const url = `https://api.stlouisfed.org/fred/series/observations?series_id=VIXCLS&api_key=${key}&file_type=json&sort_order=desc&limit=1`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`FRED fetch failed: ${res.status}`);
+  const data = await res.json();
+  const value = parseFloat(data.observations?.[0]?.value);
+  if (isNaN(value)) throw new Error(`Could not parse VIX from FRED response`);
+  return value;
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -127,18 +134,19 @@ async function storePrices(ticker: string, rows: { t: number; o: number; h: numb
 // ── Polygon helpers ────────────────────────────────────────────────────────────
 
 async function fetchCurrentPrice(underlying: string, retries = 3): Promise<number> {
-  const ticker = priceTicker(underlying);
-  const url    = `${BASE_URL}/v2/aggs/ticker/${ticker}/prev?adjusted=true&apiKey=${API_KEY}`;
-  const res    = await fetch(url);
+  if (underlying === "VIX") return fetchVixPrice();
+
+  const url = `${BASE_URL}/v2/aggs/ticker/${underlying}/prev?adjusted=true&apiKey=${API_KEY}`;
+  const res = await fetch(url);
   if (res.status === 429 && retries > 0) {
     console.log(`  rate limited — waiting 60s (${retries} retries left)`);
     await sleep(60_000);
     return fetchCurrentPrice(underlying, retries - 1);
   }
-  if (!res.ok) throw new Error(`Polygon prev aggs error for ${ticker}: ${res.status}`);
+  if (!res.ok) throw new Error(`Polygon prev aggs error for ${underlying}: ${res.status}`);
   const data  = await res.json();
   const close = data.results?.[0]?.c as number | undefined;
-  if (close == null) throw new Error(`No price data for ${ticker}`);
+  if (close == null) throw new Error(`No price data for ${underlying}`);
   return close;
 }
 
@@ -172,6 +180,14 @@ async function fetchRecentPrices(ticker: string, retries = 3): Promise<{ t: numb
   return data.results ?? [];
 }
 
+function isMonthlyExpiry(dateStr: string): boolean {
+  const d = new Date(dateStr + "T12:00:00Z");
+  const day = d.getUTCDay();
+  const date = d.getUTCDate();
+  // 3rd week (15–21), Wed–Sat: covers Fri/Sat equity, Thu NDX-style, Wed VIX
+  return date >= 15 && date <= 21 && day >= 3 && day <= 6;
+}
+
 function findMonthlyATM(contracts: PolygonContract[], approxStrike: number): PolygonContract | null {
   if (!contracts.length) return null;
 
@@ -182,14 +198,15 @@ function findMonthlyATM(contracts: PolygonContract[], approxStrike: number): Pol
     byExpiry.set(c.expiration_date, arr);
   }
 
-  let monthlyExpiry = "";
-  let maxStrikes = 0;
-  for (const [date, group] of byExpiry.entries()) {
-    if (group.length > maxStrikes) {
-      maxStrikes = group.length;
-      monthlyExpiry = date;
+  // Prefer 3rd-Friday (standard monthly) expiries; fall back to most-strikes heuristic
+  const monthlyExpiries = [...byExpiry.keys()].filter(isMonthlyExpiry).sort();
+  const monthlyExpiry = monthlyExpiries[0] ?? (() => {
+    let best = ""; let max = 0;
+    for (const [date, group] of byExpiry.entries()) {
+      if (group.length > max) { max = group.length; best = date; }
     }
-  }
+    return best;
+  })();
 
   const monthly = byExpiry.get(monthlyExpiry) ?? [];
   return monthly.reduce((best, c) =>

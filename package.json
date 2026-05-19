@@ -11,7 +11,8 @@
     "refresh:details": "tsx --env-file=.env.local scripts/refresh-ticker-details.ts",
     "backfill:forex": "tsx --env-file=.env.local scripts/backfill-forex.ts",
     "seed:options": "tsx --env-file=.env.local scripts/seed-options-contracts.ts",
-    "backfill:options": "tsx --env-file=.env.local scripts/backfill-options.ts"
+    "backfill:options": "tsx --env-file=.env.local scripts/backfill-options.ts",
+    "daily:options": "tsx --env-file=.env.local scripts/daily-options.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",

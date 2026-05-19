@@ -144,6 +144,12 @@ export class StockAppStack extends cdk.Stack {
       "polygon-api-key"
     );
 
+    const fredSecret = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      "FredApiKey",
+      "fred-api-key"
+    );
+
     const vpc = ec2.Vpc.fromVpcAttributes(this, "DefaultVpc", {
       vpcId: "vpc-dcaf7cb9",
       availabilityZones: ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"],
@@ -181,6 +187,7 @@ export class StockAppStack extends cdk.Stack {
       },
       secrets: {
         POLYGON_API_KEY: ecs.Secret.fromSecretsManager(polygonSecret),
+        FRED_API_KEY:    ecs.Secret.fromSecretsManager(fredSecret),
       },
       logging: ecs.LogDrivers.awsLogs({
         streamPrefix: "refresh",
@@ -193,6 +200,7 @@ export class StockAppStack extends cdk.Stack {
     optionsContractsTable.grantReadWriteData(taskDef.taskRole);
     optionsPricesTable.grantReadWriteData(taskDef.taskRole);
     polygonSecret.grantRead(taskDef.taskRole);
+    fredSecret.grantRead(taskDef.taskRole);
     taskDef.taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
       actions: ["cloudwatch:PutMetricData"],
       resources: ["*"],
