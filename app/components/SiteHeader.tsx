@@ -1,20 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "./ThemeProvider";
 import { logout } from "@/app/actions/auth";
-
-const NAV_TABS = [
-  { label: "Equities", href: "/" },
-  { label: "Economy", href: "/economy" },
-  { label: "Futures", href: "/futures" },
-  { label: "Currencies", href: "/currencies" },
-  { label: "Options", href: "/options" },
-  { label: "Fixed Income", href: "/bonds" },
-  { label: "Global", href: "/global" },
-];
 
 function UserMenu({ username, role }: { username: string; role?: string }) {
   const [open, setOpen] = useState(false);
@@ -91,10 +80,9 @@ interface Props {
 export default function SiteHeader({ username, role }: Props) {
   const { toggle, theme } = useTheme();
   const isDark = theme === "dark";
-  const pathname = usePathname();
 
   return (
-    <div className="mb-8">
+    <div className="mb-5">
       <div className="flex items-start justify-between mb-5">
         <div>
           <Link href="/" className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight hover:opacity-80 transition-opacity">Horizon</Link>
@@ -139,24 +127,6 @@ export default function SiteHeader({ username, role }: Props) {
         </div>
       </div>
 
-      <div className="flex gap-1 rounded-xl bg-gray-100 dark:bg-gray-900 p-1 w-fit max-w-full overflow-x-auto scrollbar-hide">
-        {NAV_TABS.map((tab) => {
-          const isActive = pathname === tab.href;
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                isActive
-                  ? "bg-emerald-500 text-white shadow"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </div>
     </div>
   );
 }

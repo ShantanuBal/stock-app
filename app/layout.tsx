@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import SiteHeader from "./components/SiteHeader";
+import NavTabs from "./components/NavTabs";
 import { getSession } from "@/lib/session";
 
 const inter = Inter({
@@ -55,6 +56,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <div className="mx-auto max-w-5xl px-4 pt-10 pb-16 font-[family-name:var(--font-geist-mono)]">
             <SiteHeader username={session?.username} role={session?.role} />
+            <NavTabs />
             {children}
             <div className="mt-12 border-t border-gray-200 dark:border-gray-800 pt-6 text-center text-xs text-gray-400 dark:text-gray-500 space-y-1.5">
               <p className="flex items-center justify-center gap-2">

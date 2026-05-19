@@ -81,7 +81,7 @@ export default function OptionsGrid({ stocks, etfs, volatility }: Props) {
   return (
     <>
       {/* Period tabs */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="sticky top-[44px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 py-1 mb-2 flex flex-wrap gap-2">
         {RANGES.map((r) => (
           <button
             key={r.value}
