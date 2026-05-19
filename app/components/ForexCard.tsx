@@ -58,6 +58,16 @@ export default function ForexCard({ pair, data, fullData }: { pair: PairConfig; 
   const selectedDays = range === "YTD" ? ytdDays() : (RANGES.find((r) => r.value === range)?.days ?? 30);
   const filteredPoints = fullData.points.slice(-selectedDays);
 
+  const modalChangePct = filteredPoints.length >= 2
+    ? ((filteredPoints[filteredPoints.length - 1].value - filteredPoints[0].value) / filteredPoints[0].value) * 100
+    : data.changePct;
+  const modalIsPositive = modalChangePct >= 0;
+  const modalChangeColor = modalIsPositive
+    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+    : "text-red-600 dark:text-red-400 bg-red-500/10";
+  const modalBadge = `${modalIsPositive ? "+" : ""}${modalChangePct.toFixed(2)}%`;
+  const rangeLabel = RANGES.find((r) => r.value === range)?.label ?? range;
+
   return (
     <>
       <div
@@ -99,8 +109,8 @@ export default function ForexCard({ pair, data, fullData }: { pair: PairConfig; 
                   {formatRate(data.rate)}
                 </p>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${changeColor}`}>{badge}</span>
-                  <span className="text-xs text-gray-400 dark:text-gray-600">1-day change</span>
+                  <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${modalChangeColor}`}>{modalBadge}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-600">{rangeLabel} change</span>
                 </div>
               </div>
               <div className="text-right">
