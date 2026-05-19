@@ -129,7 +129,8 @@ export default function ForexCard({ pair, data, fullData }: { pair: PairConfig; 
                       : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
-                  {r.label}
+                  <span className="sm:hidden">{r.value}</span>
+                  <span className="hidden sm:inline">{r.label}</span>
                 </button>
               ))}
             </div>
