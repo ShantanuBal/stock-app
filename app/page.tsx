@@ -211,8 +211,8 @@ export default function Home() {
   return (
     <div>
         {/* Index selector */}
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex flex-wrap gap-1 rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+        <div className="mb-5 rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+          <HScrollContainer variant="card" className="gap-1">
             {INDICES.map((idx) => (
               <button
                 key={idx.value}
@@ -239,7 +239,7 @@ export default function Home() {
                 </InfoTooltip>
               </button>
             ))}
-          </div>
+          </HScrollContainer>
         </div>
 
         {/* Time range selector */}
