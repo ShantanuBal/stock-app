@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 
 const NAV_TABS = [
   { label: "Equities",     href: "/"          },
+  { label: "Options",      href: "/options"   },
+  { label: "Currencies",   href: "/currencies"},
   { label: "Economy",      href: "/economy"   },
   { label: "Futures",      href: "/futures"   },
-  { label: "Currencies",   href: "/currencies"},
-  { label: "Options",      href: "/options"   },
   { label: "Fixed Income", href: "/bonds"     },
   { label: "Global",       href: "/global"    },
 ];
