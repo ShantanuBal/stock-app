@@ -55,9 +55,10 @@ export default function AboutPage() {
       {/* Mission */}
       <div className="mb-12">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-emerald-500 mb-3">Our Mission</h2>
-        <p className="text-2xl font-bold text-gray-900 dark:text-white leading-snug mb-4">
-          Financial foresight for everyone.
+        <p className="text-2xl font-bold text-gray-900 dark:text-white leading-snug mb-1">
+          Financial foresight for everyone
         </p>
+        <p className="text-sm text-gray-400 dark:text-gray-600 mb-4">Built by Shantanu Bal · Since May 2026</p>
         <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
           Horizon is an educational platform built to help anyone — from curious beginners to seasoned investors — understand how global financial markets work and where they may be heading. We bring together real-time data, clear visualisations, plain-English explanations, and AI-generated insights across equities, options, currencies, and the broader economy.
         </p>
