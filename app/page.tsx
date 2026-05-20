@@ -10,6 +10,7 @@ import { SP500_SECTORS } from "@/lib/sp500";
 import { NASDAQ100_SECTORS } from "@/lib/nasdaq100";
 import { DJIA_SECTORS } from "@/lib/djia";
 import { RUSSELL2000_SECTORS } from "@/lib/russell2000";
+import HScrollContainer from "./components/HScrollContainer";
 
 type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
 
@@ -242,21 +243,23 @@ export default function Home() {
         </div>
 
         {/* Time range selector */}
-        <div className="sticky top-[44px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 py-1 mb-2 flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide">
-          {RANGES.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => setRange(r.value)}
-              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                range === r.value
-                  ? "bg-emerald-500 text-white"
-                  : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              <span className="sm:hidden">{r.value}</span>
-              <span className="hidden sm:inline">{r.label}</span>
-            </button>
-          ))}
+        <div className="sticky top-[44px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 py-1 mb-2">
+          <HScrollContainer variant="page">
+            {RANGES.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => setRange(r.value)}
+                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                  range === r.value
+                    ? "bg-emerald-500 text-white"
+                    : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                <span className="sm:hidden">{r.value}</span>
+                <span className="hidden sm:inline">{r.label}</span>
+              </button>
+            ))}
+          </HScrollContainer>
         </div>
 
         {/* Index metadata */}
@@ -331,7 +334,7 @@ export default function Home() {
               </div>
             </InfoTooltip>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <HScrollContainer variant="card">
             {availableSectors.map((s) => {
               const isAll = s === "All";
               const isActive = isAll ? sectors.length === 0 : sectors.includes(s);
@@ -355,7 +358,7 @@ export default function Home() {
                 </button>
               );
             })}
-          </div>
+          </HScrollContainer>
         </div>
 
         {error ? (
