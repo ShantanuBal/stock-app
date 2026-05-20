@@ -75,6 +75,7 @@ export default async function RootLayout({
               <p>
                 Built by{" "}
                 <span className="text-gray-600 dark:text-gray-400 font-medium">Shantanu Bal</span>
+                <span className="text-gray-400 dark:text-gray-600"> · Since May 2026</span>
               </p>
             </div>
           </div>
