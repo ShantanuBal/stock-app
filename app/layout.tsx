@@ -5,6 +5,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import SiteHeader from "./components/SiteHeader";
 import NavTabs from "./components/NavTabs";
 import { getSession } from "@/lib/session";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -80,6 +81,7 @@ export default async function RootLayout({
             </div>
           </div>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
