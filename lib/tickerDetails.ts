@@ -57,7 +57,10 @@ export async function refreshTickerDetails(ticker: string, delayMs = 15_000): Pr
   const detailsRes = await fetch(
     `https://api.polygon.io/v3/reference/tickers/${ticker}?apiKey=${process.env.POLYGON_API_KEY}`
   );
-  if (!detailsRes.ok) return null;
+  if (!detailsRes.ok) {
+    console.log(`[ticker-details] ${ticker} — Polygon /tickers returned ${detailsRes.status}`);
+    return null;
+  }
 
   const { results } = await detailsRes.json();
   if (!results?.description) return null;

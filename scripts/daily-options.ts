@@ -321,6 +321,7 @@ async function fetchTodayPrices(contracts: Contract[]): Promise<void> {
 
 (async () => {
   console.log(`=== daily-options ${today()} ===\n`);
+  console.log(`POLYGON_API_KEY: ${API_KEY ? `set (${API_KEY.slice(0, 4)}…)` : "NOT SET — all requests will 401"}`);
 
   let contracts = await getActiveContracts();
   console.log(`Found ${contracts.length} active contracts.\n`);

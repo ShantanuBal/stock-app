@@ -57,6 +57,9 @@ function uniqueTickers(): string[] {
   const limit = limitArg ? parseInt(limitArg.split("=")[1], 10) : undefined;
   const from = fromArg ? parseInt(fromArg.split("=")[1], 10) : 0;
 
+  const apiKey = process.env.POLYGON_API_KEY;
+  console.log(`[refresh] POLYGON_API_KEY: ${apiKey ? `set (${apiKey.slice(0, 4)}…)` : "NOT SET — all requests will 401"}`);
+
   const allTickers = uniqueTickers();
   const tickers = allTickers.slice(from, limit ? from + limit : undefined);
   const suffix = [from > 0 ? `from index ${from}` : "", limit ? `limit ${limit}` : ""].filter(Boolean).join(", ");
