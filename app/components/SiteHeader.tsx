@@ -86,7 +86,10 @@ export default function SiteHeader({ username, role }: Props) {
       <div className="flex items-start justify-between mb-5">
         <div>
           <Link href="/" className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight hover:opacity-80 transition-opacity">Horizon</Link>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Financial foresight for everyone</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Financial foresight for everyone
+            <Link href="/about" className="ml-1.5 text-emerald-500 hover:text-emerald-400 transition-colors">(Learn more)</Link>
+          </p>
         </div>
         <div className="flex items-center gap-2 mt-1">
           {username ? (
