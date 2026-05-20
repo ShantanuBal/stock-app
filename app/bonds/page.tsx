@@ -2,6 +2,7 @@ import { getAllBondData, TREASURY_CONFIGS, CREDIT_CONFIGS } from "@/lib/fred-bon
 import IndicatorCard from "../components/IndicatorCard";
 import InfoTooltip from "../components/InfoTooltip";
 import YieldCurveChart from "../components/YieldCurveChart";
+import BondsAiSummary from "../components/BondsAiSummary";
 
 export const revalidate = 3600;
 
@@ -41,6 +42,8 @@ export default async function BondsPage() {
           Treasury yields, credit spreads, and inflation expectations · Data from FRED · 1 business day lag
         </p>
       </div>
+
+      <BondsAiSummary />
 
       {/* Yield Curve */}
       <div className="mb-10 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
