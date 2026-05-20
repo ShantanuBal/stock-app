@@ -6,9 +6,21 @@ export const metadata = {
 const FEATURES = [
   {
     status: "live",
-    title: "Stock Markets",
+    title: "Equities",
     description:
-      "Track top performers across the S&P 500, Nasdaq 100, Dow Jones, and Russell 2000. Filter by industry, sort by price, change, beta, market cap, or volume, and hover over any ticker for a company description.",
+      "Track top performers across the S&P 500, Nasdaq 100, Dow Jones, and Russell 2000. Filter by sector, sort by price change, beta, market cap, or volume, and get a daily AI-generated summary of what's driving the market.",
+  },
+  {
+    status: "live",
+    title: "Options & Volatility",
+    description:
+      "Monitor at-the-money option premiums for the most actively traded stocks (AAPL, NVDA, TSLA and more), index ETFs (SPY, QQQ), and the VIX fear index. See premium history across multiple timeframes and get an AI read on what the options market is signaling.",
+  },
+  {
+    status: "live",
+    title: "Currencies & Forex",
+    description:
+      "Track major forex pairs (EUR/USD, USD/JPY, GBP/USD), emerging market currencies (CNY, INR, BRL, MXN), and crypto (BTC, ETH, SOL, XRP) — with sparklines and historical performance across 1D to 1Y timeframes.",
   },
   {
     status: "live",
@@ -24,18 +36,6 @@ const FEATURES = [
   },
   {
     status: "soon",
-    title: "Currencies & Forex",
-    description:
-      "Track major currency pairs (EUR/USD, USD/JPY, GBP/USD), the US Dollar Index (DXY), and emerging market currencies — essential for understanding global capital flows and trade dynamics.",
-  },
-  {
-    status: "soon",
-    title: "Options & Volatility",
-    description:
-      "Explore implied volatility, the VIX fear index, put/call ratios, and options flow — tools that reveal how professional traders are positioning for the future.",
-  },
-  {
-    status: "soon",
     title: "Fixed Income & Credit",
     description:
       "Dive into the bond market: Treasury yields across the full curve, corporate credit spreads, and investment-grade vs high-yield dynamics.",
@@ -45,12 +45,6 @@ const FEATURES = [
     title: "Global Markets",
     description:
       "Broaden your perspective with major international indices — Europe (FTSE, DAX, CAC), Asia-Pacific (Nikkei, Hang Seng, ASX), and emerging markets.",
-  },
-  {
-    status: "soon",
-    title: "Education",
-    description:
-      "Plain-English explainers for every metric, chart, and concept on the platform — from what beta actually means to how the yield curve predicts recessions.",
   },
 ];
 
@@ -65,7 +59,7 @@ export default function AboutPage() {
           Financial foresight for everyone.
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          Horizon is an educational platform built to help anyone — from curious beginners to seasoned investors — understand how global financial markets work and where they may be heading. We bring together real-time data, clear visualisations, and plain-English explanations across every major asset class.
+          Horizon is an educational platform built to help anyone — from curious beginners to seasoned investors — understand how global financial markets work and where they may be heading. We bring together real-time data, clear visualisations, plain-English explanations, and AI-generated insights across equities, options, currencies, and the broader economy.
         </p>
       </div>
 
