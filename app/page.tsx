@@ -211,7 +211,7 @@ export default function Home() {
   return (
     <div>
         {/* Index selector */}
-        <div className="mb-5 rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+        <div className="mb-5 rounded-xl bg-gray-100 dark:bg-gray-900 p-1 w-fit max-w-full">
           <HScrollContainer variant="card" className="gap-1">
             {INDICES.map((idx) => (
               <button

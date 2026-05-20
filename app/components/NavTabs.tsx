@@ -18,7 +18,7 @@ export default function NavTabs() {
   const pathname = usePathname();
   return (
     <div className="sticky top-0 z-20 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 mb-1">
-      <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+      <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1 w-fit max-w-full">
         <HScrollContainer variant="page" className="gap-1">
           {NAV_TABS.map((tab) => (
             <Link
