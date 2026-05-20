@@ -75,6 +75,13 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
 
   useImperativeHandle(forwardedRef, () => ({ show, hide }));
 
+  useEffect(() => {
+    if (!rect) return;
+    const handler = () => { if (hideTimer.current) clearTimeout(hideTimer.current); setRect(null); };
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [rect]);
+
   function show() {
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setRect(spanRef.current?.getBoundingClientRect() ?? null);
@@ -103,13 +110,26 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
 
   return (
     <>
-      <span ref={spanRef} className="cursor-help">
+      <span
+        ref={spanRef}
+        className="cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (rect) {
+            if (hideTimer.current) clearTimeout(hideTimer.current);
+            setRect(null);
+          } else {
+            show();
+          }
+        }}
+      >
         {ticker}
       </span>
       {rect && (
         <div
           className="fixed z-50 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl font-normal normal-case tracking-normal font-[family-name:var(--font-inter)] overflow-hidden"
           style={{ top: tooltipTop, left: tooltipLeft, width: effectiveWidth }}
+          onClick={(e) => e.stopPropagation()}
           onMouseEnter={show}
           onMouseLeave={hide}
         >
