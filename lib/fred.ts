@@ -2,7 +2,7 @@ import { docClient } from "./dynamodb";
 import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 
 const CACHE_TABLE = process.env.ECONOMY_CACHE_TABLE_NAME ?? "EconomyCache";
-const CACHE_TTL = 24 * 60 * 60; // 24 hours
+const CACHE_TTL = 30 * 24 * 60 * 60; // 30 days — for eventual cleanup only; freshness is enforced by date key
 
 export interface IndicatorPoint {
   date: string;
@@ -171,7 +171,7 @@ async function fetchFromFred(config: IndicatorConfig): Promise<IndicatorResult |
 }
 
 export async function getIndicator(config: IndicatorConfig): Promise<IndicatorResult | null> {
-  const pk = config.id;
+  const pk = `${config.id}#${new Date().toISOString().split("T")[0]}`;
 
   try {
     const cached = await docClient.send(new GetCommand({ TableName: CACHE_TABLE, Key: { pk } }));

@@ -10,6 +10,8 @@ export const FOREX_TICKERS = [
   "C:EURUSD", "C:USDJPY", "C:GBPUSD", "C:USDCHF", "C:AUDUSD", "C:USDCAD",
   "C:USDCNY", "C:USDINR", "C:USDBRL", "C:USDMXN", "C:USDKRW", "C:USDZAR",
   "X:BTCUSD", "X:ETHUSD", "X:SOLUSD", "X:BNBUSD",
+  // Precious metals (XAU/XAG/XPT/XPD trade as forex pairs on Polygon)
+  "C:XAUUSD", "C:XAGUSD", "C:XPTUSD", "C:XPDUSD",
 ];
 
 export interface ForexRate {
