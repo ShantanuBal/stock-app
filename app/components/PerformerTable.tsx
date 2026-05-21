@@ -108,19 +108,24 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
   const [search, setSearch] = useState("");
   const tooltipRefs = useRef<Map<string, TickerTooltipHandle | null>>(new Map());
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeTicker = useRef<string | null>(null);
 
   function getTooltipCallbacks(ticker: string) {
     return {
       onMouseEnter: () => {
         if (hideTimer.current) clearTimeout(hideTimer.current);
-        if (activeTicker.current && activeTicker.current !== ticker) {
-          tooltipRefs.current.get(activeTicker.current)?.hide();
-        }
-        activeTicker.current = ticker;
-        tooltipRefs.current.get(ticker)?.show();
+        if (showTimer.current) clearTimeout(showTimer.current);
+        showTimer.current = setTimeout(() => {
+          if (activeTicker.current && activeTicker.current !== ticker) {
+            tooltipRefs.current.get(activeTicker.current)?.hide();
+          }
+          activeTicker.current = ticker;
+          tooltipRefs.current.get(ticker)?.show();
+        }, 300);
       },
       onMouseLeave: () => {
+        if (showTimer.current) clearTimeout(showTimer.current);
         hideTimer.current = setTimeout(() => {
           tooltipRefs.current.get(ticker)?.hide();
           if (activeTicker.current === ticker) activeTicker.current = null;
