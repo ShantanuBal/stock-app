@@ -49,6 +49,7 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
   forwardedRef,
 ) {
   const spanRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [details, setDetails] = useState<TickerDetails | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
@@ -77,7 +78,11 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
 
   useEffect(() => {
     if (!rect) return;
-    const handler = () => { if (hideTimer.current) clearTimeout(hideTimer.current); setRect(null); };
+    const handler = (e: MouseEvent) => {
+      if (tooltipRef.current?.contains(e.target as Node)) return;
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      setRect(null);
+    };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, [rect]);
@@ -127,6 +132,7 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
       </span>
       {rect && (
         <div
+          ref={tooltipRef}
           className="fixed z-50 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl font-normal normal-case tracking-normal font-[family-name:var(--font-inter)] overflow-hidden"
           style={{ top: tooltipTop, left: tooltipLeft, width: effectiveWidth }}
           onClick={(e) => e.stopPropagation()}
