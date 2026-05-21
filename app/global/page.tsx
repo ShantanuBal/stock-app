@@ -62,9 +62,23 @@ export default function GlobalMarketsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
-          Global Markets
-        </h2>
+        <div className="flex items-center gap-1.5 mb-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+            Global Markets
+          </h2>
+          <InfoTooltip width="w-80">
+            <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Why do global markets matter?</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
+              Financial markets are globally interconnected. A sell-off in Asian markets overnight often sets the tone for European and US trading hours. Major events — a Fed rate decision, a Chinese GDP report, a UK election — ripple across every market.
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              Following global indices helps you distinguish whether a US move is isolated or part of a broader trend. When all markets fall together, it typically signals a global macro event. When the US diverges, it&apos;s likely something US-specific.
+            </p>
+            <a href="https://en.wikipedia.org/wiki/Stock_market_index" target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-emerald-500 hover:text-emerald-400 underline underline-offset-2">
+              Learn more on Wikipedia →
+            </a>
+          </InfoTooltip>
+        </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Stock indices from every major market, from the Americas to Asia-Pacific · Coming soon
         </p>

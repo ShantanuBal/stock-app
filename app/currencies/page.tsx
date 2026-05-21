@@ -1,5 +1,6 @@
 import CurrenciesGrid from "@/app/components/CurrenciesGrid";
 import { getAllForexRates } from "@/lib/polygon-forex";
+import InfoTooltip from "@/app/components/InfoTooltip";
 
 export const metadata = { title: "Currencies · Horizon" };
 export const revalidate = 3600;
@@ -52,9 +53,23 @@ export default async function CurrenciesPage() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
-          Currencies & Forex
-        </h2>
+        <div className="flex items-center gap-1.5 mb-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+            Currencies & Forex
+          </h2>
+          <InfoTooltip width="w-80">
+            <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">What is forex?</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
+              The foreign exchange (forex) market is where currencies are bought and sold. An exchange rate like EUR/USD = 1.09 means one euro buys 1.09 US dollars. A rising rate means the base currency (EUR) has strengthened against the quote currency (USD).
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              Forex is the world&apos;s largest and most liquid market, with over $7 trillion traded daily. It&apos;s driven by interest rate differentials, inflation, trade flows, and geopolitical events.
+            </p>
+            <a href="https://en.wikipedia.org/wiki/Foreign_exchange_market" target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-emerald-500 hover:text-emerald-400 underline underline-offset-2">
+              Learn more on Wikipedia →
+            </a>
+          </InfoTooltip>
+        </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Live exchange rates for major forex pairs, emerging market currencies, and crypto · Data from Polygon · Updated hourly
         </p>

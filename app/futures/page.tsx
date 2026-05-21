@@ -64,9 +64,23 @@ export default async function FuturesPage() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
-          Futures & Commodities
-        </h2>
+        <div className="flex items-center gap-1.5 mb-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+            Futures & Commodities
+          </h2>
+          <InfoTooltip width="w-80">
+            <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">What are futures?</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
+              A futures contract is an agreement to buy or sell an asset at a fixed price on a future date. Commodity prices — oil, gold, natural gas — are set in futures markets, so spot prices you see here reflect the current front-month futures price.
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              Futures are used by producers (e.g. airlines hedging fuel costs), consumers, and speculators. Equity index futures like the S&amp;P 500 trade nearly 24 hours a day and are widely used to gauge pre-market sentiment.
+            </p>
+            <a href="https://en.wikipedia.org/wiki/Futures_contract" target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-emerald-500 hover:text-emerald-400 underline underline-offset-2">
+              Learn more on Wikipedia →
+            </a>
+          </InfoTooltip>
+        </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Commodity spot prices and futures contracts · Metals from Polygon · Energy from FRED · Equity & rate futures coming soon
         </p>

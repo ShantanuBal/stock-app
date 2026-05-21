@@ -211,9 +211,23 @@ export default function Home() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
-          Equities
-        </h2>
+        <div className="flex items-center gap-1.5 mb-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+            Equities
+          </h2>
+          <InfoTooltip width="w-80">
+            <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">What are equities?</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
+              Equities (stocks) represent ownership in a company. When you buy a share, you own a small slice of that business and are entitled to a proportional claim on its earnings and assets.
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              This tab tracks top movers across four major US indices: the <span className="font-medium text-gray-700 dark:text-gray-300">S&amp;P 500</span> (500 large-cap companies), <span className="font-medium text-gray-700 dark:text-gray-300">Nasdaq 100</span> (tech-heavy), <span className="font-medium text-gray-700 dark:text-gray-300">Dow Jones</span> (30 blue-chip stocks), and <span className="font-medium text-gray-700 dark:text-gray-300">Russell 2000</span> (small-caps).
+            </p>
+            <a href="https://en.wikipedia.org/wiki/Stock" target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-emerald-500 hover:text-emerald-400 underline underline-offset-2">
+              Learn more on Wikipedia →
+            </a>
+          </InfoTooltip>
+        </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Top performers across S&P 500, Nasdaq 100, Dow Jones, and Russell 2000 · Data from Polygon · Updated daily
         </p>
