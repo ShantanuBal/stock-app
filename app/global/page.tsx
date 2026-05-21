@@ -61,16 +61,13 @@ function SectionHeader({ title, children }: { title: string; children: React.Rea
 export default function GlobalMarketsPage() {
   return (
     <div>
-      <div className="flex items-center gap-3 mb-8">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Global Markets</h1>
-            <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-400 dark:text-gray-500">Coming soon</span>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Stock indices from every major market, from the Americas to Asia-Pacific.
-          </p>
-        </div>
+      <div className="mb-6">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
+          Global Markets
+        </h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Stock indices from every major market, from the Americas to Asia-Pacific · Coming soon
+        </p>
       </div>
 
       {/* Why global markets matter */}

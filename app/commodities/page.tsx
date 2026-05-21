@@ -14,7 +14,7 @@ export default async function CommoditiesPage() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
           Commodities
         </h2>
         <p className="text-xs text-gray-500 dark:text-gray-400">

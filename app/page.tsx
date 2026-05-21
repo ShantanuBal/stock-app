@@ -210,6 +210,15 @@ export default function Home() {
 
   return (
     <div>
+      <div className="mb-6">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
+          Equities
+        </h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Top performers across S&P 500, Nasdaq 100, Dow Jones, and Russell 2000 · Data from Polygon · Updated daily
+        </p>
+      </div>
+
         {/* Index selector */}
         <div className="mb-5 rounded-xl bg-gray-100 dark:bg-gray-900 p-1 w-fit max-w-full">
           <HScrollContainer variant="card" className="gap-1">

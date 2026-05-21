@@ -11,7 +11,7 @@ export default async function EconomyPage() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
           US Economic Indicators
         </h2>
         <p className="text-xs text-gray-500 dark:text-gray-400">
