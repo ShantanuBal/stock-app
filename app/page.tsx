@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition, useMemo } from "react";
 import type { IndexKey } from "./api/top-performers/route";
 import IndexChart, { type ChartData } from "./components/IndexChart";
+import IndexChartModal from "./components/IndexChartModal";
 import InfoTooltip from "./components/InfoTooltip";
 import PerformerTable from "./components/PerformerTable";
 import type { StockResult } from "@/lib/polygon";
@@ -117,6 +118,7 @@ export default function Home() {
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [chartModalOpen, setChartModalOpen] = useState(false);
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
   const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }> | undefined>(undefined);
 
@@ -301,7 +303,14 @@ export default function Home() {
         </div>
 
         {/* Index chart */}
-        <IndexChart data={chartData} label={currentIndex.label} loading={loading} />
+        <IndexChart data={chartData} label={currentIndex.label} loading={loading} onClick={() => setChartModalOpen(true)} />
+        <IndexChartModal
+          isOpen={chartModalOpen}
+          onClose={() => setChartModalOpen(false)}
+          label={currentIndex.label}
+          index={index}
+          initialRange={range}
+        />
 
         {/* AI Summary */}
         {(topStocks !== null && !loading && summary === null) || summaryLoading ? (
