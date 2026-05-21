@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-export default function EconomyAiSummary({ range }: { range: string }) {
+export default function CurrenciesAiSummary({ range }: { range: string }) {
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -10,7 +10,7 @@ export default function EconomyAiSummary({ range }: { range: string }) {
   useEffect(() => {
     setLoading(true);
     setSummary(null);
-    fetch(`/api/ai-economy-summary?range=${range}`)
+    fetch(`/api/ai-currencies-summary?range=${range}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setSummary(d?.summary ?? null))
       .catch(() => setSummary(null))

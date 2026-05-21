@@ -4,6 +4,7 @@ import { useState } from "react";
 import CommodityCard from "./CommodityCard";
 import InfoTooltip from "./InfoTooltip";
 import HScrollContainer from "./HScrollContainer";
+import FuturesAiSummary from "./FuturesAiSummary";
 import type { CommodityConfig, CommodityData } from "@/lib/polygon-commodities";
 
 type Range = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
@@ -86,6 +87,8 @@ export default function CommoditiesGrid({ metalsConfigs, energyConfigs, metalsDa
           ))}
         </HScrollContainer>
       </div>
+
+      <FuturesAiSummary range={range} />
 
       {/* Energy */}
       <div className="mb-10">

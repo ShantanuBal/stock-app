@@ -2,18 +2,20 @@
 
 import { useState, useEffect } from "react";
 
-export default function FuturesAiSummary() {
+export default function FuturesAiSummary({ range }: { range: string }) {
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    fetch("/api/ai-futures-summary")
+    setLoading(true);
+    setSummary(null);
+    fetch(`/api/ai-futures-summary?range=${range}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setSummary(d?.summary ?? null))
       .catch(() => setSummary(null))
       .finally(() => setLoading(false));
-  }, []);
+  }, [range]);
 
   if (loading) {
     return (

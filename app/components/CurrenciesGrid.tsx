@@ -4,6 +4,7 @@ import { useState } from "react";
 import ForexCard from "./ForexCard";
 import InfoTooltip from "./InfoTooltip";
 import HScrollContainer from "./HScrollContainer";
+import CurrenciesAiSummary from "./CurrenciesAiSummary";
 import type { ForexRate } from "@/lib/polygon-forex";
 
 interface PairConfig {
@@ -95,6 +96,8 @@ export default function CurrenciesGrid({ majorPairs, emPairs, crypto, majorRates
           ))}
         </HScrollContainer>
       </div>
+
+      <CurrenciesAiSummary range={range} />
 
       {/* Major Pairs */}
       <div className="mb-10">

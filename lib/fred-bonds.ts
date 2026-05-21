@@ -11,7 +11,7 @@ export const TREASURY_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     maturityLabel: "3M",
     tooltip: {
       what: "The yield on 3-month US Treasury bills — the shortest-duration government debt and the closest proxy to the risk-free rate.",
@@ -25,7 +25,7 @@ export const TREASURY_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     maturityLabel: "6M",
     tooltip: {
       what: "The yield on 6-month US Treasury bills.",
@@ -39,7 +39,7 @@ export const TREASURY_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     maturityLabel: "1Y",
     tooltip: {
       what: "The yield on 1-year US Treasury notes.",
@@ -53,7 +53,7 @@ export const TREASURY_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     maturityLabel: "2Y",
     tooltip: {
       what: "The yield on 2-year US Treasury notes — the most sensitive duration to Fed policy expectations.",
@@ -67,7 +67,7 @@ export const TREASURY_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     maturityLabel: "5Y",
     tooltip: {
       what: "The yield on 5-year US Treasury notes — the midpoint of the yield curve.",
@@ -81,7 +81,7 @@ export const TREASURY_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     maturityLabel: "10Y",
     tooltip: {
       what: "The yield on 10-year US Treasury notes — the most watched interest rate in the world.",
@@ -95,7 +95,7 @@ export const TREASURY_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     maturityLabel: "20Y",
     tooltip: {
       what: "The yield on 20-year US Treasury bonds.",
@@ -109,7 +109,7 @@ export const TREASURY_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     maturityLabel: "30Y",
     tooltip: {
       what: "The yield on 30-year US Treasury bonds — the longest-duration US government debt.",
@@ -126,7 +126,7 @@ export const CREDIT_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     tooltip: {
       what: "The real yield on 10-year Treasury Inflation-Protected Securities. Unlike nominal bonds, TIPS principal adjusts with CPI — so their yield is a return after inflation.",
       why: "A positive TIPS yield means earning above inflation. Negative TIPS yields (common post-2008) meant investors accepted a real loss for safety. Rising real yields tighten financial conditions.",
@@ -139,7 +139,7 @@ export const CREDIT_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "neutral",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     tooltip: {
       what: "The market's implied 10-year inflation expectation — the 10-year nominal Treasury yield minus the 10-year TIPS yield.",
       why: "This is the bond market's collective bet on where inflation will average over the next decade. Rising breakevens signal inflation fears; falling breakevens signal deflation worries.",
@@ -152,7 +152,7 @@ export const CREDIT_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "negative",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     tooltip: {
       what: "The option-adjusted spread between investment-grade corporate bonds and equivalent Treasuries — the extra yield demanded for corporate credit risk.",
       why: "Credit spreads are a real-time fear gauge. Widening spreads signal growing default concerns. Tightening spreads indicate confidence. Spreads blow out sharply in recessions.",
@@ -165,7 +165,7 @@ export const CREDIT_CONFIGS: BondIndicatorConfig[] = [
     unitDisplay: "%",
     framing: "negative",
     changeLabel: "vs prev day",
-    fetchLimit: 90,
+    fetchLimit: 400,
     tooltip: {
       what: "The option-adjusted spread on high-yield ('junk') bonds — issued by below-investment-grade companies. The extra yield over Treasuries for taking on default risk.",
       why: "HY spreads are a leading indicator of economic distress. Spreads above 8–10% historically signal imminent recession. They blew out to ~20% in 2008 and ~10% at the COVID lows.",

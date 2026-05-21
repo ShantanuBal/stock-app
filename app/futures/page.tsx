@@ -1,6 +1,5 @@
 import InfoTooltip from "@/app/components/InfoTooltip";
 import CommoditiesGrid from "@/app/components/CommoditiesGrid";
-import FuturesAiSummary from "@/app/components/FuturesAiSummary";
 import { getAllMetalsData, getAllEnergyData, METALS_CONFIGS, ENERGY_CONFIGS } from "@/lib/polygon-commodities";
 
 export const revalidate = 3600;
@@ -72,8 +71,6 @@ export default async function FuturesPage() {
           Commodity spot prices and futures contracts · Metals from Polygon · Energy from FRED · Equity & rate futures coming soon
         </p>
       </div>
-
-      <FuturesAiSummary />
 
       {/* Commodities — live */}
       <CommoditiesGrid
