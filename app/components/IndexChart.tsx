@@ -22,6 +22,7 @@ interface Props {
   label: string;
   loading: boolean;
   onClick?: () => void;
+  gradientId?: string;
 }
 
 function fmtAxisDate(dateStr: string): string {
@@ -52,7 +53,7 @@ function CustomTooltip({ active, payload, label, color, isDark }: any) {
   );
 }
 
-export default function IndexChart({ data, label, loading, onClick }: Props) {
+export default function IndexChart({ data, label, loading, onClick, gradientId = "indexGrad" }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -107,7 +108,7 @@ export default function IndexChart({ data, label, loading, onClick }: Props) {
       <ResponsiveContainer width="100%" height={160}>
         <AreaChart data={points} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
           <defs>
-            <linearGradient id="indexGrad" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={color} stopOpacity={0.25} />
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
@@ -135,7 +136,7 @@ export default function IndexChart({ data, label, loading, onClick }: Props) {
             dataKey="close"
             stroke={color}
             strokeWidth={2}
-            fill="url(#indexGrad)"
+            fill={`url(#${gradientId})`}
             dot={false}
             activeDot={{ r: 4, fill: color, stroke: "none" }}
           />

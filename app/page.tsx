@@ -103,6 +103,8 @@ const INDICES: {
 ];
 
 
+const SUMMARY_INDICES = ["sp500", "nasdaq100", "djia", "russell2000"] as const;
+
 const GICS = [
   { sector: "Information Technology", groups: ["Software", "Semiconductors", "Tech Hardware"] },
   { sector: "Health Care",            groups: ["Pharma & Biotech", "Health Services"] },
@@ -132,8 +134,10 @@ export default function Home() {
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
   const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }> | undefined>(undefined);
+  const [isSummary, setIsSummary] = useState(false);
+  const [summaryCharts, setSummaryCharts] = useState<Record<string, ChartData | null> | null>(null);
 
-  const isAllStocks = index === "all";
+  const isAllStocks = !isSummary && index === "all";
   const currentIndex = INDICES.find((i) => i.value === index) ?? null;
   // Show skeleton on first load (null) or while a transition is in flight
   const loading = topStocks === null || isPending;
@@ -226,6 +230,22 @@ export default function Home() {
     });
   }, [index, range, isAllStocks]);
 
+  useEffect(() => {
+    if (!isSummary) return;
+    setSummaryCharts(null);
+    Promise.all(
+      SUMMARY_INDICES.map(async (idx) => {
+        try {
+          const res = await fetch(`/api/index-chart?range=${range}&index=${idx}`);
+          const data = res.ok ? await res.json() : null;
+          return [idx, data] as [string, ChartData | null];
+        } catch {
+          return [idx, null] as [string, null];
+        }
+      })
+    ).then((results) => setSummaryCharts(Object.fromEntries(results)));
+  }, [isSummary, range]);
+
   return (
     <div>
       <div className="mb-6">
@@ -274,13 +294,32 @@ export default function Home() {
         {/* Index selector */}
         <div className="mb-5 flex items-center gap-3 w-fit max-w-full">
           <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+            <button
+              onClick={() => setIsSummary(true)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                isSummary
+                  ? "bg-emerald-500 text-white shadow"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              Summary
+              <InfoTooltip element="span">
+                <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Summary</p>
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  A side-by-side view of all four major US indices — S&amp;P 500, Nasdaq 100, Dow Jones, and Russell 2000 — over the selected time range. Click any chart to drill into that index.
+                </p>
+              </InfoTooltip>
+            </button>
+          </div>
+          <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
             <HScrollContainer variant="card" className="gap-1">
               {INDICES.filter((idx) => idx.value !== "all").map((idx) => (
                 <button
                   key={idx.value}
-                  onClick={() => { setIndex(idx.value); setSectors([]); }}
+                  onClick={() => { setIndex(idx.value); setSectors([]); setIsSummary(false); }}
                   className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
-                    index === idx.value
+                    !isSummary && index === idx.value
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
@@ -316,9 +355,9 @@ export default function Home() {
             return (
               <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
                 <button
-                  onClick={() => { setIndex("all"); setSectors([]); }}
+                  onClick={() => { setIndex("all"); setSectors([]); setIsSummary(false); }}
                   className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
-                    index === "all"
+                    !isSummary && index === "all"
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
@@ -343,8 +382,27 @@ export default function Home() {
           })()}
         </div>
 
-        {/* Chart — hidden for All Stocks */}
-        {!isAllStocks && currentIndex && (
+        {/* Summary view — 2×2 index chart grid */}
+        {isSummary && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {SUMMARY_INDICES.map((idx) => {
+              const idxInfo = INDICES.find((i) => i.value === idx)!;
+              return (
+                <IndexChart
+                  key={idx}
+                  data={summaryCharts?.[idx] ?? null}
+                  label={idxInfo.label}
+                  loading={summaryCharts === null}
+                  gradientId={`summaryGrad-${idx}`}
+                  onClick={() => { setIsSummary(false); setIndex(idx); setSectors([]); }}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Chart — hidden for All Stocks and Summary */}
+        {!isSummary && !isAllStocks && currentIndex && (
           <>
             <IndexChart data={chartData} label={currentIndex.label} loading={loading} onClick={() => setChartModalOpen(true)} />
             <IndexChartModal
@@ -357,8 +415,8 @@ export default function Home() {
           </>
         )}
 
-        {/* AI Summary — hidden for All Stocks */}
-        {!isAllStocks && ((topStocks !== null && !loading && summary === null) || summaryLoading) ? (
+        {/* AI Summary — hidden for All Stocks and Summary */}
+        {!isSummary && !isAllStocks && ((topStocks !== null && !loading && summary === null) || summaryLoading) ? (
           <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 flex items-center gap-3">
             <svg className="animate-spin h-4 w-4 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -366,7 +424,7 @@ export default function Home() {
             </svg>
             <span className="text-sm text-gray-500 dark:text-gray-400">Generating AI summary…</span>
           </div>
-        ) : !isAllStocks && summary ? (
+        ) : !isSummary && !isAllStocks && summary ? (
           <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
             <div className="flex items-center gap-2 mb-2.5">
               <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Summary</span>
@@ -388,8 +446,8 @@ export default function Home() {
           </div>
         ) : null}
 
-        {/* Sector filter tabs — hidden for All Stocks */}
-        {!isAllStocks && <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
+        {/* Sector filter tabs — hidden for All Stocks and Summary */}
+        {!isSummary && !isAllStocks && <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
           <div className="flex items-center gap-1.5 mb-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Industry</p>
             <InfoTooltip>
@@ -438,11 +496,11 @@ export default function Home() {
           </HScrollContainer>
         </div>}
 
-        {error ? (
+        {!isSummary && error ? (
           <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
             {error}
           </div>
-        ) : loading || (isAllStocks && marketCapShares === undefined) ? (
+        ) : !isSummary && (loading || (isAllStocks && marketCapShares === undefined)) ? (
           <div className="space-y-2">
             {isAllStocks && (
               <div className="flex items-center gap-2 mb-3 px-1">
@@ -460,7 +518,7 @@ export default function Home() {
               <div key={i} className="h-11 rounded-lg bg-gray-200 dark:bg-gray-800/50 animate-pulse" />
             ))}
           </div>
-        ) : (
+        ) : !isSummary ? (
           <>
             <PerformerTable
               key={`${index}-${range}-${sectors.join(",")}`}
@@ -475,7 +533,7 @@ export default function Home() {
               range={range}
             />
           </>
-        )}
+        ) : null}
 
     </div>
   );
