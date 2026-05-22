@@ -290,6 +290,14 @@ export default function Home() {
                     <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                     <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{idx.description}</p>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                      {idx.meta.map((item) => (
+                        <div key={item.label}>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider">{item.label}</p>
+                          <p className="text-xs font-semibold text-gray-900 dark:text-white mt-0.5">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
                     <a
                       href={idx.wikiUrl}
                       target="_blank"
@@ -335,22 +343,9 @@ export default function Home() {
           })()}
         </div>
 
-        {/* Index metadata + chart — hidden for All Stocks */}
+        {/* Chart — hidden for All Stocks */}
         {!isAllStocks && currentIndex && (
           <>
-            <div className="mb-5 flex flex-wrap gap-x-6 gap-y-3">
-              {currentIndex.meta.map((item, i) => (
-                <div key={item.label} className="flex items-center gap-6">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">{item.label}</p>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{item.value}</p>
-                  </div>
-                  {i < currentIndex.meta.length - 1 && (
-                    <div className="h-8 w-px bg-gray-200 dark:bg-gray-800" />
-                  )}
-                </div>
-              ))}
-            </div>
             <IndexChart data={chartData} label={currentIndex.label} loading={loading} onClick={() => setChartModalOpen(true)} />
             <IndexChartModal
               isOpen={chartModalOpen}
