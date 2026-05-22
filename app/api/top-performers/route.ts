@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTopPerformers, TimeRange } from "@/lib/polygon";
+import { getTopPerformers, getAllStocks, TimeRange } from "@/lib/polygon";
 import { SP500_TICKERS, TICKER_NAMES as SP500_NAMES } from "@/lib/sp500";
 import { NASDAQ100_TICKERS, NASDAQ100_NAMES } from "@/lib/nasdaq100";
 import { DJIA_TICKERS, DJIA_NAMES } from "@/lib/djia";
 import { RUSSELL2000_TICKERS, RUSSELL2000_NAMES } from "@/lib/russell2000";
 
-export type IndexKey = "sp500" | "nasdaq100" | "djia" | "russell2000";
+export type IndexKey = "all" | "sp500" | "nasdaq100" | "djia" | "russell2000";
 
-const INDEX_DATA: Record<IndexKey, { tickers: string[]; names: Record<string, string> }> = {
+const INDEX_DATA: Record<Exclude<IndexKey, "all">, { tickers: string[]; names: Record<string, string> }> = {
   sp500: { tickers: SP500_TICKERS, names: SP500_NAMES },
   nasdaq100: { tickers: NASDAQ100_TICKERS, names: NASDAQ100_NAMES },
   djia: { tickers: DJIA_TICKERS, names: DJIA_NAMES },
@@ -15,7 +15,7 @@ const INDEX_DATA: Record<IndexKey, { tickers: string[]; names: Record<string, st
 };
 
 const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "YTD"];
-const VALID_INDICES = Object.keys(INDEX_DATA) as IndexKey[];
+const VALID_INDICES: IndexKey[] = ["all", "sp500", "nasdaq100", "djia", "russell2000"];
 
 export async function GET(req: NextRequest) {
   const range = (req.nextUrl.searchParams.get("range") ?? "1W") as TimeRange;
@@ -28,8 +28,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid index" }, { status: 400 });
   }
 
-  const { tickers, names } = INDEX_DATA[index];
   try {
+    if (index === "all") {
+      const all = await getAllStocks(range);
+      return NextResponse.json({ all, range, index });
+    }
+    const { tickers, names } = INDEX_DATA[index];
     const all = await getTopPerformers(range, new Set(tickers), names);
     return NextResponse.json({ all, range, index });
   } catch (err) {
