@@ -235,6 +235,26 @@ export default function Home() {
         </p>
       </div>
 
+        {/* Time range selector */}
+        <div className="sticky top-[44px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 py-1 mb-2">
+          <HScrollContainer variant="page">
+            {RANGES.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => setRange(r.value)}
+                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                  range === r.value
+                    ? "bg-emerald-500 text-white"
+                    : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                <span className="sm:hidden">{r.value}</span>
+                <span className="hidden sm:inline">{r.label}</span>
+              </button>
+            ))}
+          </HScrollContainer>
+        </div>
+
         {/* Index selector */}
         <div className="mb-5 rounded-xl bg-gray-100 dark:bg-gray-900 p-1 w-fit max-w-full">
           <HScrollContainer variant="card" className="gap-1">
@@ -262,26 +282,6 @@ export default function Home() {
                     Read more on Wikipedia ↗
                   </a>
                 </InfoTooltip>
-              </button>
-            ))}
-          </HScrollContainer>
-        </div>
-
-        {/* Time range selector */}
-        <div className="sticky top-[44px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 py-1 mb-2">
-          <HScrollContainer variant="page">
-            {RANGES.map((r) => (
-              <button
-                key={r.value}
-                onClick={() => setRange(r.value)}
-                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                  range === r.value
-                    ? "bg-emerald-500 text-white"
-                    : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                <span className="sm:hidden">{r.value}</span>
-                <span className="hidden sm:inline">{r.label}</span>
               </button>
             ))}
           </HScrollContainer>
