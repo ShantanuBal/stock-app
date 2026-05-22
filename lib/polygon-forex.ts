@@ -1,5 +1,5 @@
 import { docClient } from "./dynamodb";
-import { GetCommand, QueryCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 
 const API_KEY = process.env.POLYGON_API_KEY!;
 const BASE_URL = "https://api.polygon.io";
@@ -21,20 +21,20 @@ export interface ForexRate {
   points: { date: string; value: number }[];
 }
 
-function today(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
 function daysAgo(n: number): string {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 }
 
-async function isTodayCached(): Promise<boolean> {
-  const res = await docClient.send(new GetCommand({
+async function getCachedDates(from: string, to: string): Promise<Set<string>> {
+  // All pairs are written together per day, so one probe ticker covers all gaps.
+  const res = await docClient.send(new QueryCommand({
     TableName: TABLE_NAME,
-    Key: { ticker: "C:EURUSD", date: today() },
+    KeyConditionExpression: "ticker = :t AND #d BETWEEN :from AND :to",
+    ExpressionAttributeNames: { "#d": "date" },
+    ExpressionAttributeValues: { ":t": "C:EURUSD", ":from": from, ":to": to },
+    ProjectionExpression: "#d",
   }));
-  return !!res.Item;
+  return new Set((res.Items ?? []).map((item) => item.date as string));
 }
 
 async function fetchGrouped(market: "fx" | "crypto", date: string): Promise<{ T: string; o: number; h: number; l: number; c: number; v: number }[]> {
@@ -49,10 +49,7 @@ async function fetchGrouped(market: "fx" | "crypto", date: string): Promise<{ T:
   return data.results ?? [];
 }
 
-async function fetchAndStoreTodayFromPolygon(): Promise<void> {
-  const date = today();
-  console.log(`[forex] cache miss for ${date} — fetching grouped daily from Polygon`);
-
+async function fetchAndStoreDate(date: string): Promise<void> {
   const [fxResults, cryptoResults] = await Promise.all([
     fetchGrouped("fx", date),
     fetchGrouped("crypto", date),
@@ -68,7 +65,7 @@ async function fetchAndStoreTodayFromPolygon(): Promise<void> {
     }));
 
   if (!items.length) {
-    console.log(`[forex] no results for ${date} (market closed?)`);
+    console.log(`[forex] no data for ${date} (weekend/holiday or not yet available)`);
     return;
   }
 
@@ -77,8 +74,33 @@ async function fetchAndStoreTodayFromPolygon(): Promise<void> {
       RequestItems: { [TABLE_NAME]: items.slice(i, i + 25) },
     }));
   }
-
   console.log(`[forex] stored ${items.length} pairs for ${date}`);
+}
+
+// Fills gaps in the full sparkline window — runs fire-and-forget, never blocks the response.
+async function fillHistoricalGaps(): Promise<void> {
+  const cachedDates = await getCachedDates(daysAgo(SPARKLINE_DAYS), daysAgo(2));
+  const toFetch: string[] = [];
+  for (let i = SPARKLINE_DAYS; i >= 2; i--) {
+    const date = daysAgo(i);
+    if (!cachedDates.has(date)) toFetch.push(date);
+  }
+  if (!toFetch.length) return;
+  console.log(`[forex] backfilling ${toFetch.length} historical gaps (background)`);
+  const CONCURRENCY = 5;
+  for (let i = 0; i < toFetch.length; i += CONCURRENCY) {
+    await Promise.all(toFetch.slice(i, i + CONCURRENCY).map(fetchAndStoreDate));
+  }
+}
+
+// Blocks only on yesterday's data (needed for current rates), then fills history in the background.
+async function ensureForexDataCurrent(): Promise<void> {
+  const yesterday = daysAgo(1);
+  const recent = await getCachedDates(yesterday, yesterday);
+  if (!recent.has(yesterday)) {
+    await fetchAndStoreDate(yesterday);
+  }
+  void fillHistoricalGaps();
 }
 
 async function queryHistory(ticker: string): Promise<{ date: string; close: number }[]> {
@@ -89,7 +111,7 @@ async function queryHistory(ticker: string): Promise<{ date: string; close: numb
     ExpressionAttributeValues: {
       ":t": ticker,
       ":from": daysAgo(SPARKLINE_DAYS + 10), // buffer for weekends/holidays
-      ":to": today(),
+      ":to": daysAgo(0),
     },
     ScanIndexForward: true,
   }));
@@ -115,9 +137,6 @@ export async function getForexRate(ticker: string): Promise<ForexRate | null> {
 }
 
 export async function getAllForexRates(tickers: string[]): Promise<(ForexRate | null)[]> {
-  // Ensure today's data is in DynamoDB before querying
-  const cached = await isTodayCached();
-  if (!cached) await fetchAndStoreTodayFromPolygon();
-
+  await ensureForexDataCurrent();
   return Promise.all(tickers.map((t) => getForexRate(t)));
 }
