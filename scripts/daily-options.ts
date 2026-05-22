@@ -17,8 +17,6 @@ const CONTRACTS_TABLE = process.env.OPTIONS_CONTRACTS_TABLE_NAME ?? "stock-app-o
 const PRICES_TABLE    = process.env.OPTIONS_PRICES_TABLE_NAME    ?? "stock-app-options-prices";
 const API_KEY         = process.env.POLYGON_API_KEY!;
 const BASE_URL        = "https://api.polygon.io";
-const DELAY_MS        = 15_000;
-
 const client    = new DynamoDBClient({ region: process.env.AWS_REGION ?? "us-west-2" });
 const docClient = DynamoDBDocumentClient.from(client);
 
@@ -139,8 +137,8 @@ async function fetchCurrentPrice(underlying: string, retries = 3): Promise<numbe
   const url = `${BASE_URL}/v2/aggs/ticker/${underlying}/prev?adjusted=true&apiKey=${API_KEY}`;
   const res = await fetch(url);
   if (res.status === 429 && retries > 0) {
-    console.log(`  rate limited — waiting 60s (${retries} retries left)`);
-    await sleep(60_000);
+    console.log(`  rate limited — waiting 1s (${retries} retries left)`);
+    await sleep(1_000);
     return fetchCurrentPrice(underlying, retries - 1);
   }
   if (!res.ok) throw new Error(`Polygon prev aggs error for ${underlying}: ${res.status}`);
@@ -156,8 +154,8 @@ async function fetchContracts(underlying: string, contractType: "call" | "put", 
   const url  = `${BASE_URL}/v3/reference/options/contracts?underlying_ticker=${underlying}&expired=false&contract_type=${contractType}&expiration_date.gte=${from}&expiration_date.lte=${to}&sort=expiration_date&order=asc&limit=1000&apiKey=${API_KEY}`;
   const res  = await fetch(url);
   if (res.status === 429 && retries > 0) {
-    console.log(`  rate limited — waiting 60s (${retries} retries left)`);
-    await sleep(60_000);
+    console.log(`  rate limited — waiting 1s (${retries} retries left)`);
+    await sleep(1_000);
     return fetchContracts(underlying, contractType, retries - 1);
   }
   if (!res.ok) throw new Error(`Polygon reference error: ${res.status}`);
@@ -171,8 +169,8 @@ async function fetchRecentPrices(ticker: string, retries = 3): Promise<{ t: numb
   const url  = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&apiKey=${API_KEY}`;
   const res  = await fetch(url);
   if (res.status === 429 && retries > 0) {
-    console.log(`  rate limited — waiting 60s (${retries} retries left)`);
-    await sleep(60_000);
+    console.log(`  rate limited — waiting 1s (${retries} retries left)`);
+    await sleep(1_000);
     return fetchRecentPrices(ticker, retries - 1);
   }
   if (!res.ok) throw new Error(`Polygon aggs error: ${res.status}`);
@@ -233,8 +231,6 @@ async function rotateExpired(contracts: Contract[]): Promise<Contract[]> {
     await markExpired(contract.underlying, contract.contractKey);
     console.log(`  marked expired ✓`);
 
-    await sleep(DELAY_MS);
-
     let currentPrice: number;
     try {
       currentPrice = await fetchCurrentPrice(contract.underlying);
@@ -243,8 +239,6 @@ async function rotateExpired(contracts: Contract[]): Promise<Contract[]> {
       console.log(`  ERROR fetching current price: ${err} — skipping`);
       continue;
     }
-
-    await sleep(DELAY_MS);
 
     let newContracts: PolygonContract[];
     try {
@@ -272,8 +266,6 @@ async function rotateExpired(contracts: Contract[]): Promise<Contract[]> {
       expiry:       best.expiration_date,
     });
     console.log(`  written to DynamoDB ✓\n`);
-
-    await sleep(DELAY_MS);
   }
 
   // Re-scan so price fetch uses updated contracts
@@ -310,8 +302,6 @@ async function fetchTodayPrices(contracts: Contract[]): Promise<void> {
     } catch (err) {
       console.log(`ERROR: ${err}`);
     }
-
-    await sleep(DELAY_MS);
   }
 
   console.log(`\nDone. Stored ${stored} prices, skipped ${skipped} already cached.`);

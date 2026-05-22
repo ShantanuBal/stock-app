@@ -11,11 +11,6 @@
 import { fetchGroupedDailyForBackfill, formatDate, getPreviousTradingDay } from "../lib/polygon";
 
 const DAYS = parseInt(process.argv.find((a) => a.startsWith("--days="))?.split("=")[1] ?? "30");
-const DELAY_MS = 12_000; // 5 calls/min free tier → 1 call every 12s
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function getTradingDays(count: number): string[] {
   const days: string[] = [];
@@ -27,28 +22,36 @@ function getTradingDays(count: number): string[] {
   return days.reverse(); // oldest first
 }
 
+const CONCURRENCY = 3;
+
 (async () => {
   const days = getTradingDays(DAYS);
-  console.log(`Backfilling ${days.length} trading days: ${days[0]} → ${days[days.length - 1]}\n`);
+  console.log(`Backfilling ${days.length} trading days: ${days[0]} → ${days[days.length - 1]} (concurrency: ${CONCURRENCY})\n`);
 
-  for (const date of days) {
-    process.stdout.write(`[${date}] Fetching... `);
-    try {
-      const count = await fetchGroupedDailyForBackfill(date);
-      if (count === null) {
-        console.log(`already in DynamoDB — skipped`);
-      } else if (count === 0) {
-        console.log(`no data returned (market closed or holiday)`);
-        await sleep(DELAY_MS);
-      } else {
-        console.log(`stored ${count} stocks ✓`);
-        await sleep(DELAY_MS);
+  let stored = 0;
+  let skipped = 0;
+  let errors = 0;
+
+  for (let i = 0; i < days.length; i += CONCURRENCY) {
+    const batch = days.slice(i, i + CONCURRENCY);
+    await Promise.all(batch.map(async (date) => {
+      try {
+        const count = await fetchGroupedDailyForBackfill(date);
+        if (count === null) {
+          console.log(`[${date}] already in DynamoDB — skipped`);
+          skipped++;
+        } else if (count === 0) {
+          console.log(`[${date}] no data (market closed or holiday)`);
+        } else {
+          console.log(`[${date}] stored ${count} stocks ✓`);
+          stored += count;
+        }
+      } catch (err) {
+        console.log(`[${date}] ERROR: ${err}`);
+        errors++;
       }
-    } catch (err) {
-      console.log(`ERROR: ${err}`);
-      await sleep(DELAY_MS);
-    }
+    }));
   }
 
-  console.log("\nBackfill complete.");
+  console.log(`\nBackfill complete. Stored: ${stored} rows · Skipped: ${skipped} days · Errors: ${errors}`);
 })();

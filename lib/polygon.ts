@@ -1,5 +1,6 @@
 import { BatchGetCommand, BatchWriteCommand, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAME } from "./dynamodb";
+import { batchGetTickerNamesAndIndustries } from "./tickerDetails";
 
 const API_KEY = process.env.POLYGON_API_KEY!;
 const BASE_URL = "https://api.polygon.io";
@@ -13,6 +14,7 @@ export type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
 export interface StockResult {
   ticker: string;
   name: string;
+  industry?: string;
   price: number;
   changePercent: number;
   changeDollars: number;
@@ -267,6 +269,76 @@ export async function getTopPerformers(
   }
 
   return stocks.sort((a, b) => b.changePercent - a.changePercent);
+}
+
+// Queries all tickers for a given date from DynamoDB (no ticker filter), paginating as needed.
+async function queryAllTickersForDate(dateStr: string): Promise<GroupedDailyResult[]> {
+  const results: GroupedDailyResult[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+
+  do {
+    const res = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "#d = :date",
+        ExpressionAttributeNames: { "#d": "date" },
+        ExpressionAttributeValues: { ":date": dateStr },
+        ExclusiveStartKey: lastKey,
+      }),
+    );
+    for (const item of res.Items ?? []) {
+      if (item.ticker === COMPLETE_SENTINEL) continue;
+      results.push({ T: item.ticker, c: item.c, o: item.o, h: item.h, l: item.l, v: item.v, t: item.t });
+    }
+    lastKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
+
+  return results;
+}
+
+export async function getAllStocks(range: TimeRange): Promise<StockResult[]> {
+  const yesterday = getPreviousTradingDay(new Date(), 1);
+  const startDate = getStartDate(range, yesterday);
+
+  // Use a small probe set to resolve dates and ensure DB is populated (fetchGroupedDaily
+  // writes all ~9K tickers to DB on a cache miss regardless of the requested ticker set).
+  const probe = new Set(["AAPL", "MSFT", "AMZN"]);
+  const [currentMeta, startMeta] = await Promise.all([
+    findMostRecentTradingData(yesterday, probe),
+    findMostRecentTradingData(startDate, probe),
+  ]);
+
+  const [current, start] = await Promise.all([
+    queryAllTickersForDate(currentMeta.date),
+    queryAllTickersForDate(startMeta.date),
+  ]);
+
+  const startPriceMap = new Map<string, number>();
+  for (const item of start) startPriceMap.set(item.T, item.c);
+
+  const stocks: StockResult[] = [];
+  for (const item of current) {
+    const startPrice = startPriceMap.get(item.T);
+    if (!startPrice || startPrice === 0) continue;
+    stocks.push({
+      ticker: item.T,
+      name: "",
+      price: item.c,
+      changePercent: ((item.c - startPrice) / startPrice) * 100,
+      changeDollars: item.c - startPrice,
+      volume: item.v,
+    });
+  }
+
+  const sorted = stocks.sort((a, b) => b.changePercent - a.changePercent);
+
+  const detailsMap = await batchGetTickerNamesAndIndustries(sorted.map((s) => s.ticker));
+  for (const s of sorted) {
+    s.name = detailsMap.get(s.ticker)?.name ?? "";
+    s.industry = detailsMap.get(s.ticker)?.industry;
+  }
+
+  return sorted.filter((s) => s.name !== "");
 }
 
 export interface ChartPoint {

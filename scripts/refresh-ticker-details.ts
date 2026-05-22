@@ -1,15 +1,11 @@
 /**
  * Daily refresh job for ticker details and earnings (description, shares outstanding, net income).
  * Runs in ECS Fargate, triggered by EventBridge Scheduler daily at midnight PST (8 AM UTC).
- * Makes 2 sequential Polygon API calls per ticker with 15s between them (4 calls/min, under free tier limit).
  * Exits 1 and prints JOB_FAILED if errors exceed 10% of tickers.
  */
 
 import { CloudWatchClient, PutMetricDataCommand } from "@aws-sdk/client-cloudwatch";
-import { SP500_SECTORS } from "../lib/sp500";
-import { NASDAQ100_SECTORS } from "../lib/nasdaq100";
-import { DJIA_SECTORS } from "../lib/djia";
-import { RUSSELL2000_SECTORS } from "../lib/russell2000";
+import { ALL_TICKERS } from "../lib/all-tickers";
 import { refreshTickerDetails } from "../lib/tickerDetails";
 
 const cw = new CloudWatchClient({ region: process.env.AWS_REGION ?? "us-west-2" });
@@ -31,25 +27,6 @@ async function publishMetrics(refreshed: number, errors: number, durationSeconds
   }
 }
 
-const DELAY_MS = 15_000; // 15s after financials call before next ticker → 4 calls/min total
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function uniqueTickers(): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const source of [SP500_SECTORS, NASDAQ100_SECTORS, DJIA_SECTORS, RUSSELL2000_SECTORS]) {
-    for (const ticker of Object.keys(source)) {
-      if (!seen.has(ticker)) {
-        seen.add(ticker);
-        result.push(ticker);
-      }
-    }
-  }
-  return result;
-}
 
 (async () => {
   const limitArg = process.argv.find((a) => a.startsWith("--limit="));
@@ -60,7 +37,7 @@ function uniqueTickers(): string[] {
   const apiKey = process.env.POLYGON_API_KEY;
   console.log(`[refresh] POLYGON_API_KEY: ${apiKey ? `set (${apiKey.slice(0, 4)}…)` : "NOT SET — all requests will 401"}`);
 
-  const allTickers = uniqueTickers();
+  const allTickers = ALL_TICKERS;
   const tickers = allTickers.slice(from, limit ? from + limit : undefined);
   const suffix = [from > 0 ? `from index ${from}` : "", limit ? `limit ${limit}` : ""].filter(Boolean).join(", ");
   console.log(`[refresh] Starting ticker details refresh for ${tickers.length} tickers${suffix ? ` (${suffix})` : ""}`);
@@ -85,7 +62,6 @@ function uniqueTickers(): string[] {
       console.log(`ERROR: ${err}`);
       errors++;
     }
-    await sleep(DELAY_MS);
   }
 
   const durationSeconds = Math.round((Date.now() - startTime) / 1000);

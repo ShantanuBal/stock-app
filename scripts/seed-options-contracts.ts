@@ -13,7 +13,6 @@ import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 const TABLE_NAME = process.env.OPTIONS_CONTRACTS_TABLE_NAME ?? "stock-app-options-contracts";
 const API_KEY    = process.env.POLYGON_API_KEY!;
 const BASE_URL   = "https://api.polygon.io";
-const DELAY_MS   = 15_000;
 
 const client    = new DynamoDBClient({ region: process.env.AWS_REGION ?? "us-west-2" });
 const docClient = DynamoDBDocumentClient.from(client);
@@ -65,8 +64,8 @@ async function fetchCurrentPrice(underlying: string, retries = 3): Promise<numbe
   const url = `${BASE_URL}/v2/aggs/ticker/${underlying}/prev?adjusted=true&apiKey=${API_KEY}`;
   const res = await fetch(url);
   if (res.status === 429 && retries > 0) {
-    console.log(`  rate limited — waiting 60s (${retries} retries left)`);
-    await sleep(60_000);
+    console.log(`  rate limited — waiting 1s (${retries} retries left)`);
+    await sleep(1_000);
     return fetchCurrentPrice(underlying, retries - 1);
   }
   if (!res.ok) throw new Error(`Polygon prev aggs error for ${underlying}: ${res.status}`);
@@ -82,8 +81,8 @@ async function fetchContracts(underlying: string, contractType: "call" | "put", 
   const url  = `${BASE_URL}/v3/reference/options/contracts?underlying_ticker=${underlying}&expired=false&contract_type=${contractType}&expiration_date.gte=${from}&expiration_date.lte=${to}&sort=expiration_date&order=asc&limit=1000&apiKey=${API_KEY}`;
   const res  = await fetch(url);
   if (res.status === 429 && retries > 0) {
-    console.log(`  rate limited — waiting 60s (${retries} retries left)`);
-    await sleep(60_000);
+    console.log(`  rate limited — waiting 1s (${retries} retries left)`);
+    await sleep(1_000);
     return fetchContracts(underlying, contractType, retries - 1);
   }
   if (!res.ok) throw new Error(`Polygon reference API error: ${res.status}`);
@@ -168,12 +167,8 @@ async function seedContract(underlying: string, name: string, currentPrice: numb
       console.log(`  ERROR fetching price: ${err} — skipping`);
       continue;
     }
-    await sleep(DELAY_MS);
-
     await seedContract(ticker, name, currentPrice, "call");
-    await sleep(DELAY_MS);
     await seedContract(ticker, name, currentPrice, "put");
-    await sleep(DELAY_MS);
   }
 
   console.log("\nDone. All contracts seeded.");

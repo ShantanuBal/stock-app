@@ -89,6 +89,17 @@ const INDICES: {
       { label: "Focus", value: "Small-cap" },
     ],
   },
+  {
+    label: "All Stocks",
+    value: "all",
+    description: "Every US-listed stock in our database, sorted by performance over the selected time period.",
+    wikiUrl: "https://en.wikipedia.org/wiki/Stock_market",
+    meta: [
+      { label: "Coverage", value: "~9,000 stocks" },
+      { label: "Exchange", value: "NYSE + Nasdaq" },
+      { label: "Data", value: "Polygon" },
+    ],
+  },
 ];
 
 
@@ -122,16 +133,20 @@ export default function Home() {
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
   const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }> | undefined>(undefined);
 
-  const currentIndex = INDICES.find((i) => i.value === index)!;
+  const isAllStocks = index === "all";
+  const currentIndex = INDICES.find((i) => i.value === index) ?? null;
   // Show skeleton on first load (null) or while a transition is in flight
   const loading = topStocks === null || isPending;
 
-  const sectorMap = useMemo<Record<string, string>>(() => ({
-    sp500: SP500_SECTORS,
-    nasdaq100: NASDAQ100_SECTORS,
-    djia: DJIA_SECTORS,
-    russell2000: RUSSELL2000_SECTORS,
-  }[index]), [index]);
+  const sectorMap = useMemo<Record<string, string>>(() => {
+    const map: Record<string, Record<string, string>> = {
+      sp500: SP500_SECTORS,
+      nasdaq100: NASDAQ100_SECTORS,
+      djia: DJIA_SECTORS,
+      russell2000: RUSSELL2000_SECTORS,
+    };
+    return map[index] ?? {};
+  }, [index]);
 
   const availableSectors = useMemo(() => {
     const sectors = new Set(
@@ -146,23 +161,25 @@ export default function Home() {
   }, [topStocks, sectors, sectorMap]);
 
   useEffect(() => {
-    if (!topStocks || topStocks.length === 0) return;
+    if (!topStocks || topStocks.length === 0 || isAllStocks) return;
     setBetas(undefined);
-    setMarketCapShares(undefined);
-    const tickers = topStocks.map((s) => s.ticker);
-    const body = JSON.stringify({ tickers });
     fetch("/api/beta", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body,
+      body: JSON.stringify({ tickers: topStocks.map((s) => s.ticker) }),
     })
       .then((r) => r.json())
       .then((d) => setBetas(d.betas ?? {}))
       .catch(() => setBetas({}));
+  }, [topStocks, isAllStocks]);
+
+  useEffect(() => {
+    if (!topStocks || topStocks.length === 0) return;
+    setMarketCapShares(undefined);
     fetch("/api/market-caps", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body,
+      body: JSON.stringify({ tickers: topStocks.map((s) => s.ticker) }),
     })
       .then((r) => r.json())
       .then((d) => setMarketCapShares(d.marketCapShares ?? {}))
@@ -170,7 +187,7 @@ export default function Home() {
   }, [topStocks]);
 
   useEffect(() => {
-    if (!topStocks || topStocks.length === 0) return;
+    if (!topStocks || topStocks.length === 0 || isAllStocks) return;
     setSummary(null);
     setSummaryLoading(true);
     const controller = new AbortController();
@@ -185,30 +202,29 @@ export default function Home() {
       .catch((e) => { if (e.name !== "AbortError") setSummary(null); })
       .finally(() => setSummaryLoading(false));
     return () => controller.abort();
-  }, [topStocks, index, range]);
+  }, [topStocks, index, range, isAllStocks]);
 
   useEffect(() => {
     startTransition(async () => {
       setError(null);
       try {
+        const fetchChart = !isAllStocks;
         const [stocksRes, chartRes] = await Promise.all([
           fetch(`/api/top-performers?range=${range}&index=${index}`),
-          fetch(`/api/index-chart?range=${range}&index=${index}`),
+          fetchChart ? fetch(`/api/index-chart?range=${range}&index=${index}`) : Promise.resolve(null),
         ]);
         if (!stocksRes.ok) throw new Error("Failed to fetch");
-        const [stocksJson, chartJson] = await Promise.all([
-          stocksRes.json(),
-          chartRes.ok ? chartRes.json() : null,
-        ]);
+        const stocksJson = await stocksRes.json();
+        const chartJson = chartRes && chartRes.ok ? await chartRes.json() : null;
         setTopStocks(stocksJson.all);
-        setChartData(chartJson);
+        setChartData(fetchChart ? chartJson : null);
         setSectors([]);
       } catch {
         setError("Could not load stock data. Please try again.");
         setTopStocks((prev) => prev ?? []);
       }
     });
-  }, [index, range]);
+  }, [index, range, isAllStocks]);
 
   return (
     <div>
@@ -256,64 +272,98 @@ export default function Home() {
         </div>
 
         {/* Index selector */}
-        <div className="mb-5 rounded-xl bg-gray-100 dark:bg-gray-900 p-1 w-fit max-w-full">
-          <HScrollContainer variant="card" className="gap-1">
-            {INDICES.map((idx) => (
-              <button
-                key={idx.value}
-                onClick={() => { setIndex(idx.value); setSectors([]); }}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
-                  index === idx.value
-                    ? "bg-emerald-500 text-white shadow"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                {idx.label}
-                <InfoTooltip element="span">
-                  <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{idx.description}</p>
-                  <a
-                    href={idx.wikiUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
-                  >
-                    Read more on Wikipedia ↗
-                  </a>
-                </InfoTooltip>
-              </button>
-            ))}
-          </HScrollContainer>
-        </div>
-
-        {/* Index metadata */}
-        <div className="mb-5 flex flex-wrap gap-x-6 gap-y-3">
-          {currentIndex.meta.map((item, i) => (
-            <div key={item.label} className="flex items-center gap-6">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">{item.label}</p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{item.value}</p>
+        <div className="mb-5 flex items-center gap-3 w-fit max-w-full">
+          <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+            <HScrollContainer variant="card" className="gap-1">
+              {INDICES.filter((idx) => idx.value !== "all").map((idx) => (
+                <button
+                  key={idx.value}
+                  onClick={() => { setIndex(idx.value); setSectors([]); }}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                    index === idx.value
+                      ? "bg-emerald-500 text-white shadow"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  {idx.label}
+                  <InfoTooltip element="span">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{idx.description}</p>
+                    <a
+                      href={idx.wikiUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                    >
+                      Read more on Wikipedia ↗
+                    </a>
+                  </InfoTooltip>
+                </button>
+              ))}
+            </HScrollContainer>
+          </div>
+          {(() => {
+            const allIdx = INDICES.find((idx) => idx.value === "all")!;
+            return (
+              <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+                <button
+                  onClick={() => { setIndex("all"); setSectors([]); }}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                    index === "all"
+                      ? "bg-emerald-500 text-white shadow"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  {allIdx.label}
+                  <InfoTooltip element="span">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{allIdx.label}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{allIdx.description}</p>
+                    <a
+                      href={allIdx.wikiUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                    >
+                      Read more on Wikipedia ↗
+                    </a>
+                  </InfoTooltip>
+                </button>
               </div>
-              {i < currentIndex.meta.length - 1 && (
-                <div className="h-8 w-px bg-gray-200 dark:bg-gray-800" />
-              )}
-            </div>
-          ))}
+            );
+          })()}
         </div>
 
-        {/* Index chart */}
-        <IndexChart data={chartData} label={currentIndex.label} loading={loading} onClick={() => setChartModalOpen(true)} />
-        <IndexChartModal
-          isOpen={chartModalOpen}
-          onClose={() => setChartModalOpen(false)}
-          label={currentIndex.label}
-          index={index}
-          initialRange={range}
-        />
+        {/* Index metadata + chart — hidden for All Stocks */}
+        {!isAllStocks && currentIndex && (
+          <>
+            <div className="mb-5 flex flex-wrap gap-x-6 gap-y-3">
+              {currentIndex.meta.map((item, i) => (
+                <div key={item.label} className="flex items-center gap-6">
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">{item.label}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{item.value}</p>
+                  </div>
+                  {i < currentIndex.meta.length - 1 && (
+                    <div className="h-8 w-px bg-gray-200 dark:bg-gray-800" />
+                  )}
+                </div>
+              ))}
+            </div>
+            <IndexChart data={chartData} label={currentIndex.label} loading={loading} onClick={() => setChartModalOpen(true)} />
+            <IndexChartModal
+              isOpen={chartModalOpen}
+              onClose={() => setChartModalOpen(false)}
+              label={currentIndex.label}
+              index={index}
+              initialRange={range}
+            />
+          </>
+        )}
 
-        {/* AI Summary */}
-        {(topStocks !== null && !loading && summary === null) || summaryLoading ? (
+        {/* AI Summary — hidden for All Stocks */}
+        {!isAllStocks && ((topStocks !== null && !loading && summary === null) || summaryLoading) ? (
           <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 flex items-center gap-3">
             <svg className="animate-spin h-4 w-4 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -321,7 +371,7 @@ export default function Home() {
             </svg>
             <span className="text-sm text-gray-500 dark:text-gray-400">Generating AI summary…</span>
           </div>
-        ) : summary ? (
+        ) : !isAllStocks && summary ? (
           <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
             <div className="flex items-center gap-2 mb-2.5">
               <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Summary</span>
@@ -343,8 +393,8 @@ export default function Home() {
           </div>
         ) : null}
 
-        {/* Sector filter tabs */}
-        <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
+        {/* Sector filter tabs — hidden for All Stocks */}
+        {!isAllStocks && <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
           <div className="flex items-center gap-1.5 mb-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Industry</p>
             <InfoTooltip>
@@ -391,13 +441,13 @@ export default function Home() {
               );
             })}
           </HScrollContainer>
-        </div>
+        </div>}
 
         {error ? (
           <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
             {error}
           </div>
-        ) : loading ? (
+        ) : loading || (isAllStocks && marketCapShares === undefined) ? (
           <div className="space-y-2">
             <div className="h-5 w-36 rounded bg-gray-200 dark:bg-gray-800/50 animate-pulse mb-3" />
             {Array.from({ length: 10 }).map((_, i) => (
@@ -411,8 +461,10 @@ export default function Home() {
               title="Companies"
               accent="emerald"
               stocks={filteredTop ?? []}
-              sectors={sectorMap}
-              betas={betas}
+              sectors={isAllStocks ? Object.fromEntries((topStocks ?? []).filter((s) => s.industry).map((s) => [s.ticker, s.industry!])) : sectorMap}
+              betas={isAllStocks ? undefined : betas}
+              showBeta={!isAllStocks}
+              defaultSortCol={isAllStocks ? "marketCap" : "change"}
               marketCapShares={marketCapShares}
               range={range}
             />

@@ -9,7 +9,7 @@ const TABLE = process.env.TICKER_DETAILS_TABLE_NAME!;
 
 export async function POST(req: NextRequest) {
   const { tickers } = await req.json() as { tickers: string[] };
-  if (!Array.isArray(tickers) || tickers.length === 0 || tickers.length > 600) {
+  if (!Array.isArray(tickers) || tickers.length === 0 || tickers.length > 6000) {
     return NextResponse.json({ error: "Invalid tickers" }, { status: 400 });
   }
 

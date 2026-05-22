@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, BatchGetCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 
 const dynamo = DynamoDBDocumentClient.from(
   new DynamoDBClient({ region: process.env.AWS_REGION ?? "us-east-1" })
@@ -9,6 +9,7 @@ const TABLE = process.env.TICKER_DETAILS_TABLE_NAME!;
 export interface TickerDetails {
   ticker: string;
   name: string;
+  industry?: string;
   description: string;
   homepageUrl: string;
   sharesOutstanding?: number;
@@ -53,7 +54,51 @@ export async function getTickerDetails(ticker: string): Promise<TickerDetails | 
   return details;
 }
 
-export async function refreshTickerDetails(ticker: string, delayMs = 15_000): Promise<TickerDetails | null> {
+export async function batchGetTickerNames(tickers: string[]): Promise<Map<string, string>> {
+  const nameMap = new Map<string, string>();
+  const chunks: string[][] = [];
+  for (let i = 0; i < tickers.length; i += 100) chunks.push(tickers.slice(i, i + 100));
+
+  const CONCURRENCY = 5;
+  for (let i = 0; i < chunks.length; i += CONCURRENCY) {
+    await Promise.all(
+      chunks.slice(i, i + CONCURRENCY).map(async (chunk) => {
+        const res = await dynamo.send(new BatchGetCommand({
+          RequestItems: { [TABLE]: { Keys: chunk.map((t) => ({ ticker: t })), ProjectionExpression: "ticker, #n", ExpressionAttributeNames: { "#n": "name" } } },
+        }));
+        for (const item of res.Responses?.[TABLE] ?? []) {
+          if (item.ticker && item.name) nameMap.set(item.ticker as string, item.name as string);
+        }
+      })
+    );
+  }
+  return nameMap;
+}
+
+export async function batchGetTickerNamesAndIndustries(tickers: string[]): Promise<Map<string, { name: string; industry?: string }>> {
+  const map = new Map<string, { name: string; industry?: string }>();
+  const chunks: string[][] = [];
+  for (let i = 0; i < tickers.length; i += 100) chunks.push(tickers.slice(i, i + 100));
+
+  const CONCURRENCY = 5;
+  for (let i = 0; i < chunks.length; i += CONCURRENCY) {
+    await Promise.all(
+      chunks.slice(i, i + CONCURRENCY).map(async (chunk) => {
+        const res = await dynamo.send(new BatchGetCommand({
+          RequestItems: { [TABLE]: { Keys: chunk.map((t) => ({ ticker: t })), ProjectionExpression: "ticker, #n, industry", ExpressionAttributeNames: { "#n": "name" } } },
+        }));
+        for (const item of res.Responses?.[TABLE] ?? []) {
+          if (item.ticker && item.name) {
+            map.set(item.ticker as string, { name: item.name as string, industry: item.industry as string | undefined });
+          }
+        }
+      })
+    );
+  }
+  return map;
+}
+
+export async function refreshTickerDetails(ticker: string): Promise<TickerDetails | null> {
   const detailsRes = await fetch(
     `https://api.polygon.io/v3/reference/tickers/${ticker}?apiKey=${process.env.POLYGON_API_KEY}`
   );
@@ -64,9 +109,6 @@ export async function refreshTickerDetails(ticker: string, delayMs = 15_000): Pr
 
   const { results } = await detailsRes.json();
   if (!results?.description) return null;
-
-  // Wait before second API call to respect rate limits
-  await new Promise((resolve) => setTimeout(resolve, delayMs));
 
   const financialsRes = await fetch(
     `https://api.polygon.io/vX/reference/financials?ticker=${ticker}&limit=1&apiKey=${process.env.POLYGON_API_KEY}`
@@ -80,6 +122,7 @@ export async function refreshTickerDetails(ticker: string, delayMs = 15_000): Pr
   const details: TickerDetails = {
     ticker,
     name: results.name ?? ticker,
+    industry: results.sic_description ?? undefined,
     description: results.description,
     homepageUrl: results.homepage_url ?? "",
     sharesOutstanding: results.share_class_shares_outstanding ?? undefined,

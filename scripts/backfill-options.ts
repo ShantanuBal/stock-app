@@ -16,7 +16,6 @@ const CONTRACTS_TABLE = process.env.OPTIONS_CONTRACTS_TABLE_NAME ?? "stock-app-o
 const PRICES_TABLE    = process.env.OPTIONS_PRICES_TABLE_NAME    ?? "stock-app-options-prices";
 const API_KEY         = process.env.POLYGON_API_KEY!;
 const BASE_URL        = "https://api.polygon.io";
-const DELAY_MS        = 15_000;
 
 const client    = new DynamoDBClient({ region: process.env.AWS_REGION ?? "us-west-2" });
 const docClient = DynamoDBDocumentClient.from(client);
@@ -58,8 +57,8 @@ async function fetchPriceHistory(ticker: string, from: string, to: string, retri
   const url = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&apiKey=${API_KEY}`;
   const res = await fetch(url);
   if (res.status === 429 && retries > 0) {
-    console.log(`    rate limited — waiting 60s (${retries} retries left)`);
-    await sleep(60_000);
+    console.log(`    rate limited — waiting 1s (${retries} retries left)`);
+    await sleep(1_000);
     return fetchPriceHistory(ticker, from, to, retries - 1);
   }
   if (!res.ok) throw new Error(`Polygon aggs error: ${res.status}`);
@@ -129,8 +128,6 @@ async function storePrices(ticker: string, rows: { t: number; o: number; h: numb
     } catch (err) {
       console.log(`ERROR: ${err}`);
     }
-
-    await sleep(DELAY_MS);
   }
 
   console.log(`\nDone. Stored ${totalStored} rows, skipped ${totalSkipped} already up-to-date contracts.`);

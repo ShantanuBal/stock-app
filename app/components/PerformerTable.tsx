@@ -15,7 +15,13 @@ interface Props {
   sectors?: Record<string, string>;
   betas?: Record<string, number | null>;
   marketCapShares?: Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }>;
+  showBeta?: boolean;
+  defaultSortCol?: SortCol;
   range?: string;
+}
+
+function toTitleCase(s: string): string {
+  return s.toLowerCase().replace(/(?:^|[\s\-])(\w)/g, (m) => m.toUpperCase());
 }
 
 function formatVolume(v: number): string {
@@ -100,9 +106,9 @@ function SimpleColHeader({
   );
 }
 
-export default function PerformerTable({ title, accent, stocks, sectors, betas, marketCapShares, range }: Props) {
+export default function PerformerTable({ title, accent, stocks, sectors, betas, marketCapShares, showBeta = true, defaultSortCol, range }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
-  const [sortCol, setSortCol] = useState<SortCol | null>(null);
+  const [sortCol, setSortCol] = useState<SortCol | null>(defaultSortCol ?? null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [visibleCount, setVisibleCount] = useState(20);
   const [search, setSearch] = useState("");
@@ -229,17 +235,19 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                   <p><span className="font-medium text-gray-700 dark:text-gray-300">N/A</span> — company is currently unprofitable (negative earnings)</p>
                 </div>
               </ColHeader>
-              <ColHeader label="Beta" col="beta" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                  Beta measures how volatile a stock is relative to the overall market (S&P 500).
-                </p>
-                <div className="mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
-                  <p><span className="font-medium text-gray-700 dark:text-gray-300">Beta &gt; 1</span> — moves more than the market</p>
-                  <p><span className="font-medium text-gray-700 dark:text-gray-300">Beta = 1</span> — moves with the market</p>
-                  <p><span className="font-medium text-gray-700 dark:text-gray-300">Beta &lt; 1</span> — moves less than the market</p>
-                </div>
-                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Calculated from 1 year of daily returns vs SPY.</p>
-              </ColHeader>
+              {showBeta && (
+                <ColHeader label="Beta" col="beta" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    Beta measures how volatile a stock is relative to the overall market (S&P 500).
+                  </p>
+                  <div className="mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">Beta &gt; 1</span> — moves more than the market</p>
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">Beta = 1</span> — moves with the market</p>
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">Beta &lt; 1</span> — moves less than the market</p>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Calculated from 1 year of daily returns vs SPY.</p>
+                </ColHeader>
+              )}
               <ColHeader label="Volume" col="volume" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                   The number of shares traded on the most recent trading day. High volume on a price move signals stronger conviction — low volume may suggest the move is less reliable.
@@ -250,7 +258,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
           <tbody>
             {visibleStocks.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-3 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={showBeta ? 9 : 8} className="px-3 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
                   No results for &ldquo;{search}&rdquo;
                 </td>
               </tr>
@@ -282,10 +290,10 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                     />
                   </td>
                   <td className="px-3 py-3 text-gray-500 dark:text-gray-300 max-w-[140px] truncate">
-                    {stock.name}
+                    {stock.name || "—"}
                   </td>
                   <td className="px-3 py-3 text-gray-500 dark:text-gray-400 max-w-[140px] truncate text-xs">
-                    {sectors?.[stock.ticker] ?? "—"}
+                    {sectors?.[stock.ticker] ? toTitleCase(sectors[stock.ticker]) : "N/A"}
                   </td>
                   <td className="px-3 py-3 text-right text-gray-900 dark:text-white tabular-nums">
                     ${stock.price.toFixed(2)}
@@ -315,15 +323,17 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                       <span>{pe.toFixed(1)}x</span>
                     )}
                   </td>
-                  <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
-                    {betas === undefined ? (
-                      <span className="text-gray-300 dark:text-gray-600">···</span>
-                    ) : beta === null || beta === undefined ? (
-                      <span className="text-gray-400 dark:text-gray-600">—</span>
-                    ) : (
-                      beta.toFixed(2)
-                    )}
-                  </td>
+                  {showBeta && (
+                    <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
+                      {betas === undefined ? (
+                        <span className="text-gray-300 dark:text-gray-600">···</span>
+                      ) : beta === null || beta === undefined ? (
+                        <span className="text-gray-400 dark:text-gray-600">—</span>
+                      ) : (
+                        beta.toFixed(2)
+                      )}
+                    </td>
+                  )}
                   <td className="px-3 py-3 text-right text-gray-500 dark:text-gray-400 tabular-nums">
                     {formatVolume(stock.volume)}
                   </td>
