@@ -5,7 +5,7 @@ import type { IndexKey } from "../top-performers/route";
 // I:NDX is freely available on Polygon's free tier.
 // S&P, DJIA, and Russell index data requires a paid license, so we use ETF
 // proxies (SPY, DIA, IWM) and scale them back to index-level values.
-const INDEX_CONFIG: Record<IndexKey, { ticker: string; scale: number }> = {
+const INDEX_CONFIG: Record<Exclude<IndexKey, "all">, { ticker: string; scale: number }> = {
   sp500:       { ticker: "SPY",   scale: 10  }, // SPY ≈ SPX / 10
   nasdaq100:   { ticker: "I:NDX", scale: 1   }, // direct index data
   djia:        { ticker: "DIA",   scale: 100 }, // DIA ≈ DJIA / 100
@@ -29,7 +29,9 @@ export async function GET(req: NextRequest) {
   const yesterday = getPreviousTradingDay(new Date(), 1);
   const startDate = getStartDate(range, yesterday);
 
-  const { ticker, scale } = INDEX_CONFIG[index];
+  const config = INDEX_CONFIG[index as Exclude<IndexKey, "all">];
+  if (!config) return NextResponse.json({ error: "No chart for this index" }, { status: 400 });
+  const { ticker, scale } = config;
 
   try {
     const raw = await getIndexBars(ticker, formatDate(startDate), formatDate(yesterday));

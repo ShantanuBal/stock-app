@@ -10,14 +10,16 @@ import type { StockResult } from "@/lib/polygon";
 
 const client = new Anthropic();
 
-const SECTOR_MAPS: Record<IndexKey, Record<string, string>> = {
+type IndexKeyWithoutAll = Exclude<IndexKey, "all">;
+
+const SECTOR_MAPS: Record<IndexKeyWithoutAll, Record<string, string>> = {
   sp500: SP500_SECTORS,
   nasdaq100: NASDAQ100_SECTORS,
   djia: DJIA_SECTORS,
   russell2000: RUSSELL2000_SECTORS,
 };
 
-const INDEX_LABELS: Record<IndexKey, string> = {
+const INDEX_LABELS: Record<IndexKeyWithoutAll, string> = {
   sp500: "S&P 500",
   nasdaq100: "Nasdaq 100",
   djia: "Dow Jones Industrial Average",
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
   }
   console.log(`No AI summary found for ${pk} — generating with Claude`);
 
-  const sectorMap = SECTOR_MAPS[index];
+  const sectorMap = SECTOR_MAPS[index as IndexKeyWithoutAll] ?? {};
   const top = (stocks as StockResult[]).slice(0, 15);
 
   const stockLines = top
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest) {
     })
     .join("\n");
 
-  const prompt = `You are a concise financial market analyst. Below are the top-performing stocks in the ${INDEX_LABELS[index]} over the past ${RANGE_LABELS[range]} as of ${today}.
+  const prompt = `You are a concise financial market analyst. Below are the top-performing stocks in the ${INDEX_LABELS[index as IndexKeyWithoutAll] ?? index} over the past ${RANGE_LABELS[range]} as of ${today}.
 
 ${stockLines}
 
