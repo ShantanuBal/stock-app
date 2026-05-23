@@ -235,6 +235,7 @@ async function rotateExpired(contracts: Contract[]): Promise<Contract[]> {
     try {
       currentPrice = await fetchCurrentPrice(contract.underlying);
       console.log(`  current price: $${currentPrice}`);
+      if (contract.underlying !== "VIX") await sleep(15_000);
     } catch (err) {
       console.log(`  ERROR fetching current price: ${err} — skipping`);
       continue;
@@ -243,6 +244,7 @@ async function rotateExpired(contracts: Contract[]): Promise<Contract[]> {
     let newContracts: PolygonContract[];
     try {
       newContracts = await fetchContracts(contract.underlying, contract.contractType);
+      await sleep(15_000);
     } catch (err) {
       console.log(`  ERROR fetching new contracts: ${err}`);
       continue;
@@ -292,6 +294,7 @@ async function fetchTodayPrices(contracts: Contract[]): Promise<void> {
 
     try {
       const rows  = await fetchRecentPrices(contract.ticker);
+      await sleep(15_000);
       const count = await storePrices(contract.ticker, rows);
       if (count === 0) {
         console.log(`no data (market closed?)`);
