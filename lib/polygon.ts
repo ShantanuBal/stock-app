@@ -160,27 +160,26 @@ export async function fetchGroupedDailyForBackfill(date: string): Promise<number
 }
 
 async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<GroupedDailyResult[]> {
-  // Sentinel check — only trust DynamoDB if the full write completed successfully.
-  const sentinel = await docClient.send(
-    new GetCommand({
-      TableName: TABLE_NAME,
-      Key: { date, ticker: COMPLETE_SENTINEL },
-    }),
-  );
+  const isToday = date === formatDate(new Date());
 
-  if (sentinel.Item) {
-    console.log(`Stock data for ${date} already in database — skipping Polygon call`);
-    return batchGetTickers(date, tickers);
+  // Historical dates: check DynamoDB permanent cache first.
+  // Today's data: skip DynamoDB — use Next.js edge cache (revalidate: 900) to avoid write amplification.
+  if (!isToday) {
+    const sentinel = await docClient.send(
+      new GetCommand({ TableName: TABLE_NAME, Key: { date, ticker: COMPLETE_SENTINEL } }),
+    );
+    if (sentinel.Item) {
+      console.log(`Stock data for ${date} already in database — skipping Polygon call`);
+      return batchGetTickers(date, tickers);
+    }
   }
 
-  // Not in DB (or write was incomplete) — fetch from Polygon, persist all tickers, then write sentinel.
-  console.log(`No data found for ${date} — fetching from Polygon`);
+  console.log(`Fetching ${isToday ? "today's" : ""} stock data for ${date} from Polygon`);
   const url = `${BASE_URL}/v2/aggs/grouped/locale/us/market/stocks/${date}?adjusted=true&apiKey=${API_KEY}`;
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, isToday ? { next: { revalidate: 900 } } : { cache: "no-store" });
   if (!res.ok) {
     if (res.status === 403) {
-      // Free tier: data not available until after US market close + processing. Caller will try the previous day.
-      console.log(`Polygon returned 403 for ${date} (data not yet available) — skipping to previous day`);
+      console.log(`Polygon returned 403 for ${date} — no data available yet, trying previous day`);
       return [];
     }
     const body = await res.text();
@@ -189,26 +188,14 @@ async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<Gr
   const data = await res.json();
   const results: GroupedDailyResult[] = data.results ?? [];
 
-  if (results.length > 0) {
-    console.log(`Saving ${results.length} stocks for ${date} to database so we don't need to call Polygon again`);
+  // Persist to DynamoDB only for completed (historical) dates, not today.
+  if (!isToday && results.length > 0) {
+    console.log(`Saving ${results.length} stocks for ${date} to database`);
     await batchWrite(
-      results.map((r) => ({
-        date,
-        ticker: r.T,
-        c: r.c,
-        o: r.o,
-        h: r.h,
-        l: r.l,
-        v: r.v,
-        t: r.t,
-      })),
+      results.map((r) => ({ date, ticker: r.T, c: r.c, o: r.o, h: r.h, l: r.l, v: r.v, t: r.t })),
     );
-    // Sentinel written last — signals that all batch writes completed successfully.
     await docClient.send(
-      new PutCommand({
-        TableName: TABLE_NAME,
-        Item: { date, ticker: COMPLETE_SENTINEL },
-      }),
+      new PutCommand({ TableName: TABLE_NAME, Item: { date, ticker: COMPLETE_SENTINEL } }),
     );
     console.log(`All stock data for ${date} saved — future requests will be served from database`);
   }
@@ -236,14 +223,12 @@ export async function getTopPerformers(
   tickers: Set<string>,
   tickerNames: Record<string, string>,
 ): Promise<StockResult[]> {
-  // Always use the most recent completed trading day (free tier can't fetch today's data until after close)
-  const yesterday = getPreviousTradingDay(new Date(), 1);
-  const startDate = getStartDate(range, yesterday);
-
-  const [currentData, startData] = await Promise.all([
-    findMostRecentTradingData(yesterday, tickers),
-    findMostRecentTradingData(startDate, tickers),
-  ]);
+  // Resolve current data first — it may fall back to a prior date (weekend, pre-market, no data yet).
+  // Start date must be computed from the resolved date so "1D" always means one trading day prior.
+  const currentData = await findMostRecentTradingData(new Date(), tickers);
+  const resolvedDate = new Date(currentData.date + "T12:00:00Z");
+  const startDate = getStartDate(range, resolvedDate);
+  const startData = await findMostRecentTradingData(startDate, tickers);
 
   const startPriceMap = new Map<string, number>();
   for (const item of startData.results) {
