@@ -7,7 +7,7 @@ import {
 import { useTheme } from "./ThemeProvider";
 import type { ChartData } from "./IndexChart";
 
-const RANGES = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "YTD"] as const;
+const RANGES = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"] as const;
 type Range = typeof RANGES[number];
 
 interface Props {
@@ -18,8 +18,36 @@ interface Props {
   initialRange: string;
 }
 
-function fmtAxisDate(dateStr: string): string {
+function fmtAxisDate(dateStr: string, range: string): string {
   const d = new Date(dateStr + "T12:00:00");
+  if (range === "5Y" || range === "1Y" || range === "YTD")
+    return `${d.toLocaleDateString("en-US", { month: "short" })} ${d.getFullYear().toString().slice(2)}`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function RotatedAxisTick({ x, y, payload, fill, range }: any) {
+  const isLong = range === "1Y" || range === "5Y" || range === "YTD";
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0} y={0}
+        dy={isLong ? 4 : 10}
+        textAnchor={isLong ? "end" : "middle"}
+        fill={fill}
+        fontSize={11}
+        transform={isLong ? "rotate(-35)" : undefined}
+      >
+        {fmtAxisDate(payload.value, range)}
+      </text>
+    </g>
+  );
+}
+
+function fmtTooltipDate(dateStr: string, range: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  if (range === "5Y" || range === "1Y" || range === "YTD")
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
@@ -34,11 +62,11 @@ function fmtYAxis(v: number): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, label, color, isDark }: any) {
+function CustomTooltip({ active, payload, label, color, isDark, range }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className={`rounded-lg border px-3 py-2 text-xs shadow-lg ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"}`}>
-      <p className={`mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{fmtAxisDate(label)}</p>
+      <p className={`mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{fmtTooltipDate(label, range)}</p>
       <p style={{ color }} className="font-semibold">{fmtValue(payload[0].value)}</p>
     </div>
   );
@@ -148,9 +176,9 @@ export default function IndexChartModal({ isOpen, onClose, label, index, initial
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-              <XAxis dataKey="date" tickFormatter={fmtAxisDate} tick={{ fill: tickColor, fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+              <XAxis dataKey="date" tick={<RotatedAxisTick fill={tickColor} range={range} />} axisLine={false} tickLine={false} interval="preserveStartEnd" height={range === "1Y" || range === "5Y" || range === "YTD" ? 45 : 25} />
               <YAxis domain={["auto", "auto"]} tick={{ fill: tickColor, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={fmtYAxis} width={48} />
-              <Tooltip content={<CustomTooltip color={color} isDark={isDark} />} />
+              <Tooltip content={<CustomTooltip color={color} isDark={isDark} range={range} />} />
               <Area type="monotone" dataKey="close" stroke={color} strokeWidth={2} fill="url(#modalIndexGrad)" dot={false} activeDot={{ r: 4, fill: color, stroke: "none" }} />
             </AreaChart>
           </ResponsiveContainer>

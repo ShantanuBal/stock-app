@@ -13,7 +13,7 @@ import { DJIA_SECTORS } from "@/lib/djia";
 import { RUSSELL2000_SECTORS } from "@/lib/russell2000";
 import HScrollContainer from "./components/HScrollContainer";
 
-type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
+type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" | "YTD";
 
 const RANGES: { label: string; value: TimeRange }[] = [
   { label: "1 Day", value: "1D" },
@@ -23,6 +23,7 @@ const RANGES: { label: string; value: TimeRange }[] = [
   { label: "3 Months", value: "3M" },
   { label: "6 Months", value: "6M" },
   { label: "1 Year", value: "1Y" },
+  { label: "5 Years", value: "5Y" },
   { label: "YTD", value: "YTD" },
 ];
 
@@ -404,7 +405,7 @@ export default function Home() {
         {/* Chart — hidden for All Stocks and Summary */}
         {!isSummary && !isAllStocks && currentIndex && (
           <>
-            <IndexChart data={chartData} label={currentIndex.label} loading={loading} onClick={() => setChartModalOpen(true)} />
+            <IndexChart data={chartData} label={currentIndex.label} loading={loading} onClick={() => setChartModalOpen(true)} range={range} />
             <IndexChartModal
               isOpen={chartModalOpen}
               onClose={() => setChartModalOpen(false)}

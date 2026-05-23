@@ -12,7 +12,7 @@ const INDEX_CONFIG: Record<Exclude<IndexKey, "all">, { ticker: string; scale: nu
   russell2000: { ticker: "IWM",   scale: 10  }, // IWM ≈ RUT / 10
 };
 
-const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "YTD"];
+const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"];
 const VALID_INDICES = Object.keys(INDEX_CONFIG) as IndexKey[];
 
 export async function GET(req: NextRequest) {

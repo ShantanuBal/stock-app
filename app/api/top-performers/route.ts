@@ -14,7 +14,7 @@ const INDEX_DATA: Record<Exclude<IndexKey, "all">, { tickers: string[]; names: R
   russell2000: { tickers: RUSSELL2000_TICKERS, names: RUSSELL2000_NAMES },
 };
 
-const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "YTD"];
+const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"];
 const VALID_INDICES: IndexKey[] = ["all", "sp500", "nasdaq100", "djia", "russell2000"];
 
 export async function GET(req: NextRequest) {

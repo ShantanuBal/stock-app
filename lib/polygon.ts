@@ -9,7 +9,7 @@ const BASE_URL = "https://api.polygon.io";
 // Its presence means the date's data is complete and trustworthy.
 const COMPLETE_SENTINEL = "__complete__";
 
-export type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
+export type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" | "YTD";
 
 export interface StockResult {
   ticker: string;
@@ -68,6 +68,10 @@ export function getStartDate(range: TimeRange, today: Date): Date {
       return d;
     case "1Y":
       d.setFullYear(d.getFullYear() - 1);
+      while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
+      return d;
+    case "5Y":
+      d.setFullYear(d.getFullYear() - 5);
       while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
       return d;
     case "YTD":

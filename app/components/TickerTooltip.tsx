@@ -5,7 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import type { TickerDetails } from "@/lib/tickerDetails";
 import { useTheme } from "./ThemeProvider";
 
-const RANGES = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "YTD"] as const;
+const RANGES = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"] as const;
 type Range = typeof RANGES[number];
 
 interface ChartData {

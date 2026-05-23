@@ -23,11 +23,33 @@ interface Props {
   loading: boolean;
   onClick?: () => void;
   gradientId?: string;
+  range?: string;
 }
 
-function fmtAxisDate(dateStr: string): string {
+function fmtAxisDate(dateStr: string, range?: string): string {
   const d = new Date(dateStr + "T12:00:00");
+  if (range === "5Y" || range === "1Y" || range === "YTD")
+    return `${d.toLocaleDateString("en-US", { month: "short" })} ${d.getFullYear().toString().slice(2)}`;
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function RotatedAxisTick({ x, y, payload, fill, range }: any) {
+  const isLong = range === "1Y" || range === "5Y" || range === "YTD";
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0} y={0}
+        dy={isLong ? 4 : 10}
+        textAnchor={isLong ? "end" : "middle"}
+        fill={fill}
+        fontSize={11}
+        transform={isLong ? "rotate(-35)" : undefined}
+      >
+        {fmtAxisDate(payload.value, range)}
+      </text>
+    </g>
+  );
 }
 
 function fmtValue(v: number): string {
@@ -41,11 +63,11 @@ function fmtYAxis(v: number): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, label, color, isDark }: any) {
+function CustomTooltip({ active, payload, label, color, isDark, range }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className={`rounded-lg border px-3 py-2 text-xs shadow-lg ${isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-white"}`}>
-      <p className={`mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{fmtAxisDate(label)}</p>
+      <p className={`mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{fmtAxisDate(label, range)}</p>
       <p style={{ color }} className="font-semibold">
         {fmtValue(payload[0].value)}
       </p>
@@ -53,7 +75,7 @@ function CustomTooltip({ active, payload, label, color, isDark }: any) {
   );
 }
 
-export default function IndexChart({ data, label, loading, onClick, gradientId = "indexGrad" }: Props) {
+export default function IndexChart({ data, label, loading, onClick, gradientId = "indexGrad", range }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -116,11 +138,11 @@ export default function IndexChart({ data, label, loading, onClick, gradientId =
           <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
           <XAxis
             dataKey="date"
-            tickFormatter={fmtAxisDate}
-            tick={{ fill: tickColor, fontSize: 11 }}
+            tick={<RotatedAxisTick fill={tickColor} range={range} />}
             axisLine={false}
             tickLine={false}
             interval="preserveStartEnd"
+            height={range === "1Y" || range === "5Y" || range === "YTD" ? 40 : 25}
           />
           <YAxis
             domain={["auto", "auto"]}
@@ -130,7 +152,7 @@ export default function IndexChart({ data, label, loading, onClick, gradientId =
             tickFormatter={fmtYAxis}
             width={48}
           />
-          <Tooltip content={<CustomTooltip color={color} isDark={isDark} />} />
+          <Tooltip content={<CustomTooltip color={color} isDark={isDark} range={range} />} />
           <Area
             type="monotone"
             dataKey="close"

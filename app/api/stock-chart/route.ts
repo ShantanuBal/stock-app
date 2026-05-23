@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay } from "@/lib/polygon";
 
-const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "YTD"];
+const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"];
 
 export async function GET(req: NextRequest) {
   const ticker = req.nextUrl.searchParams.get("ticker");
