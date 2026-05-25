@@ -14,7 +14,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   label: string;
-  index: string;
+  index?: string;
+  ticker?: string;
   initialRange: string;
 }
 
@@ -72,7 +73,7 @@ function CustomTooltip({ active, payload, label, color, isDark, range }: any) {
   );
 }
 
-export default function IndexChartModal({ isOpen, onClose, label, index, initialRange }: Props) {
+export default function IndexChartModal({ isOpen, onClose, label, index, ticker, initialRange }: Props) {
   const [range, setRange] = useState<Range>((initialRange as Range) ?? "1W");
   const [data, setData] = useState<ChartData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -82,11 +83,11 @@ export default function IndexChartModal({ isOpen, onClose, label, index, initial
   const fetchData = useCallback((r: Range) => {
     setLoading(true);
     setData(null);
-    fetch(`/api/index-chart?range=${r}&index=${index}`)
+    fetch(ticker ? `/api/stock-chart?ticker=${ticker}&range=${r}` : `/api/index-chart?range=${r}&index=${index}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((d) => setData(d))
       .finally(() => setLoading(false));
-  }, [index]);
+  }, [index, ticker]);
 
   useEffect(() => {
     if (isOpen) fetchData(range);

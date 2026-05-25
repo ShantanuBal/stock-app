@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, type ReactNode } from "react";
 import type { StockResult } from "@/lib/polygon";
 import InfoTooltip from "./InfoTooltip";
 import TickerTooltip, { type TickerTooltipHandle } from "./TickerTooltip";
@@ -10,6 +10,7 @@ type SortDir = "asc" | "desc";
 
 interface Props {
   title: string;
+  titleExtra?: ReactNode;
   accent: "emerald" | "red";
   stocks: StockResult[];
   sectors?: Record<string, string>;
@@ -106,7 +107,7 @@ function SimpleColHeader({
   );
 }
 
-export default function PerformerTable({ title, accent, stocks, sectors, betas, marketCapShares, showBeta = true, defaultSortCol, range }: Props) {
+export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, showBeta = true, defaultSortCol, range }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const [sortCol, setSortCol] = useState<SortCol | null>(defaultSortCol ?? null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -191,7 +192,10 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className={`text-sm font-semibold uppercase tracking-wider ${accentColor}`}>{title}</h2>
+        <div className="flex items-center gap-1.5">
+          <h2 className={`text-sm font-semibold uppercase tracking-wider ${accentColor}`}>{title}</h2>
+          {titleExtra}
+        </div>
         <div className="relative">
           <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
@@ -211,7 +215,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
         </div>
       </div>
       <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
-        <table className="w-full min-w-[800px] text-sm">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
               <th className="px-3 py-3 text-left w-7">#</th>
@@ -220,21 +224,25 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
               <th className="px-3 py-3 text-left">Industry</th>
               <SimpleColHeader label="Price" col="price" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               <SimpleColHeader label="% Change" col="change" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
-              <ColHeader label="Mkt Cap" col="marketCap" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                  Market capitalisation — the total value of all outstanding shares at the current price. Calculated as share price × shares outstanding.
-                </p>
-              </ColHeader>
-              <ColHeader label="P/E" col="pe" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2">
-                  Price-to-earnings ratio — how much investors are paying for each dollar of annual profit. Calculated as market cap ÷ trailing twelve months net income.
-                </p>
-                <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
-                  <p><span className="font-medium text-gray-700 dark:text-gray-300">Low P/E (&lt;15)</span> — cheap relative to earnings, or slow growth expected</p>
-                  <p><span className="font-medium text-gray-700 dark:text-gray-300">High P/E (&gt;30)</span> — expensive, or high growth expected</p>
-                  <p><span className="font-medium text-gray-700 dark:text-gray-300">N/A</span> — company is currently unprofitable (negative earnings)</p>
-                </div>
-              </ColHeader>
+              {marketCapShares !== undefined && (
+                <ColHeader label="Mkt Cap" col="marketCap" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    Market capitalisation — the total value of all outstanding shares at the current price. Calculated as share price × shares outstanding.
+                  </p>
+                </ColHeader>
+              )}
+              {marketCapShares !== undefined && (
+                <ColHeader label="P/E" col="pe" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2">
+                    Price-to-earnings ratio — how much investors are paying for each dollar of annual profit. Calculated as market cap ÷ trailing twelve months net income.
+                  </p>
+                  <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">Low P/E (&lt;15)</span> — cheap relative to earnings, or slow growth expected</p>
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">High P/E (&gt;30)</span> — expensive, or high growth expected</p>
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">N/A</span> — company is currently unprofitable (negative earnings)</p>
+                  </div>
+                </ColHeader>
+              )}
               {showBeta && (
                 <ColHeader label="Beta" col="beta" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -258,7 +266,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
           <tbody>
             {visibleStocks.length === 0 && (
               <tr>
-                <td colSpan={showBeta ? 9 : 8} className="px-3 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={6 + (marketCapShares !== undefined ? 2 : 0) + (showBeta ? 1 : 0) + 1} className="px-3 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
                   No results for &ldquo;{search}&rdquo;
                 </td>
               </tr>
@@ -303,26 +311,26 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
                       {isPos ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
-                    {marketCapShares === undefined ? (
-                      <span className="text-gray-300 dark:text-gray-600">···</span>
-                    ) : marketCap == null ? (
-                      <span className="text-gray-400 dark:text-gray-600">—</span>
-                    ) : (
-                      formatMarketCap(marketCap)
-                    )}
-                  </td>
-                  <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
-                    {marketCapShares === undefined ? (
-                      <span className="text-gray-300 dark:text-gray-600">···</span>
-                    ) : pe == null ? (
-                      <span className="text-gray-400 dark:text-gray-600">—</span>
-                    ) : pe < 0 ? (
-                      <span className="text-gray-400 dark:text-gray-600">N/A</span>
-                    ) : (
-                      <span>{pe.toFixed(1)}x</span>
-                    )}
-                  </td>
+                  {marketCapShares !== undefined && (
+                    <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
+                      {marketCap == null ? (
+                        <span className="text-gray-400 dark:text-gray-600">—</span>
+                      ) : (
+                        formatMarketCap(marketCap)
+                      )}
+                    </td>
+                  )}
+                  {marketCapShares !== undefined && (
+                    <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
+                      {pe == null ? (
+                        <span className="text-gray-400 dark:text-gray-600">—</span>
+                      ) : pe < 0 ? (
+                        <span className="text-gray-400 dark:text-gray-600">N/A</span>
+                      ) : (
+                        <span>{pe.toFixed(1)}x</span>
+                      )}
+                    </td>
+                  )}
                   {showBeta && (
                     <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
                       {betas === undefined ? (
@@ -352,7 +360,7 @@ export default function PerformerTable({ title, accent, stocks, sectors, betas, 
         </button>
       )}
       <p className="mt-3 text-xs text-gray-400 dark:text-gray-600">
-        Data from <a href="https://polygon.io" target="_blank" rel="noopener noreferrer" className="hover:text-gray-500 dark:hover:text-gray-500 transition-colors">Polygon.io</a> · EOD prices · 1 day delay · Real-time prices coming soon
+        Data from <a href="https://polygon.io" target="_blank" rel="noopener noreferrer" className="hover:text-gray-500 dark:hover:text-gray-500 transition-colors">Polygon.io</a> · Prices delayed 15 min
       </p>
     </div>
   );
