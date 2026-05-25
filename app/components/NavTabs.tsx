@@ -6,8 +6,10 @@ import HScrollContainer from "./HScrollContainer";
 
 const NAV_TABS = [
   { label: "Equities",     href: "/"             },
+  { label: "ETFs",         href: "/etfs"         },
   { label: "Options",      href: "/options"      },
   { label: "Currencies",   href: "/currencies"   },
+  { label: "Commodities",  href: "/commodities"  },
   { label: "Futures",      href: "/futures"      },
   { label: "Fixed Income", href: "/bonds"        },
   { label: "Economy",      href: "/economy"      },
