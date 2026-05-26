@@ -122,7 +122,7 @@ const GICS = [
 
 export default function Home() {
   const [index, setIndex] = useState<IndexKey>("sp500");
-  const [range, setRange] = useState<TimeRange>("1W");
+  const [range, setRange] = useState<TimeRange>("1D");
   const [sectors, setSectors] = useState<string[]>([]);
   // null = never loaded yet (show skeleton); [] = loaded but empty
   const [topStocks, setTopStocks] = useState<StockResult[] | null>(null);
@@ -316,8 +316,9 @@ export default function Home() {
         </div>
 
         {/* Index selector */}
-        <div className="mb-5 flex items-center gap-3 w-fit max-w-full">
-          <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+        <div className="sticky top-[84px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 pb-3 mb-2">
+        <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1 w-fit max-w-full">
+          <HScrollContainer variant="card" className="gap-1">
             <button
               onClick={() => setIsSummary(true)}
               className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
@@ -335,24 +336,22 @@ export default function Home() {
                 </p>
               </InfoTooltip>
             </button>
-          </div>
-          <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
-            <HScrollContainer variant="card" className="gap-1">
-              {INDICES.filter((idx) => idx.value !== "all").map((idx) => (
-                <button
-                  key={idx.value}
-                  onClick={() => { setIndex(idx.value); setSectors([]); setIsSummary(false); }}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
-                    !isSummary && index === idx.value
-                      ? "bg-emerald-500 text-white shadow"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  {idx.label}
-                  <InfoTooltip element="span">
-                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
-                    <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{idx.description}</p>
+            {INDICES.map((idx) => (
+              <button
+                key={idx.value}
+                onClick={() => { setIndex(idx.value); setSectors([]); setIsSummary(false); }}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                  !isSummary && index === idx.value
+                    ? "bg-emerald-500 text-white shadow"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                {idx.label}
+                <InfoTooltip element="span">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{idx.description}</p>
+                  {idx.meta.length > 0 && (
                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-3 pt-2 border-t border-gray-200 dark:border-gray-700">
                       {idx.meta.map((item) => (
                         <div key={item.label}>
@@ -361,49 +360,20 @@ export default function Home() {
                         </div>
                       ))}
                     </div>
-                    <a
-                      href={idx.wikiUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
-                    >
-                      Read more on Wikipedia ↗
-                    </a>
-                  </InfoTooltip>
-                </button>
-              ))}
-            </HScrollContainer>
-          </div>
-          {(() => {
-            const allIdx = INDICES.find((idx) => idx.value === "all")!;
-            return (
-              <div className="rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
-                <button
-                  onClick={() => { setIndex("all"); setSectors([]); setIsSummary(false); }}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
-                    !isSummary && index === "all"
-                      ? "bg-emerald-500 text-white shadow"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  {allIdx.label}
-                  <InfoTooltip element="span">
-                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
-                    <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{allIdx.label}</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{allIdx.description}</p>
-                    <a
-                      href={allIdx.wikiUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
-                    >
-                      Read more on Wikipedia ↗
-                    </a>
-                  </InfoTooltip>
-                </button>
-              </div>
-            );
-          })()}
+                  )}
+                  <a
+                    href={idx.wikiUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                  >
+                    Read more on Wikipedia ↗
+                  </a>
+                </InfoTooltip>
+              </button>
+            ))}
+          </HScrollContainer>
+        </div>
         </div>
 
         {/* Summary view — AI overview */}
