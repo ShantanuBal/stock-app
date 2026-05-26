@@ -60,7 +60,7 @@ interface Props {
 }
 
 export default function CurrenciesGrid({ majorPairs, emPairs, crypto, majorRates, emRates, cryptoRates }: Props) {
-  const [range, setRange] = useState<Range>("1W");
+  const [range, setRange] = useState<Range>("1D");
 
   const days = range === "YTD" ? ytdDays() : (RANGES.find((r) => r.value === range)?.days ?? 7);
 

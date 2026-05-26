@@ -74,7 +74,7 @@ function CustomTooltip({ active, payload, label, color, isDark, range }: any) {
 }
 
 export default function IndexChartModal({ isOpen, onClose, label, index, ticker, initialRange }: Props) {
-  const [range, setRange] = useState<Range>((initialRange as Range) ?? "1W");
+  const [range, setRange] = useState<Range>((initialRange as Range) ?? "1D");
   const [data, setData] = useState<ChartData | null>(null);
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme();

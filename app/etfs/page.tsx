@@ -68,7 +68,7 @@ const categoryMap = Object.fromEntries(
 );
 
 export default function ETFsPage() {
-  const [range, setRange] = useState<TimeRange>("1W");
+  const [range, setRange] = useState<TimeRange>("1D");
   const [etfs, setEtfs] = useState<StockResult[] | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
