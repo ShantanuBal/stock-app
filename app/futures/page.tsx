@@ -2,7 +2,10 @@ import InfoTooltip from "@/app/components/InfoTooltip";
 
 export const revalidate = 3600;
 
-export const metadata = { title: "Futures · Horizon" };
+export const metadata = {
+  title: "Futures · Horizon",
+  description: "Commodity, equity index, and interest rate futures — coming soon to Horizon.",
+};
 
 const COMMODITY_FUTURES = [
   { symbol: "CL",  name: "WTI Crude Oil",   exchange: "NYMEX" },

@@ -17,6 +17,7 @@ interface Props {
   betas?: Record<string, number | null>;
   marketCapShares?: Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }>;
   showBeta?: boolean;
+  showSector?: boolean;
   defaultSortCol?: SortCol;
   range?: string;
 }
@@ -107,7 +108,7 @@ function SimpleColHeader({
   );
 }
 
-export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, showBeta = true, defaultSortCol, range }: Props) {
+export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, showBeta = true, showSector = true, defaultSortCol, range }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const [sortCol, setSortCol] = useState<SortCol | null>(defaultSortCol ?? null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -221,7 +222,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
               <th className="px-3 py-3 text-left w-7">#</th>
               <th className="px-3 py-3 text-left">Ticker</th>
               <th className="px-3 py-3 text-left">Company</th>
-              <th className="px-3 py-3 text-left">Industry</th>
+              {showSector && <th className="px-3 py-3 text-left">Industry</th>}
               <SimpleColHeader label="Price" col="price" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               <SimpleColHeader label="% Change" col="change" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               {marketCapShares !== undefined && (
@@ -266,7 +267,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
           <tbody>
             {visibleStocks.length === 0 && (
               <tr>
-                <td colSpan={6 + (marketCapShares !== undefined ? 2 : 0) + (showBeta ? 1 : 0) + 1} className="px-3 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={6 + (showSector ? 1 : 0) + (marketCapShares !== undefined ? 2 : 0) + (showBeta ? 1 : 0)} className="px-3 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
                   No results for &ldquo;{search}&rdquo;
                 </td>
               </tr>
@@ -300,9 +301,11 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                   <td className="px-3 py-3 text-gray-500 dark:text-gray-300 max-w-[140px] truncate">
                     {stock.name || "—"}
                   </td>
-                  <td className="px-3 py-3 text-gray-500 dark:text-gray-400 max-w-[140px] truncate text-xs">
-                    {sectors?.[stock.ticker] ? toTitleCase(sectors[stock.ticker]) : "N/A"}
-                  </td>
+                  {showSector && (
+                    <td className="px-3 py-3 text-gray-500 dark:text-gray-400 max-w-[140px] truncate text-xs">
+                      {sectors?.[stock.ticker] ? toTitleCase(sectors[stock.ticker]) : "N/A"}
+                    </td>
+                  )}
                   <td className="px-3 py-3 text-right text-gray-900 dark:text-white tabular-nums">
                     ${stock.price.toFixed(2)}
                   </td>

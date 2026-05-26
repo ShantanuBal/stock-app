@@ -2,7 +2,10 @@ import { getAllMetalsData, getAllEnergyData, METALS_CONFIGS, ENERGY_CONFIGS } fr
 import CommoditiesGrid from "@/app/components/CommoditiesGrid";
 import InfoTooltip from "@/app/components/InfoTooltip";
 
-export const metadata = { title: "Commodities · Horizon" };
+export const metadata = {
+  title: "Commodities · Horizon",
+  description: "Live spot prices for precious metals and energy benchmarks — gold, silver, crude oil, and natural gas. Data from Polygon and FRED.",
+};
 export const revalidate = 3600;
 
 export default async function CommoditiesPage() {

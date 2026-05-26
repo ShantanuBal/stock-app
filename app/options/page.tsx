@@ -2,7 +2,10 @@ import { getAllOptionsData } from "@/lib/polygon-options";
 import OptionsGrid from "@/app/components/OptionsGrid";
 import InfoTooltip from "@/app/components/InfoTooltip";
 
-export const metadata = { title: "Options · Horizon" };
+export const metadata = {
+  title: "Options · Horizon",
+  description: "Monitor at-the-money options premiums and implied volatility for major indices and stocks. Historical premium data updated daily.",
+};
 export const revalidate = 3600;
 
 export default async function OptionsPage() {

@@ -165,6 +165,7 @@ export default function ETFsPage() {
                     stocks={sectionEtfs}
                     sectors={categoryMap}
                     showBeta={false}
+                    showSector={false}
                     defaultSortCol="change"
                     range={range}
                   />

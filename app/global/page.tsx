@@ -1,6 +1,9 @@
 import InfoTooltip from "@/app/components/InfoTooltip";
 
-export const metadata = { title: "Global Markets · Horizon" };
+export const metadata = {
+  title: "Global Markets · Horizon",
+  description: "Monitor equity indices across the Americas, Europe, and Asia-Pacific. A snapshot of how global markets are moving.",
+};
 
 const AMERICAS = [
   { symbol: "SPX", name: "S&P 500", country: "United States" },

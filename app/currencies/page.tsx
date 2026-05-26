@@ -2,7 +2,10 @@ import CurrenciesGrid from "@/app/components/CurrenciesGrid";
 import { getAllForexRates } from "@/lib/polygon-forex";
 import InfoTooltip from "@/app/components/InfoTooltip";
 
-export const metadata = { title: "Currencies · Horizon" };
+export const metadata = {
+  title: "Currencies · Horizon",
+  description: "Live exchange rates for major forex pairs, emerging market currencies, and crypto. Rates updated hourly via Polygon.",
+};
 export const revalidate = 3600;
 
 interface PairConfig {

@@ -4,7 +4,10 @@ import InfoTooltip from "../components/InfoTooltip";
 
 export const revalidate = 3600;
 
-export const metadata = { title: "Fixed Income · Horizon" };
+export const metadata = {
+  title: "Fixed Income · Horizon",
+  description: "Track US Treasury yields, the yield curve, and key fixed income indicators. Data from FRED, updated daily.",
+};
 
 export default async function BondsPage() {
   const { treasuries, credit } = await getAllBondData();

@@ -4,7 +4,10 @@ import InfoTooltip from "../components/InfoTooltip";
 
 export const revalidate = 3600;
 
-export const metadata = { title: "Economy · Horizon" };
+export const metadata = {
+  title: "Economy · Horizon",
+  description: "Track key US economic indicators — GDP growth, inflation, unemployment, interest rates, and more. Data from FRED, updated daily.",
+};
 
 export default async function EconomyPage() {
   const results = await getAllIndicators();
