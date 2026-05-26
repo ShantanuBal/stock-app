@@ -18,6 +18,7 @@ interface Props {
   marketCapShares?: Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }>;
   showBeta?: boolean;
   showSector?: boolean;
+  companyLabel?: string;
   defaultSortCol?: SortCol;
   range?: string;
 }
@@ -108,7 +109,7 @@ function SimpleColHeader({
   );
 }
 
-export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, showBeta = true, showSector = true, defaultSortCol, range }: Props) {
+export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, showBeta = true, showSector = true, companyLabel = "Company", defaultSortCol, range }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const [sortCol, setSortCol] = useState<SortCol | null>(defaultSortCol ?? null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -221,7 +222,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
             <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
               <th className="px-3 py-3 text-left w-7">#</th>
               <th className="px-3 py-3 text-left">Ticker</th>
-              <th className="px-3 py-3 text-left">Company</th>
+              <th className="px-3 py-3 text-left">{companyLabel}</th>
               {showSector && <th className="px-3 py-3 text-left">Industry</th>}
               <SimpleColHeader label="Price" col="price" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               <SimpleColHeader label="% Change" col="change" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />

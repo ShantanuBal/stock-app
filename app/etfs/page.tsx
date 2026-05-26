@@ -166,6 +166,7 @@ export default function ETFsPage() {
                     sectors={categoryMap}
                     showBeta={false}
                     showSector={false}
+                    companyLabel="Fund"
                     defaultSortCol="change"
                     range={range}
                   />

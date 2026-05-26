@@ -6,7 +6,10 @@
 
 import { CloudWatchClient, PutMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 import { ALL_TICKERS } from "../lib/all-tickers";
+import { ALL_ETFS } from "../lib/etf-config";
 import { refreshTickerDetails } from "../lib/tickerDetails";
+
+const ETF_TICKERS = ALL_ETFS.map((e) => e.symbol);
 
 const cw = new CloudWatchClient({ region: process.env.AWS_REGION ?? "us-west-2" });
 const CW_NAMESPACE = "Horizon/TickerRefresh";
@@ -45,6 +48,20 @@ async function publishMetrics(refreshed: number, errors: number, durationSeconds
   const startTime = Date.now();
   let refreshed = 0;
   let errors = 0;
+
+  console.log(`[refresh] Refreshing ${ETF_TICKERS.length} ETF tickers first...`);
+  for (let i = 0; i < ETF_TICKERS.length; i++) {
+    const ticker = ETF_TICKERS[i];
+    process.stdout.write(`[refresh] [ETF ${i + 1}/${ETF_TICKERS.length}] ${ticker}... `);
+    try {
+      const details = await refreshTickerDetails(ticker);
+      if (details) { console.log("ok"); refreshed++; }
+      else { console.log("no data"); errors++; }
+    } catch (err) {
+      console.log(`ERROR: ${err}`);
+      errors++;
+    }
+  }
 
   for (let i = 0; i < tickers.length; i++) {
     const ticker = tickers[i];
