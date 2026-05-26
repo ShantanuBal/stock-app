@@ -37,10 +37,10 @@ export function formatDate(date: Date): string {
 
 export function getPreviousTradingDay(date: Date, daysBack: number): Date {
   const d = new Date(date);
-  d.setDate(d.getDate() - daysBack);
-  // Skip weekends
-  while (d.getDay() === 0 || d.getDay() === 6) {
+  let count = 0;
+  while (count < daysBack) {
     d.setDate(d.getDate() - 1);
+    if (d.getDay() !== 0 && d.getDay() !== 6) count++;
   }
   return d;
 }
@@ -386,7 +386,12 @@ export async function getIndexBars(
   // Not in DB (or incomplete) — fetch from Polygon then persist.
   console.log(`No chart data found for ${ticker} — fetching from Polygon`);
   const url = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`;
-  const res = await fetch(url, { cache: "no-store" });
+  let res = await fetch(url, { cache: "no-store" });
+  if (res.status === 429) {
+    console.log(`Polygon rate limit for ${ticker} — retrying in 2s`);
+    await new Promise((r) => setTimeout(r, 2000));
+    res = await fetch(url, { cache: "no-store" });
+  }
   if (!res.ok) throw new Error(`Polygon error: ${res.status}`);
   const data = await res.json();
   const bars: Array<{ t: number; c: number; o: number; h: number; l: number; v: number }> =

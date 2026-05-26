@@ -37,10 +37,17 @@ export async function GET(req: NextRequest) {
     const raw = await getIndexBars(ticker, formatDate(startDate), formatDate(yesterday));
     const points = scale === 1 ? raw : raw.map((p) => ({ ...p, close: p.close * scale }));
 
-    const changePercent =
-      points.length >= 2
-        ? ((points[points.length - 1].close - points[0].close) / points[0].close) * 100
-        : 0;
+    let changePercent = 0;
+    if (points.length >= 2) {
+      changePercent = ((points[points.length - 1].close - points[0].close) / points[0].close) * 100;
+    } else if (points.length === 1) {
+      const prevDay = getPreviousTradingDay(new Date(points[0].date + "T12:00:00"), 1);
+      const prevRaw = await getIndexBars(ticker, formatDate(prevDay), formatDate(prevDay));
+      const prev = scale === 1 ? prevRaw : prevRaw.map((p) => ({ ...p, close: p.close * scale }));
+      if (prev.length > 0) {
+        changePercent = ((points[0].close - prev[0].close) / prev[0].close) * 100;
+      }
+    }
 
     return NextResponse.json({
       points,
