@@ -139,6 +139,64 @@ export default function FuturesPage() {
           {RATE_FUTURES.map((f) => <PlaceholderCard key={f.symbol} {...f} />)}
         </div>
       </div>
+
+      {/* Key concepts explainer */}
+      <div className="mt-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-4">
+          Key Futures Concepts
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {[
+            {
+              symbol: "×",
+              name: "Leverage",
+              measures: "Amplified exposure",
+              description: "Futures require only a margin deposit — a fraction of the contract's notional value. An ES (S&P 500) contract controls ~$230k of exposure for ~$12k of margin. Gains and losses are magnified proportionally. A 1% move in the index becomes a ~20% move on your margin.",
+              color: "text-emerald-500 dark:text-emerald-400",
+            },
+            {
+              symbol: "◻",
+              name: "Margin",
+              measures: "Performance bond",
+              description: "Margin in futures is not a loan — it's a good-faith deposit held by the exchange. Initial margin is required to open a position; maintenance margin is the minimum to keep it open. If your account falls below maintenance margin, you get a margin call and must top up immediately or be liquidated.",
+              color: "text-blue-500 dark:text-blue-400",
+            },
+            {
+              symbol: "↻",
+              name: "Expiry & Roll",
+              measures: "Contract lifecycle",
+              description: "Every futures contract has a fixed expiry date. Traders who want to maintain continuous exposure must \"roll\" — closing the expiring contract and opening the next one before expiry. Roll dates are published in advance. Failing to roll a physical commodity contract could result in actual delivery obligation.",
+              color: "text-orange-500 dark:text-orange-400",
+            },
+            {
+              symbol: "↗",
+              name: "Contango",
+              measures: "Futures > spot price",
+              description: "When the futures price is higher than the current spot price. Normal for commodities with storage costs — you're paying a premium to take delivery later. For ETFs that hold rolling futures (like USO), contango creates \"roll drag\" that slowly erodes returns over time even if the spot price stays flat.",
+              color: "text-purple-500 dark:text-purple-400",
+            },
+            {
+              symbol: "↘",
+              name: "Backwardation",
+              measures: "Futures < spot price",
+              description: "When the futures price is below the current spot price. Often signals near-term supply tightness — buyers prefer immediate delivery. Backwardation benefits rolling ETF holders because they sell expiring contracts at a premium and buy the next at a discount, creating positive roll yield.",
+              color: "text-red-500 dark:text-red-400",
+            },
+          ].map(({ symbol, name, measures, description, color }) => (
+            <div
+              key={name}
+              className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 flex flex-col gap-2"
+            >
+              <div className="flex items-baseline gap-2">
+                <span className={`text-2xl font-bold tabular-nums ${color}`}>{symbol}</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">{name}</span>
+              </div>
+              <p className={`text-xs font-medium ${color}`}>{measures}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
