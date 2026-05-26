@@ -87,20 +87,33 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Built by */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-emerald-500 mb-2">Built by</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          Horizon is built and maintained by{" "}
-          <span className="font-medium text-gray-700 dark:text-gray-300">Shantanu Bal</span>.
-          Have a feature idea, spotted a bug, or just want to chat markets?{" "}
-          <a
-            href="mailto:shantanu.r.bal@gmail.com"
-            className="text-emerald-500 hover:text-emerald-400 transition-colors"
-          >
-            shantanu.r.bal@gmail.com
-          </a>
-        </p>
+      {/* About the author */}
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-5">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-emerald-500 mb-4">About the Author</h2>
+        <div className="flex items-start gap-4">
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Shantanu Bal</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
+              Software engineer with a passion for financial markets. Horizon started as a personal project to make market data more accessible and understandable — the kind of dashboard he always wanted but couldn&apos;t find.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="https://shantanubal.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-500 hover:bg-emerald-500/20 transition-colors"
+              >
+                Portfolio ↗
+              </a>
+              <a
+                href="mailto:shantanu.r.bal@gmail.com"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                shantanu.r.bal@gmail.com
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
