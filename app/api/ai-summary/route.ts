@@ -27,26 +27,27 @@ const INDEX_LABELS: Record<IndexKeyWithoutAll, string> = {
 };
 
 const RANGE_LABELS: Record<string, string> = {
-  "1D": "1 day",
-  "3D": "3 days",
-  "1W": "1 week",
-  "1M": "1 month",
-  "3M": "3 months",
-  "6M": "6 months",
-  "1Y": "1 year",
-  "5Y": "5 years",
+  "1D": "today",
+  "3D": "the past 3 days",
+  "1W": "the past week",
+  "1M": "the past month",
+  "3M": "the past 3 months",
+  "6M": "the past 6 months",
+  "1Y": "the past year",
+  "5Y": "the past 5 years",
   "YTD": "year to date",
 };
 
-const VALID_INDICES: IndexKey[] = ["sp500", "nasdaq100", "djia", "russell2000"];
+const VALID_INDICES: (IndexKey | "summary")[] = ["sp500", "nasdaq100", "djia", "russell2000", "summary"];
 const VALID_RANGES = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"];
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { index, range, stocks } = body as {
-    index: IndexKey;
+  const { index, range, stocks, indices } = body as {
+    index: IndexKey | "summary";
     range: string;
-    stocks: StockResult[];
+    stocks?: StockResult[];
+    indices?: { label: string; changePercent: number }[];
   };
 
   if (!VALID_INDICES.includes(index) || !VALID_RANGES.includes(range)) {
@@ -64,18 +65,35 @@ export async function POST(req: NextRequest) {
   }
   console.log(`No AI summary found for ${pk} — generating with Claude`);
 
-  const sectorMap = SECTOR_MAPS[index as IndexKeyWithoutAll] ?? {};
-  const top = (stocks as StockResult[]).slice(0, 15);
+  let prompt: string;
+  let maxTokens: number;
 
-  const stockLines = top
-    .map((s, i) => {
-      const sector = sectorMap[s.ticker] ?? "Other";
-      const sign = s.changePercent >= 0 ? "+" : "";
-      return `${i + 1}. ${s.name} (${s.ticker}) — ${sector} — ${sign}${s.changePercent.toFixed(2)}%`;
-    })
-    .join("\n");
+  if (index === "summary") {
+    const indexLines = (indices ?? [])
+      .map(({ label, changePercent }) => `${label}: ${changePercent >= 0 ? "+" : ""}${changePercent.toFixed(2)}%`)
+      .join(", ");
 
-  const prompt = `You are a concise financial market analyst. Below are the top-performing stocks in the ${INDEX_LABELS[index as IndexKeyWithoutAll] ?? index} over the past ${RANGE_LABELS[range]} as of ${today}.
+    prompt = `You are a concise financial market analyst. The major US equity indices performed as follows for ${RANGE_LABELS[range] ?? range} as of ${today}: ${indexLines}.
+
+Write exactly 2 paragraphs separated by a blank line:
+- Paragraph 1: the overall market direction and which indices led or lagged, noting any notable divergences between them
+- Paragraph 2: the likely macro or sector-specific drivers behind this performance, drawing on your knowledge of market conditions and economic context for this period
+
+Be direct and specific. Professional but accessible tone. No disclaimers. Plain text only — no markdown, no headers, no bullet points, no bold.`;
+    maxTokens = 600;
+  } else {
+    const sectorMap = SECTOR_MAPS[index as IndexKeyWithoutAll] ?? {};
+    const top = (stocks ?? []).slice(0, 15);
+
+    const stockLines = top
+      .map((s, i) => {
+        const sector = sectorMap[s.ticker] ?? "Other";
+        const sign = s.changePercent >= 0 ? "+" : "";
+        return `${i + 1}. ${s.name} (${s.ticker}) — ${sector} — ${sign}${s.changePercent.toFixed(2)}%`;
+      })
+      .join("\n");
+
+    prompt = `You are a concise financial market analyst. Below are the top-performing stocks in the ${INDEX_LABELS[index as IndexKeyWithoutAll] ?? index} over the past ${RANGE_LABELS[range]} as of ${today}.
 
 ${stockLines}
 
@@ -84,10 +102,12 @@ Write exactly 2 paragraphs separated by a blank line:
 - Paragraph 2: likely macro or sector-specific reasons for the outperformance, drawing on your knowledge of market conditions and economic context for this period
 
 Be direct and specific. Professional but accessible tone. No disclaimers. Plain text only — no markdown, no headers, no bullet points, no bold.`;
+    maxTokens = 600;
+  }
 
   const message = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 600,
+    max_tokens: maxTokens,
     messages: [{ role: "user", content: prompt }],
   });
 

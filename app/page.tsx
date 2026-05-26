@@ -137,6 +137,9 @@ export default function Home() {
   const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }> | undefined>(undefined);
   const [isSummary, setIsSummary] = useState(true);
   const [summaryCharts, setSummaryCharts] = useState<Record<string, ChartData | null> | null>(null);
+  const [overviewSummary, setOverviewSummary] = useState<string | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [overviewExpanded, setOverviewExpanded] = useState(false);
 
   const isAllStocks = !isSummary && index === "all";
   const currentIndex = INDICES.find((i) => i.value === index) ?? null;
@@ -234,6 +237,8 @@ export default function Home() {
   useEffect(() => {
     if (!isSummary) return;
     setSummaryCharts(null);
+    setOverviewSummary(null);
+    setOverviewExpanded(false);
     Promise.all(
       SUMMARY_INDICES.map(async (idx) => {
         try {
@@ -246,6 +251,24 @@ export default function Home() {
       })
     ).then((results) => setSummaryCharts(Object.fromEntries(results)));
   }, [isSummary, range]);
+
+  useEffect(() => {
+    if (!isSummary || !summaryCharts) return;
+    const indices = SUMMARY_INDICES.map((idx) => {
+      const idxInfo = INDICES.find((i) => i.value === idx)!;
+      return { label: idxInfo.label, changePercent: summaryCharts[idx]?.changePercent ?? 0 };
+    });
+    setOverviewLoading(true);
+    fetch("/api/ai-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ index: "summary", range, indices }),
+    })
+      .then((r) => r.json())
+      .then((d) => setOverviewSummary(d.summary ?? null))
+      .catch(() => setOverviewSummary(null))
+      .finally(() => setOverviewLoading(false));
+  }, [isSummary, summaryCharts, range]);
 
   return (
     <div>
@@ -303,10 +326,10 @@ export default function Home() {
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
-              Summary
+              Overview
               <InfoTooltip element="span">
                 <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
-                <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Summary</p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Overview</p>
                 <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
                   A side-by-side view of all four major US indices — S&amp;P 500, Nasdaq 100, Dow Jones, and Russell 2000 — over the selected time range. Click any chart to drill into that index.
                 </p>
@@ -382,6 +405,41 @@ export default function Home() {
             );
           })()}
         </div>
+
+        {/* Summary view — AI overview */}
+        {isSummary && (overviewLoading || overviewSummary) && (
+          <div className="mb-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Overview</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">· Claude · Not financial advice</span>
+            </div>
+            {overviewLoading && !overviewSummary ? (
+              <div className="flex items-center gap-2">
+                <svg className="animate-spin h-3.5 w-3.5 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Generating overview…</span>
+              </div>
+            ) : (
+              <>
+                <div className={`space-y-3 ${overviewExpanded ? "" : "line-clamp-5"}`}>
+                  {(overviewSummary ?? "").split("\n\n").map((para, i) => (
+                    <p key={i} className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-[family-name:var(--font-inter)]">
+                      {para.trim()}
+                    </p>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setOverviewExpanded((e) => !e)}
+                  className="mt-2 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                >
+                  {overviewExpanded ? "Show less" : "Read more"}
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Summary view — 2×2 index chart grid */}
         {isSummary && (
