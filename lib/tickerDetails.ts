@@ -15,6 +15,7 @@ export interface TickerDetails {
   sharesOutstanding?: number;
   weightedSharesOutstanding?: number;
   netIncome?: number;
+  epsGrowth?: number;
 }
 
 export async function getTickerDetails(ticker: string): Promise<TickerDetails | null> {
@@ -111,12 +112,18 @@ export async function refreshTickerDetails(ticker: string): Promise<TickerDetail
   if (!results?.description) return null;
 
   const financialsRes = await fetch(
-    `https://api.polygon.io/vX/reference/financials?ticker=${ticker}&limit=1&apiKey=${process.env.POLYGON_API_KEY}`
+    `https://api.polygon.io/vX/reference/financials?ticker=${ticker}&limit=2&timeframe=annual&apiKey=${process.env.POLYGON_API_KEY}`
   );
   let netIncome: number | undefined;
+  let epsGrowth: number | undefined;
   if (financialsRes.ok) {
     const financialsData = await financialsRes.json();
-    netIncome = financialsData.results?.[0]?.financials?.income_statement?.net_income_loss?.value ?? undefined;
+    const periods = financialsData.results ?? [];
+    netIncome = periods[0]?.financials?.income_statement?.net_income_loss?.value ?? undefined;
+    const prevNetIncome: number | undefined = periods[1]?.financials?.income_statement?.net_income_loss?.value ?? undefined;
+    if (netIncome != null && prevNetIncome != null && prevNetIncome !== 0) {
+      epsGrowth = ((netIncome - prevNetIncome) / Math.abs(prevNetIncome)) * 100;
+    }
   }
 
   const details: TickerDetails = {
@@ -128,6 +135,7 @@ export async function refreshTickerDetails(ticker: string): Promise<TickerDetail
     sharesOutstanding: results.share_class_shares_outstanding ?? undefined,
     weightedSharesOutstanding: results.weighted_shares_outstanding ?? undefined,
     netIncome,
+    epsGrowth,
   };
 
   await dynamo.send(new PutCommand({ TableName: TABLE, Item: details }));

@@ -5,7 +5,7 @@ import type { StockResult } from "@/lib/polygon";
 import InfoTooltip from "./InfoTooltip";
 import TickerTooltip, { type TickerTooltipHandle } from "./TickerTooltip";
 
-type SortCol = "price" | "change" | "marketCap" | "pe" | "beta" | "volume";
+type SortCol = "price" | "change" | "marketCap" | "pe" | "peg" | "beta" | "volume";
 type SortDir = "asc" | "desc";
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
   stocks: StockResult[];
   sectors?: Record<string, string>;
   betas?: Record<string, number | null>;
-  marketCapShares?: Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }>;
+  marketCapShares?: Record<string, { weighted: number | null; shares: number | null; netIncome: number | null; epsGrowth: number | null }>;
   showBeta?: boolean;
   showSector?: boolean;
   companyLabel?: string;
@@ -181,6 +181,15 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
         const mcB = db ? (db.weighted ?? db.shares) != null ? (db.weighted ?? db.shares)! * b.price : null : null;
         av = mcA != null && da?.netIncome ? mcA / da.netIncome : null;
         bv = mcB != null && db?.netIncome ? mcB / db.netIncome : null;
+      } else if (sortCol === "peg") {
+        const da = marketCapShares?.[a.ticker];
+        const db = marketCapShares?.[b.ticker];
+        const mcA = da ? (da.weighted ?? da.shares) != null ? (da.weighted ?? da.shares)! * a.price : null : null;
+        const mcB = db ? (db.weighted ?? db.shares) != null ? (db.weighted ?? db.shares)! * b.price : null : null;
+        const peA = mcA != null && da?.netIncome ? mcA / da.netIncome : null;
+        const peB = mcB != null && db?.netIncome ? mcB / db.netIncome : null;
+        av = peA != null && da?.epsGrowth != null && da.epsGrowth > 0 ? peA / da.epsGrowth : null;
+        bv = peB != null && db?.epsGrowth != null && db.epsGrowth > 0 ? peB / db.epsGrowth : null;
       }
       if (av == null && bv == null) return 0;
       if (av == null) return 1;
@@ -245,6 +254,19 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                   </div>
                 </ColHeader>
               )}
+              {marketCapShares !== undefined && (
+                <ColHeader label="PEG" col="peg" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2">
+                    Price/earnings-to-growth ratio — adjusts P/E for the company&apos;s earnings growth rate. Calculated as P/E ÷ trailing YoY net income growth (%).
+                  </p>
+                  <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">PEG &lt; 1</span> — potentially undervalued relative to growth</p>
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">PEG = 1</span> — fairly valued</p>
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">PEG &gt; 1</span> — potentially overvalued relative to growth</p>
+                    <p><span className="font-medium text-gray-700 dark:text-gray-300">—</span> — not meaningful (negative or zero growth)</p>
+                  </div>
+                </ColHeader>
+              )}
               {showBeta && (
                 <ColHeader label="Beta" col="beta" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -268,7 +290,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
           <tbody>
             {visibleStocks.length === 0 && (
               <tr>
-                <td colSpan={6 + (showSector ? 1 : 0) + (marketCapShares !== undefined ? 2 : 0) + (showBeta ? 1 : 0)} className="px-3 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={6 + (showSector ? 1 : 0) + (marketCapShares !== undefined ? 3 : 0) + (showBeta ? 1 : 0)} className="px-3 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
                   No results for &ldquo;{search}&rdquo;
                 </td>
               </tr>
@@ -282,6 +304,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
               const capShares = capData ? (capData.weighted ?? capData.shares) : null;
               const marketCap = capShares != null ? capShares * stock.price : null;
               const pe = marketCap != null && capData?.netIncome ? marketCap / capData.netIncome : null;
+              const peg = pe != null && capData?.epsGrowth != null && capData.epsGrowth > 0 ? pe / capData.epsGrowth : null;
               return (
                 <tr
                   key={stock.ticker}
@@ -332,6 +355,15 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                         <span className="text-red-400 dark:text-red-500">{pe.toFixed(1)}x</span>
                       ) : (
                         <span>{pe.toFixed(1)}x</span>
+                      )}
+                    </td>
+                  )}
+                  {marketCapShares !== undefined && (
+                    <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
+                      {peg == null ? (
+                        <span className="text-gray-400 dark:text-gray-600">—</span>
+                      ) : (
+                        <span className={peg < 1 ? "text-emerald-500 dark:text-emerald-400" : peg > 2 ? "text-red-400 dark:text-red-500" : ""}>{peg.toFixed(2)}</span>
                       )}
                     </td>
                   )}

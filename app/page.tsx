@@ -134,7 +134,7 @@ export default function Home() {
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
-  const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null; netIncome: number | null }> | undefined>(undefined);
+  const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null; netIncome: number | null; epsGrowth: number | null }> | undefined>(undefined);
   const [isSummary, setIsSummary] = useState(true);
   const [summaryCharts, setSummaryCharts] = useState<Record<string, ChartData | null> | null>(null);
   const [overviewSummary, setOverviewSummary] = useState<string | null>(null);
