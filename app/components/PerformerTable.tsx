@@ -328,7 +328,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                       {pe == null ? (
                         <span className="text-gray-400 dark:text-gray-600">—</span>
                       ) : pe < 0 ? (
-                        <span className="text-gray-400 dark:text-gray-600">N/A</span>
+                        <span className="text-red-400 dark:text-red-500">{pe.toFixed(1)}x</span>
                       ) : (
                         <span>{pe.toFixed(1)}x</span>
                       )}
