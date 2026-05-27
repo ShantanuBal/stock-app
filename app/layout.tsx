@@ -55,7 +55,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full bg-slate-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
         <ThemeProvider>
-          <div className="mx-auto max-w-5xl px-4 pt-10 pb-16 font-[family-name:var(--font-geist-mono)]">
+          <div className="mx-auto max-w-7xl px-4 pt-10 pb-16 font-[family-name:var(--font-geist-mono)]">
             <SiteHeader username={session?.username} role={session?.role} />
             <NavTabs />
             {children}
