@@ -6,8 +6,6 @@ export const metadata = {
 };
 
 const AMERICAS = [
-  { symbol: "SPX", name: "S&P 500", country: "United States" },
-  { symbol: "COMP", name: "Nasdaq Composite", country: "United States" },
   { symbol: "TSX", name: "S&P/TSX Composite", country: "Canada" },
   { symbol: "IBOV", name: "Bovespa Index", country: "Brazil" },
   { symbol: "MXX", name: "IPC Index", country: "Mexico" },
@@ -106,7 +104,7 @@ export default function GlobalMarketsPage() {
         <SectionHeader title="Americas">
           <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Americas indices</p>
           <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
-            The US markets dominate global finance — the NYSE and Nasdaq together account for over 40% of global equity market cap. But Canada, Brazil, and Mexico are significant markets in their own right, often influenced by commodity prices (oil, metals, agriculture).
+            Canada, Brazil, and Mexico are significant markets in their own right, often influenced by commodity prices (oil, metals, agriculture).
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
             Brazil's Bovespa is particularly sensitive to commodity cycles and local political stability. Mexico's IPC tracks closely with NAFTA/USMCA trade dynamics and US economic conditions.
