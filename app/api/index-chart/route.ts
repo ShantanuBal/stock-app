@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay } from "@/lib/polygon";
+import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay, getTodayET } from "@/lib/polygon";
 import type { IndexKey } from "../top-performers/route";
 
 // I:NDX is freely available on Polygon's free tier.
@@ -26,26 +26,33 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid index" }, { status: 400 });
   }
 
-  const yesterday = getPreviousTradingDay(new Date(), 1);
-  const startDate = getStartDate(range, yesterday);
+  // Use ET date so post-midnight-UTC requests still resolve to the correct trading day.
+  const todayET = getTodayET();
+  const isWeekday = todayET.getDay() !== 0 && todayET.getDay() !== 6;
+  const endDate = isWeekday ? todayET : getPreviousTradingDay(todayET, 1);
+  const startDate = getStartDate(range, endDate);
 
   const config = INDEX_CONFIG[index as Exclude<IndexKey, "all">];
   if (!config) return NextResponse.json({ error: "No chart for this index" }, { status: 400 });
   const { ticker, scale } = config;
 
   try {
-    const raw = await getIndexBars(ticker, formatDate(startDate), formatDate(yesterday));
+    const raw = await getIndexBars(ticker, formatDate(startDate), formatDate(endDate));
     const points = scale === 1 ? raw : raw.map((p) => ({ ...p, close: p.close * scale }));
 
     let changePercent = 0;
     if (points.length >= 2) {
       changePercent = ((points[points.length - 1].close - points[0].close) / points[0].close) * 100;
     } else if (points.length === 1) {
-      const prevDay = getPreviousTradingDay(new Date(points[0].date + "T12:00:00"), 1);
-      const prevRaw = await getIndexBars(ticker, formatDate(prevDay), formatDate(prevDay));
-      const prev = scale === 1 ? prevRaw : prevRaw.map((p) => ({ ...p, close: p.close * scale }));
-      if (prev.length > 0) {
-        changePercent = ((points[0].close - prev[0].close) / prev[0].close) * 100;
+      // Retry up to 5 trading days back to skip holidays
+      for (let daysBack = 1; daysBack <= 5; daysBack++) {
+        const prevDay = getPreviousTradingDay(new Date(points[0].date + "T12:00:00"), daysBack);
+        const prevRaw = await getIndexBars(ticker, formatDate(prevDay), formatDate(prevDay));
+        const prev = scale === 1 ? prevRaw : prevRaw.map((p) => ({ ...p, close: p.close * scale }));
+        if (prev.length > 0) {
+          changePercent = ((points[0].close - prev[0].close) / prev[0].close) * 100;
+          break;
+        }
       }
     }
 

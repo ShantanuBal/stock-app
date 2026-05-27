@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay } from "@/lib/polygon";
+import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay, getTodayET } from "@/lib/polygon";
 
 const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"];
 
@@ -10,19 +10,24 @@ export async function GET(req: NextRequest) {
   if (!ticker) return NextResponse.json({ error: "Missing ticker" }, { status: 400 });
   if (!VALID_RANGES.includes(range)) return NextResponse.json({ error: "Invalid range" }, { status: 400 });
 
-  const yesterday = getPreviousTradingDay(new Date(), 1);
-  const startDate = getStartDate(range, yesterday);
+  const todayET = getTodayET();
+  const isWeekday = todayET.getDay() !== 0 && todayET.getDay() !== 6;
+  const endDate = isWeekday ? todayET : getPreviousTradingDay(todayET, 1);
+  const startDate = getStartDate(range, endDate);
 
   try {
-    const points = await getIndexBars(ticker, formatDate(startDate), formatDate(yesterday));
+    const points = await getIndexBars(ticker, formatDate(startDate), formatDate(endDate));
     let changePercent = 0;
     if (points.length >= 2) {
       changePercent = ((points[points.length - 1].close - points[0].close) / points[0].close) * 100;
     } else if (points.length === 1) {
-      const prevDay = getPreviousTradingDay(new Date(points[0].date + "T12:00:00"), 1);
-      const prev = await getIndexBars(ticker, formatDate(prevDay), formatDate(prevDay));
-      if (prev.length > 0) {
-        changePercent = ((points[0].close - prev[0].close) / prev[0].close) * 100;
+      for (let daysBack = 1; daysBack <= 5; daysBack++) {
+        const prevDay = getPreviousTradingDay(new Date(points[0].date + "T12:00:00"), daysBack);
+        const prev = await getIndexBars(ticker, formatDate(prevDay), formatDate(prevDay));
+        if (prev.length > 0) {
+          changePercent = ((points[0].close - prev[0].close) / prev[0].close) * 100;
+          break;
+        }
       }
     }
 

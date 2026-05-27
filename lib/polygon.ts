@@ -35,6 +35,12 @@ export function formatDate(date: Date): string {
   return date.toISOString().split("T")[0];
 }
 
+// Returns today's date in US Eastern Time as a noon-UTC Date, avoiding post-midnight UTC drift.
+export function getTodayET(): Date {
+  const etStr = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  return new Date(etStr + "T12:00:00Z");
+}
+
 export function getPreviousTradingDay(date: Date, daysBack: number): Date {
   const d = new Date(date);
   let count = 0;
