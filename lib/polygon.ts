@@ -41,16 +41,11 @@ export function getTodayET(): Date {
   return new Date(etStr + "T12:00:00Z");
 }
 
-// Returns the correct chart end date: today (ET) when market has closed (after 4 PM ET on a weekday),
-// otherwise the previous weekday. This ensures today's closed bar is included while avoiding
-// querying a date that hasn't traded yet.
+// Always use today (ET) as the chart end date. The retry/fallback logic in getIndexBars
+// handles holidays and pre-market hours by widening the range and returning the most
+// recent available bar, so there's no need to second-guess the end date here.
 export function getChartEndDate(): Date {
-  const todayET = getTodayET();
-  const nowET = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
-  const isWeekday = todayET.getDay() !== 0 && todayET.getDay() !== 6;
-  const isAfterMarketClose = nowET.getHours() >= 16;
-  if (isWeekday && isAfterMarketClose) return todayET;
-  return getPreviousTradingDay(todayET, 1);
+  return getTodayET();
 }
 
 export function getPreviousTradingDay(date: Date, daysBack: number): Date {
