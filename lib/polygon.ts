@@ -402,7 +402,7 @@ export async function getIndexBars(
   }
 
   // Not in DB (or incomplete) — fetch from Polygon then persist.
-  console.log(`No chart data found for ${ticker} — fetching from Polygon`);
+  console.log(`No chart data found for ${ticker} — fetching from Polygon (${from} → ${to})`);
   const url = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`;
   let res = await fetch(url, { cache: "no-store" });
   if (res.status === 429) {
@@ -414,6 +414,24 @@ export async function getIndexBars(
   const data = await res.json();
   const bars: Array<{ t: number; c: number; o: number; h: number; l: number; v: number }> =
     data.results ?? [];
+  console.log(`Polygon returned ${bars.length} bars for ${ticker} (status: ${data.status}, resultsCount: ${data.resultsCount ?? "n/a"})`);
+
+  // If 0 bars, the from date may be a market holiday — retry with a 7-day wider start.
+  if (bars.length === 0) {
+    const extStart = new Date(from + "T12:00:00Z");
+    extStart.setDate(extStart.getDate() - 7);
+    const extFrom = extStart.toISOString().split("T")[0];
+    console.log(`No bars for ${ticker} — retrying with extended range (${extFrom} → ${to})`);
+    const retryRes = await fetch(
+      `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${extFrom}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`,
+      { cache: "no-store" }
+    );
+    if (retryRes.ok) {
+      const retryData = await retryRes.json();
+      bars.push(...(retryData.results ?? []));
+      console.log(`Retry returned ${bars.length} bars for ${ticker}`);
+    }
+  }
 
   if (bars.length > 0) {
     await Promise.all(
@@ -438,8 +456,17 @@ export async function getIndexBars(
     console.log(`Saved ${bars.length} days of chart data for ${ticker} — future requests will be served from database`);
   }
 
-  return bars.map((b) => ({
-    date: new Date(b.t).toISOString().split("T")[0],
-    close: b.c,
-  }));
+  // Store all fetched bars (including any from the wider retry range) but only
+  // return bars within the originally requested window so callers get the right slice.
+  const allMapped = bars
+    .map((b) => ({ date: new Date(b.t).toISOString().split("T")[0], close: b.c }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const inRange = allMapped.filter((p) => p.date >= from && p.date <= to);
+  if (inRange.length > 0) return inRange;
+
+  // No bars fell within the requested window (e.g. today's data not yet on free tier) —
+  // return the single most recent bar we do have so the chart isn't blank.
+  const fallback = [...allMapped].reverse().find((p) => p.date <= to);
+  return fallback ? [fallback] : [];
 }

@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay, getChartEndDate } from "@/lib/polygon";
 import type { IndexKey } from "../top-performers/route";
 
-// I:NDX is freely available on Polygon's free tier.
-// S&P, DJIA, and Russell index data requires a paid license, so we use ETF
-// proxies (SPY, DIA, IWM) and scale them back to index-level values.
+// All major index data requires a paid Polygon license, so we use ETF proxies
+// and scale them back to approximate index-level values.
 const INDEX_CONFIG: Record<Exclude<IndexKey, "all">, { ticker: string; scale: number }> = {
   sp500:       { ticker: "SPY",   scale: 10  }, // SPY ≈ SPX / 10
-  nasdaq100:   { ticker: "I:NDX", scale: 1   }, // direct index data
+  nasdaq100:   { ticker: "QQQ",   scale: 40  }, // QQQ ≈ NDX / 40
   djia:        { ticker: "DIA",   scale: 100 }, // DIA ≈ DJIA / 100
   russell2000: { ticker: "IWM",   scale: 10  }, // IWM ≈ RUT / 10
 };
