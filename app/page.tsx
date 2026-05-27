@@ -317,63 +317,105 @@ export default function Home() {
 
         {/* Index selector */}
         <div className="sticky top-[84px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 pb-3 mb-2">
-        <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1 w-fit max-w-full">
-          <HScrollContainer variant="card" className="gap-1">
-            <button
-              onClick={() => setIsSummary(true)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
-                isSummary
-                  ? "bg-emerald-500 text-white shadow"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Overview
-              <InfoTooltip element="span">
-                <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
-                <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Overview</p>
-                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                  A side-by-side view of all four major US indices — S&amp;P 500, Nasdaq 100, Dow Jones, and Russell 2000 — over the selected time range. Click any chart to drill into that index.
-                </p>
-              </InfoTooltip>
-            </button>
-            {INDICES.map((idx) => (
+          <HScrollContainer variant="card" className="gap-2">
+            {/* Overview pill */}
+            <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
               <button
-                key={idx.value}
-                onClick={() => { setIndex(idx.value); setSectors([]); setIsSummary(false); }}
+                onClick={() => setIsSummary(true)}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
-                  !isSummary && index === idx.value
+                  isSummary
                     ? "bg-emerald-500 text-white shadow"
                     : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
-                {idx.label}
+                Overview
                 <InfoTooltip element="span">
                   <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{idx.description}</p>
-                  {idx.meta.length > 0 && (
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-                      {idx.meta.map((item) => (
-                        <div key={item.label}>
-                          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider">{item.label}</p>
-                          <p className="text-xs font-semibold text-gray-900 dark:text-white mt-0.5">{item.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <a
-                    href={idx.wikiUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
-                  >
-                    Read more on Wikipedia ↗
-                  </a>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Overview</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    A side-by-side view of all four major US indices — S&amp;P 500, Nasdaq 100, Dow Jones, and Russell 2000 — over the selected time range. Click any chart to drill into that index.
+                  </p>
                 </InfoTooltip>
               </button>
+            </div>
+            {/* Indexes pill */}
+            <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex">
+              {INDICES.filter((idx) => idx.value !== "all").map((idx) => (
+                <button
+                  key={idx.value}
+                  onClick={() => { setIndex(idx.value); setSectors([]); setIsSummary(false); }}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                    !isSummary && index === idx.value
+                      ? "bg-emerald-500 text-white shadow"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  {idx.label}
+                  <InfoTooltip element="span">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{idx.description}</p>
+                    {idx.meta.length > 0 && (
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        {idx.meta.map((item) => (
+                          <div key={item.label}>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider">{item.label}</p>
+                            <p className="text-xs font-semibold text-gray-900 dark:text-white mt-0.5">{item.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <a
+                      href={idx.wikiUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                    >
+                      Read more on Wikipedia ↗
+                    </a>
+                  </InfoTooltip>
+                </button>
+              ))}
+            </div>
+            {/* All Stocks pill */}
+            {INDICES.filter((idx) => idx.value === "all").map((idx) => (
+              <div key={idx.value} className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
+                <button
+                  onClick={() => { setIndex(idx.value); setSectors([]); setIsSummary(false); }}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                    !isSummary && index === idx.value
+                      ? "bg-emerald-500 text-white shadow"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  {idx.label}
+                  <InfoTooltip element="span">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{idx.description}</p>
+                    {idx.meta.length > 0 && (
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        {idx.meta.map((item) => (
+                          <div key={item.label}>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider">{item.label}</p>
+                            <p className="text-xs font-semibold text-gray-900 dark:text-white mt-0.5">{item.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <a
+                      href={idx.wikiUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                    >
+                      Read more on Wikipedia ↗
+                    </a>
+                  </InfoTooltip>
+                </button>
+              </div>
             ))}
           </HScrollContainer>
-        </div>
         </div>
 
         {/* Summary view — AI overview */}
