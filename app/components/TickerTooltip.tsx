@@ -20,6 +20,7 @@ interface Props {
   price?: number;
   changePercent?: number;
   initialRange?: string;
+  description?: string;
 }
 
 export interface TickerTooltipHandle {
@@ -45,7 +46,7 @@ function ChartTooltip({ active, payload, label, color, isDark }: any) {
 }
 
 const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTooltip(
-  { ticker, name, price, changePercent, initialRange }: Props,
+  { ticker, name, price, changePercent, initialRange, description }: Props,
   forwardedRef,
 ) {
   const spanRef = useRef<HTMLSpanElement>(null);
@@ -214,18 +215,18 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
 
           {/* Description + links */}
           <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-3">
-            {details ? (
+            {details || description ? (
               <>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2 max-h-20 overflow-y-auto scrollbar-hide">
-                  {details.description}
+                  {details?.description || description}
                 </p>
                 <div className="flex gap-4">
-                  {details.homepageUrl && (
+                  {details?.homepageUrl && (
                     <a href={details.homepageUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors">
                       Website ↗
                     </a>
                   )}
-                  <a href={`https://en.wikipedia.org/wiki/${encodeURIComponent(details.name)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors">
+                  <a href={`https://en.wikipedia.org/wiki/${encodeURIComponent(details?.name ?? name ?? ticker)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors">
                     Wikipedia ↗
                   </a>
                 </div>

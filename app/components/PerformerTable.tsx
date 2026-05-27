@@ -16,6 +16,7 @@ interface Props {
   sectors?: Record<string, string>;
   betas?: Record<string, number | null>;
   marketCapShares?: Record<string, { weighted: number | null; shares: number | null; netIncome: number | null; epsGrowth: number | null }>;
+  descriptions?: Record<string, string>;
   showBeta?: boolean;
   showSector?: boolean;
   companyLabel?: string;
@@ -109,7 +110,7 @@ function SimpleColHeader({
   );
 }
 
-export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, showBeta = true, showSector = true, companyLabel = "Company", defaultSortCol, range }: Props) {
+export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, descriptions, showBeta = true, showSector = true, companyLabel = "Company", defaultSortCol, range }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const [sortCol, setSortCol] = useState<SortCol | null>(defaultSortCol ?? null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -320,6 +321,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                       price={stock.price}
                       changePercent={stock.changePercent}
                       initialRange={range}
+                      description={descriptions?.[stock.ticker]}
                     />
                   </td>
                   <td className="px-3 py-3 text-gray-500 dark:text-gray-300 max-w-[140px] truncate">

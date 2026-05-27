@@ -7,7 +7,7 @@ import InfoTooltip from "@/app/components/InfoTooltip";
 import HScrollContainer from "@/app/components/HScrollContainer";
 import {
   BROAD_MARKET, SECTOR_ETFS, BOND_ETFS, COMMODITY_ETFS, INTERNATIONAL_ETFS,
-  ETF_CATEGORY_MAP, CATEGORY_LABELS,
+  ETF_CATEGORY_MAP, CATEGORY_LABELS, ETF_DESCRIPTION_MAP,
   type ETFCategory,
 } from "@/lib/etf-config";
 
@@ -164,6 +164,7 @@ export default function ETFsPage() {
                     accent="emerald"
                     stocks={sectionEtfs}
                     sectors={categoryMap}
+                    descriptions={ETF_DESCRIPTION_MAP}
                     showBeta={false}
                     showSector={false}
                     companyLabel="Fund"
