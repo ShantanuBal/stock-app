@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay, getTodayET } from "@/lib/polygon";
+import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay, getChartEndDate } from "@/lib/polygon";
 import type { IndexKey } from "../top-performers/route";
 
 // I:NDX is freely available on Polygon's free tier.
@@ -26,10 +26,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid index" }, { status: 400 });
   }
 
-  // Use ET date so post-midnight-UTC requests still resolve to the correct trading day.
-  const todayET = getTodayET();
-  const isWeekday = todayET.getDay() !== 0 && todayET.getDay() !== 6;
-  const endDate = isWeekday ? todayET : getPreviousTradingDay(todayET, 1);
+  const endDate = getChartEndDate();
   const startDate = getStartDate(range, endDate);
 
   const config = INDEX_CONFIG[index as Exclude<IndexKey, "all">];

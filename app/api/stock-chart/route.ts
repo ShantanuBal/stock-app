@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay, getTodayET } from "@/lib/polygon";
+import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDay, getChartEndDate } from "@/lib/polygon";
 
 const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"];
 
@@ -10,9 +10,7 @@ export async function GET(req: NextRequest) {
   if (!ticker) return NextResponse.json({ error: "Missing ticker" }, { status: 400 });
   if (!VALID_RANGES.includes(range)) return NextResponse.json({ error: "Invalid range" }, { status: 400 });
 
-  const todayET = getTodayET();
-  const isWeekday = todayET.getDay() !== 0 && todayET.getDay() !== 6;
-  const endDate = isWeekday ? todayET : getPreviousTradingDay(todayET, 1);
+  const endDate = getChartEndDate();
   const startDate = getStartDate(range, endDate);
 
   try {
