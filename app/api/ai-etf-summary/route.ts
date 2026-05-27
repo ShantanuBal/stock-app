@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const today = new Date().toISOString().split("T")[0];
   const pk = `etf#${category}#${range}#${today}`;
 
-  const cached = await getCachedSummary(pk);
+  const cached = await getCachedSummary(pk, range === "1D" ? 15 * 60 : undefined);
   if (cached) {
     console.log(`AI ETF summary for ${pk} found in cache`);
     return NextResponse.json({ summary: cached, cached: true });
