@@ -72,6 +72,9 @@ export default function ETFsPage() {
   const [etfs, setEtfs] = useState<StockResult[] | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
 
   const loading = etfs === null || isPending;
 
@@ -89,6 +92,25 @@ export default function ETFsPage() {
       }
     });
   }, [range]);
+
+  useEffect(() => {
+    if (!etfs || etfs.length === 0) return;
+    setSummary(null);
+    setSummaryLoading(true);
+    setSummaryExpanded(false);
+    const controller = new AbortController();
+    fetch("/api/ai-etf-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category: "all", range, etfs }),
+      signal: controller.signal,
+    })
+      .then((r) => r.json())
+      .then((d) => setSummary(d.summary ?? null))
+      .catch((e) => { if (e.name !== "AbortError") setSummary(null); })
+      .finally(() => setSummaryLoading(false));
+    return () => controller.abort();
+  }, [etfs, range]);
 
   return (
     <div>
@@ -134,6 +156,41 @@ export default function ETFsPage() {
           ))}
         </HScrollContainer>
       </div>
+
+      {/* AI Summary */}
+      {(summaryLoading || summary) && (
+        <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Summary</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">· Claude · Not financial advice</span>
+          </div>
+          {summaryLoading && !summary ? (
+            <div className="flex items-center gap-2">
+              <svg className="animate-spin h-3.5 w-3.5 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Generating summary…</span>
+            </div>
+          ) : (
+            <>
+              <div className={`space-y-3 ${summaryExpanded ? "" : "line-clamp-5"}`}>
+                {(summary ?? "").split("\n\n").map((para, i) => (
+                  <p key={i} className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-[family-name:var(--font-inter)]">
+                    {para.trim()}
+                  </p>
+                ))}
+              </div>
+              <button
+                onClick={() => setSummaryExpanded((e) => !e)}
+                className="mt-2 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+              >
+                {summaryExpanded ? "Show less" : "Read more"}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {error ? (
         <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">

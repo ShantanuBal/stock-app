@@ -7,7 +7,7 @@ import { CATEGORY_LABELS, type ETFCategory } from "@/lib/etf-config";
 const client = new Anthropic();
 
 const VALID_RANGES = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"];
-const VALID_CATEGORIES = ["broad", "sector", "bonds", "commodities", "international"];
+const VALID_CATEGORIES = ["broad", "sector", "bonds", "commodities", "international", "all"];
 
 const RANGE_LABELS: Record<string, string> = {
   "1D": "1 day",
@@ -24,7 +24,7 @@ const RANGE_LABELS: Record<string, string> = {
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { category, range, etfs } = body as {
-    category: ETFCategory;
+    category: ETFCategory | "all";
     range: string;
     etfs: StockResult[];
   };
@@ -43,8 +43,9 @@ export async function POST(req: NextRequest) {
   }
   console.log(`Generating AI ETF summary for ${pk}`);
 
-  const categoryLabel = CATEGORY_LABELS[category];
-  const etfLines = etfs
+  const categoryLabel = category === "all" ? "all" : CATEGORY_LABELS[category as ETFCategory];
+  const sortedEtfs = [...etfs].sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent));
+  const etfLines = (category === "all" ? sortedEtfs : etfs)
     .slice(0, 15)
     .map((e, i) => {
       const sign = e.changePercent >= 0 ? "+" : "";
@@ -52,7 +53,17 @@ export async function POST(req: NextRequest) {
     })
     .join("\n");
 
-  const prompt = `You are a concise financial market analyst. Below are the ${categoryLabel} ETFs ranked by performance over the past ${RANGE_LABELS[range]} as of ${today}.
+  const prompt = category === "all"
+    ? `You are a concise financial market analyst. Below are the top-moving ETFs across all categories (broad market, sectors, bonds, commodities, international) over the past ${RANGE_LABELS[range]} as of ${today}, sorted by absolute move.
+
+${etfLines}
+
+Write exactly 2 paragraphs separated by a blank line:
+- Paragraph 1: the biggest movers across asset classes — what led, what lagged, and what cross-asset themes stand out
+- Paragraph 2: the likely macro drivers behind these moves, drawing on your knowledge of market conditions for this period
+
+Be direct and specific. Professional but accessible tone. No disclaimers. Plain text only — no markdown, no headers, no bullet points, no bold.`
+    : `You are a concise financial market analyst. Below are the ${categoryLabel} ETFs ranked by performance over the past ${RANGE_LABELS[range]} as of ${today}.
 
 ${etfLines}
 
