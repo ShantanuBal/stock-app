@@ -37,14 +37,19 @@ export const SP500_TICKERS = [
   "PG", "PGR", "PLD", "PRU", "PEG", "PTC", "PSA", "PHM", "QRVO", "PWR",
   "QCOM", "DGX", "RL", "RJF", "RTX", "O", "REG", "REGN", "RF", "RSG",
   "RMD", "ROK", "ROL", "ROP", "ROST", "RCL", "SPGI", "CRM", "SBAC", "SLB",
-  "STX", "SRE", "NOW", "SHW", "SPG", "SWKS", "SJM", "SNA", "SO",
+  "STX", "SRE", "NOW", "SHW", "SPG", "SWKS", "SJM", "SNA", "SNDK", "SO",
   "LUV", "SWK", "SBUX", "STT", "STLD", "STE", "SYK", "SYF", "SNPS", "SYY",
   "TMUS", "TROW", "TTWO", "TPR", "TRGP", "TGT", "TEL", "TDY", "TFX", "TER",
   "TSLA", "TXN", "TXT", "TMO", "TJX", "TSCO", "TT", "TDG", "TRV", "TRMB",
   "TFC", "TYL", "TSN", "USB", "UBER", "UDR", "ULTA", "UNP", "UAL", "UPS",
   "URI", "UNH", "UHS", "VLO", "VTR", "VRSN", "VRSK", "VZ", "VRTX", "V",
   "VST", "VMC", "WAB", "WMT", "WBD", "WDAY", "WEC", "WFC", "WELL",
-  "WST", "WDC", "WTW", "WMB", "WYNN", "XEL", "XYL", "YUM", "ZBRA", "ZBH", "ZTS"
+  "WST", "WDC", "WTW", "WMB", "WYNN", "XEL", "XYL", "YUM", "ZBRA", "ZBH", "ZTS",
+  // Added 2024-2025 inclusions + long-standing omissions
+  "APO", "APP", "ARES", "BKNG", "BNY", "BSX", "CIEN", "CNP", "COHR", "CPAY",
+  "CRH", "CRWD", "CVNA", "DASH", "DDOG", "DECK", "DELL", "DOC", "EME", "ERIE",
+  "ES", "EVRG", "EXE", "FISV", "FIX", "GDDY", "GEV", "IBKR", "KKR", "LII",
+  "MRK", "PLTR", "PODD", "TECH",
 ];
 
 export const TICKER_NAMES: Record<string, string> = {
@@ -124,7 +129,7 @@ export const TICKER_NAMES: Record<string, string> = {
   RMD: "ResMed", ROK: "Rockwell Automation", ROL: "Rollins", ROP: "Roper Technologies", ROST: "Ross Stores",
   RCL: "Royal Caribbean", SPGI: "S&P Global", CRM: "Salesforce", SBAC: "SBA Communications", SLB: "SLB",
   STX: "Seagate Technology", SRE: "Sempra", NOW: "ServiceNow", SHW: "Sherwin-Williams",
-  SPG: "Simon Property", SWKS: "Skyworks Solutions", SJM: "J.M. Smucker", SNA: "Snap-on", SO: "Southern Co",
+  SPG: "Simon Property", SWKS: "Skyworks Solutions", SJM: "J.M. Smucker", SNA: "Snap-on", SNDK: "SanDisk", SO: "Southern Co",
   LUV: "Southwest Airlines", SWK: "Stanley Black & Decker", SBUX: "Starbucks", STT: "State Street", STLD: "Steel Dynamics",
   STE: "STERIS", SYK: "Stryker", SYF: "Synchrony Financial", SNPS: "Synopsys", SYY: "Sysco",
   TMUS: "T-Mobile US", TROW: "T. Rowe Price", TTWO: "Take-Two Interactive", TPR: "Tapestry", TRGP: "Targa Resources",
@@ -139,6 +144,15 @@ export const TICKER_NAMES: Record<string, string> = {
   WBD: "Warner Bros. Discovery", WDAY: "Workday", WEC: "WEC Energy", WFC: "Wells Fargo", WELL: "Welltower",
   WST: "West Pharmaceutical", WDC: "Western Digital", WTW: "Willis Towers Watson", WMB: "Williams Companies", WYNN: "Wynn Resorts",
   XEL: "Xcel Energy", XYL: "Xylem", YUM: "Yum! Brands", ZBRA: "Zebra Technologies", ZBH: "Zimmer Biomet", ZTS: "Zoetis",
+  APO: "Apollo Global Management", APP: "AppLovin", ARES: "Ares Management",
+  BKNG: "Booking Holdings", BNY: "BNY Mellon", BSX: "Boston Scientific",
+  CIEN: "Ciena", CNP: "CenterPoint Energy", COHR: "Coherent", CPAY: "Corpay",
+  CRH: "CRH", CRWD: "CrowdStrike", CVNA: "Carvana", DASH: "DoorDash",
+  DDOG: "Datadog", DECK: "Deckers Outdoor", DELL: "Dell Technologies", DOC: "Healthpeak Properties",
+  EME: "EMCOR Group", ERIE: "Erie Indemnity", ES: "Eversource Energy", EVRG: "Evergy",
+  EXE: "Expand Energy", FISV: "Fiserv", FIX: "Comfort Systems", GDDY: "GoDaddy",
+  GEV: "GE Vernova", IBKR: "Interactive Brokers", KKR: "KKR & Co", LII: "Lennox International",
+  MRK: "Merck", PLTR: "Palantir Technologies", PODD: "Insulet", TECH: "Bio-Techne",
 };
 
 export const SP500_SECTORS: Record<string, string> = {
@@ -244,7 +258,7 @@ export const SP500_SECTORS: Record<string, string> = {
   SPGI: "Financial Services", CRM: "Software", SBAC: "REITs", SLB: "Energy",
   STX: "Tech Hardware", SRE: "Utilities", NOW: "Software",
   SHW: "Materials", SPG: "REITs", SWKS: "Semiconductors", SJM: "Food & Beverage",
-  SNA: "Capital Goods", SO: "Utilities", LUV: "Transportation", SWK: "Capital Goods",
+  SNA: "Capital Goods", SNDK: "Tech Hardware", SO: "Utilities", LUV: "Transportation", SWK: "Capital Goods",
   SBUX: "Consumer Services", STT: "Financial Services", STLD: "Materials",
   STE: "Health Services", SYK: "Health Services", SYF: "Financial Services",
   SNPS: "Software", SYY: "Food & Beverage", TMUS: "Telecom", TROW: "Financial Services",
@@ -263,4 +277,13 @@ export const SP500_SECTORS: Record<string, string> = {
   WST: "Health Services", WDC: "Tech Hardware", WTW: "Insurance", WMB: "Energy",
   WYNN: "Consumer Services", XEL: "Utilities", XYL: "Capital Goods",
   YUM: "Consumer Services", ZBRA: "Tech Hardware", ZBH: "Health Services", ZTS: "Pharma & Biotech",
+  APO: "Financial Services", APP: "Software", ARES: "Financial Services",
+  BKNG: "Consumer Services", BNY: "Banks", BSX: "Health Services",
+  CIEN: "Tech Hardware", CNP: "Utilities", COHR: "Tech Hardware", CPAY: "Financial Services",
+  CRH: "Materials", CRWD: "Software", CVNA: "Retail", DASH: "Consumer Services",
+  DDOG: "Software", DECK: "Consumer Goods", DELL: "Tech Hardware", DOC: "REITs",
+  EME: "Capital Goods", ERIE: "Insurance", ES: "Utilities", EVRG: "Utilities",
+  EXE: "Energy", FISV: "Financial Services", FIX: "Capital Goods", GDDY: "Software",
+  GEV: "Capital Goods", IBKR: "Financial Services", KKR: "Financial Services", LII: "Capital Goods",
+  MRK: "Pharma & Biotech", PLTR: "Software", PODD: "Health Services", TECH: "Health Services",
 };
