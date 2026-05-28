@@ -13,7 +13,8 @@
     "seed:options": "tsx --env-file=.env.local scripts/seed-options-contracts.ts",
     "backfill:options": "tsx --env-file=.env.local scripts/backfill-options.ts",
     "daily:options": "tsx --env-file=.env.local scripts/daily-options.ts",
-    "generate:tickers": "tsx --env-file=.env.local scripts/generate-tickers.ts"
+    "generate:tickers": "tsx --env-file=.env.local scripts/generate-tickers.ts",
+    "backfill:futures": "tsx --env-file=.env.local scripts/backfill-futures.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
