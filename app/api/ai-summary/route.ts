@@ -55,7 +55,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid params" }, { status: 400 });
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const today = now.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const etHour = parseInt(now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }), 10);
+  const etMinute = now.toLocaleString("en-US", { timeZone: "America/New_York", minute: "2-digit" });
+  const etTimeStr = now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true });
+  const dayOfWeek = now.toLocaleString("en-US", { timeZone: "America/New_York", weekday: "long" });
+  const isWeekday = !["Saturday", "Sunday"].includes(dayOfWeek);
+  const marketOpen = isWeekday && (etHour > 9 || (etHour === 9 && parseInt(etMinute, 10) >= 30)) && etHour < 16;
+  const marketStatus = marketOpen ? `markets are currently open (${etTimeStr} ET)` : `markets are closed (${etTimeStr} ET)`;
   const pk = `${index}#${range}#${today}`;
 
   const cached = await getCachedSummary(pk, range === "1D" ? 60 * 60 : undefined);
@@ -73,10 +81,10 @@ export async function POST(req: NextRequest) {
       .map(({ label, changePercent }) => `${label}: ${changePercent >= 0 ? "+" : ""}${changePercent.toFixed(2)}%`)
       .join(", ");
 
-    prompt = `You are a concise financial market analyst. The major US equity indices performed as follows for ${RANGE_LABELS[range] ?? range} as of ${today}: ${indexLines}.
+    prompt = `You are a concise financial market analyst. The major US equity indices performed as follows for ${RANGE_LABELS[range] ?? range} as of ${today} (${marketStatus}): ${indexLines}.
 
 Write exactly 2 paragraphs separated by a blank line:
-- Paragraph 1: the overall market direction and which indices led or lagged, noting any notable divergences between them
+- Paragraph 1: the overall market direction and which indices led or lagged, noting any notable divergences between them${marketOpen ? ". Use present tense where appropriate since trading is ongoing" : ""}
 - Paragraph 2: the likely macro or sector-specific drivers behind this performance, drawing on your knowledge of market conditions and economic context for this period
 
 Be direct and specific. Professional but accessible tone. No disclaimers. Plain text only — no markdown, no headers, no bullet points, no bold.`;
@@ -93,7 +101,7 @@ Be direct and specific. Professional but accessible tone. No disclaimers. Plain 
       })
       .join("\n");
 
-    prompt = `You are a concise financial market analyst. Below are the top-performing stocks in the ${INDEX_LABELS[index as IndexKeyWithoutAll] ?? index} over the past ${RANGE_LABELS[range]} as of ${today}.
+    prompt = `You are a concise financial market analyst. Below are the top-performing stocks in the ${INDEX_LABELS[index as IndexKeyWithoutAll] ?? index} over the past ${RANGE_LABELS[range]} as of ${today} (${marketStatus}).
 
 ${stockLines}
 
