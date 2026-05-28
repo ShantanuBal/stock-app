@@ -72,7 +72,7 @@ export default function AboutPage() {
         </p>
         <p className="text-sm text-gray-400 dark:text-gray-600 mb-4">Built by Shantanu Bal · Since May 2026</p>
         <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          Horizon is an educational platform built to help anyone — from curious beginners to seasoned investors — understand how global financial markets work and where they may be heading. We bring together real-time data, clear visualisations, plain-English explanations, and AI-generated insights across equities, options, currencies, and the broader economy.
+          Horizon is an educational platform built to help anyone — from curious beginners to seasoned investors — understand how global financial markets work and where they may be heading. We bring together real-time data, clear visualisations, plain-English explanations, and AI-generated insights across equities, ETFs, options, futures, fixed income, currencies, commodities, and the broader economy.
         </p>
       </div>
 
