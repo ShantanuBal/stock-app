@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   const today = new Date().toISOString().split("T")[0];
   const pk = `${index}#${range}#${today}`;
 
-  const cached = await getCachedSummary(pk, range === "1D" ? 15 * 60 : undefined);
+  const cached = await getCachedSummary(pk, range === "1D" ? 60 * 60 : undefined);
   if (cached) {
     console.log(`AI summary for ${pk} found in DynamoDB — skipping Claude call`);
     return NextResponse.json({ summary: cached, cached: true });
