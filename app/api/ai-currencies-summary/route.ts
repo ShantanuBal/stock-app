@@ -41,7 +41,15 @@ function rangeToDays(range: string): number {
 
 export async function GET(req: NextRequest) {
   const range = req.nextUrl.searchParams.get("range") ?? "1W";
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const today = now.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const etHour = parseInt(now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }), 10);
+  const etMinute = now.toLocaleString("en-US", { timeZone: "America/New_York", minute: "2-digit" });
+  const etTimeStr = now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true });
+  const dayOfWeek = now.toLocaleString("en-US", { timeZone: "America/New_York", weekday: "long" });
+  const isWeekday = !["Saturday", "Sunday"].includes(dayOfWeek);
+  const marketOpen = isWeekday && (etHour > 9 || (etHour === 9 && parseInt(etMinute, 10) >= 30)) && etHour < 16;
+  const marketStatus = marketOpen ? `US markets are currently open (${etTimeStr} ET)` : `US markets are closed (${etTimeStr} ET)`;
   const pk = `currencies#${range}#${today}`;
 
   const cached = await getCachedSummary(pk);
@@ -78,7 +86,7 @@ export async function GET(req: NextRequest) {
     return `${pair.symbol}: ${r.rate.toFixed(4)} (${sign}${changePct.toFixed(2)}% over ${rangeLabel})`;
   }).filter(Boolean).join("\n");
 
-  const prompt = `You are a concise foreign exchange analyst. Below is today's (${today}) snapshot of currency markets over the past ${rangeLabel}.
+  const prompt = `You are a concise foreign exchange analyst. Below is today's (${today}, ${marketStatus}) snapshot of currency markets over the past ${rangeLabel}.
 
 Major Pairs:
 ${majorLines}

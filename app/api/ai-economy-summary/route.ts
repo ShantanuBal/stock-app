@@ -16,7 +16,9 @@ function rangeToDays(range: string): number {
 
 export async function GET(req: NextRequest) {
   const range = req.nextUrl.searchParams.get("range") ?? "1Y";
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const today = now.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const etTimeStr = now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true });
   const pk = `economy#${range}#${today}`;
 
   const cached = await getCachedSummary(pk);
@@ -39,7 +41,7 @@ export async function GET(req: NextRequest) {
     return `${config.label}: ${result.value.toFixed(2)}${config.unitDisplay} (${sign}${change.toFixed(2)} over ${rangeLabel})`;
   }).filter(Boolean).join("\n");
 
-  const prompt = `You are a concise economic analyst. Below are current US macroeconomic indicators as of ${today}, with changes over the past ${rangeLabel}.
+  const prompt = `You are a concise economic analyst. Below are current US macroeconomic indicators as of ${today} (${etTimeStr} ET), with changes over the past ${rangeLabel}.
 
 ${lines}
 

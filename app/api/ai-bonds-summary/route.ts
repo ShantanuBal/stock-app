@@ -23,7 +23,15 @@ function rangeToDays(range: string): number {
 
 export async function GET(req: NextRequest) {
   const range = req.nextUrl.searchParams.get("range") ?? "1M";
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const today = now.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const etHour = parseInt(now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }), 10);
+  const etMinute = now.toLocaleString("en-US", { timeZone: "America/New_York", minute: "2-digit" });
+  const etTimeStr = now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true });
+  const dayOfWeek = now.toLocaleString("en-US", { timeZone: "America/New_York", weekday: "long" });
+  const isWeekday = !["Saturday", "Sunday"].includes(dayOfWeek);
+  const marketOpen = isWeekday && (etHour > 9 || (etHour === 9 && parseInt(etMinute, 10) >= 30)) && etHour < 16;
+  const marketStatus = marketOpen ? `markets are currently open (${etTimeStr} ET)` : `markets are closed (${etTimeStr} ET)`;
   const pk = `bonds#${range}#${today}`;
 
   const cached = await getCachedSummary(pk);
@@ -63,7 +71,7 @@ export async function GET(req: NextRequest) {
       : `normal — 10Y (${tenYear.toFixed(2)}%) above 2Y (${twoYear.toFixed(2)}%) by ${(tenYear - twoYear).toFixed(2)}pp`
     : "unknown";
 
-  const prompt = `You are a concise fixed income analyst. Below is today's (${today}) snapshot of US Treasury yields and credit market data over the past ${rangeLabel}.
+  const prompt = `You are a concise fixed income analyst. Below is today's (${today}, ${marketStatus}) snapshot of US Treasury yields and credit market data over the past ${rangeLabel}.
 
 Yield curve: ${curveState}
 

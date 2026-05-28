@@ -12,7 +12,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No contracts provided" }, { status: 400 });
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const today = now.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const etHour = parseInt(now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }), 10);
+  const etMinute = now.toLocaleString("en-US", { timeZone: "America/New_York", minute: "2-digit" });
+  const etTimeStr = now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true });
+  const dayOfWeek = now.toLocaleString("en-US", { timeZone: "America/New_York", weekday: "long" });
+  const isWeekday = !["Saturday", "Sunday"].includes(dayOfWeek);
+  const marketOpen = isWeekday && (etHour > 9 || (etHour === 9 && parseInt(etMinute, 10) >= 30)) && etHour < 16;
+  const marketStatus = marketOpen ? `markets are currently open (${etTimeStr} ET)` : `markets are closed (${etTimeStr} ET)`;
   const pk = `options#${range}#${today}`;
 
   const cached = await getCachedSummary(pk);
@@ -36,7 +44,7 @@ export async function POST(req: NextRequest) {
     })
     .join("\n");
 
-  const prompt = `You are a concise options market analyst. Below is today's (${today}) snapshot of at-the-money monthly option premiums for major US stocks and ETFs.
+  const prompt = `You are a concise options market analyst. Below is today's (${today}, ${marketStatus}) snapshot of at-the-money monthly option premiums for major US stocks and ETFs.
 
 ${vixLine}
 
