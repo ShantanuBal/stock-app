@@ -62,7 +62,7 @@ const FEATURES = [
 
 export default function AboutPage() {
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl pt-6">
 
       {/* Mission */}
       <div className="mb-12">
