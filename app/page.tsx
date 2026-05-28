@@ -291,7 +291,7 @@ export default function Home() {
           </InfoTooltip>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Top performers across S&P 500, Nasdaq 100, Dow Jones, and Russell 2000 · Data from Polygon · Prices delayed 15 min
+          S&P 500, Nasdaq 100, Dow Jones, and Russell 2000 · Data from Massive · Prices delayed 15 min
         </p>
       </div>
 
