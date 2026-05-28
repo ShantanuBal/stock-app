@@ -112,7 +112,7 @@ export async function refreshTickerDetails(ticker: string): Promise<TickerDetail
   if (!results?.description) return null;
 
   const financialsRes = await fetch(
-    `https://api.polygon.io/vX/reference/financials?ticker=${ticker}&limit=2&timeframe=annual&apiKey=${process.env.POLYGON_API_KEY}`
+    `https://api.polygon.io/v1/reference/financials?ticker=${ticker}&limit=2&timeframe=annual&apiKey=${process.env.POLYGON_API_KEY}`
   );
   let netIncome: number | undefined;
   let epsGrowth: number | undefined;
