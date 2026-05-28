@@ -8,10 +8,10 @@ const NAV_TABS = [
   { label: "Equities",     href: "/"             },
   { label: "ETFs",         href: "/etfs"         },
   { label: "Options",      href: "/options"      },
-  { label: "Currencies",   href: "/currencies"   },
-  { label: "Commodities",  href: "/commodities"  },
   { label: "Futures",      href: "/futures"      },
   { label: "Fixed Income", href: "/bonds"        },
+  { label: "Currencies",   href: "/currencies"   },
+  { label: "Commodities",  href: "/commodities"  },
   { label: "Economy",      href: "/economy"      },
   { label: "Global",       href: "/global"       },
 ];
