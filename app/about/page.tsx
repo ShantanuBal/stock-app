@@ -12,9 +12,27 @@ const FEATURES = [
   },
   {
     status: "live",
+    title: "ETFs",
+    description:
+      "Monitor performance across broad market, sector, bond, commodity, and international ETFs. See how SPY, QQQ, TLT, GLD, and dozens of others are moving — with sparklines and AI-generated commentary.",
+  },
+  {
+    status: "live",
     title: "Options & Volatility",
     description:
       "Monitor at-the-money option premiums for the most actively traded stocks (AAPL, NVDA, TSLA and more), index ETFs (SPY, QQQ), and the VIX fear index. See premium history across multiple timeframes and get an AI read on what the options market is signaling.",
+  },
+  {
+    status: "live",
+    title: "Futures",
+    description:
+      "Follow equity index futures (ES, NQ, YM, RTY) and commodity futures (crude oil, gold, natural gas, silver) — front-month contracts with sparklines, historical charts, and an AI summary of what futures markets are signaling.",
+  },
+  {
+    status: "live",
+    title: "Fixed Income & Credit",
+    description:
+      "Dive into the bond market: Treasury yields across the full curve, corporate credit spreads, and investment-grade vs high-yield dynamics.",
   },
   {
     status: "live",
@@ -24,21 +42,15 @@ const FEATURES = [
   },
   {
     status: "live",
+    title: "Commodities",
+    description:
+      "Live spot prices for precious metals (gold, silver, platinum, palladium) and energy benchmarks (WTI crude, Brent crude, natural gas) — with historical sparklines and plain-English explainers on how each commodity fits into the broader economy.",
+  },
+  {
+    status: "live",
     title: "Macroeconomy",
     description:
       "Monitor the health of the US economy through key FRED indicators — GDP growth, inflation (CPI & Core PCE), unemployment, the Fed Funds rate, Treasury yields, the yield curve, and consumer sentiment.",
-  },
-  {
-    status: "soon",
-    title: "Futures",
-    description:
-      "Follow equity index futures (ES, NQ, YM), commodity futures (crude oil, gold, natural gas, wheat), and interest rate futures — giving you a picture of where markets are headed before they open.",
-  },
-  {
-    status: "soon",
-    title: "Fixed Income & Credit",
-    description:
-      "Dive into the bond market: Treasury yields across the full curve, corporate credit spreads, and investment-grade vs high-yield dynamics.",
   },
   {
     status: "soon",
