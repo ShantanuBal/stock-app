@@ -129,7 +129,12 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
         className="cursor-pointer hover:text-emerald-500 transition-colors"
         onClick={(e) => {
           e.stopPropagation();
-          router.push(href ?? `/stock/${ticker}`);
+          const url = href ?? `/stock/${ticker}`;
+          if (e.metaKey || e.ctrlKey) {
+            window.open(url, "_blank");
+          } else {
+            router.push(url);
+          }
         }}
       >
         {ticker}
