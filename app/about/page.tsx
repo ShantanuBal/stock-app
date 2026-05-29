@@ -87,12 +87,6 @@ export default function AboutPage() {
             </p>
           </div>
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1.5">Index funds first, for most people</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-              For new investors or those sensitive to volatility, broad index funds — accessible through ETFs like SPY or QQQ — remain the most reliable path to long-term wealth. Low cost, diversified, and historically resilient. Individual stock picking is best approached only once you have a strong grasp of the underlying businesses and your own risk tolerance.
-            </p>
-          </div>
-          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
             <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1.5">Markets are connected</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
               A rate decision by the Fed ripples into bond yields, which moves the dollar, which affects commodity prices, which feeds into inflation data, which shapes corporate earnings. Geopolitical events move energy markets; energy moves inflation; inflation moves central banks. Horizon exists to help investors see these connections — so that when something moves, you have a framework for understanding why.
@@ -102,6 +96,12 @@ export default function AboutPage() {
             <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1.5">Always evolving</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
               Horizon is a continuous work in progress. Markets evolve, data sources improve, and new tools emerge. The goal is to keep building — adding depth, improving clarity, and expanding coverage — so the platform grows alongside the investors who use it. But growth will never come at the cost of simplicity. Financial data can be overwhelming; the whole point is to make it approachable.
+            </p>
+          </div>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1.5">Broad markets beat most stock pickers</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              For new investors or those sensitive to volatility, broad index funds — accessible through ETFs like SPY or QQQ — remain the most reliable path to long-term wealth. Low cost, diversified, and historically resilient. Individual stock picking is best approached only once you have a strong grasp of the underlying businesses and your own risk tolerance.
             </p>
           </div>
         </div>
