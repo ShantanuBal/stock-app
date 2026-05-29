@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import type { StockResult } from "@/lib/polygon";
 import InfoTooltip from "./InfoTooltip";
 import TickerTooltip, { type TickerTooltipHandle } from "./TickerTooltip";
@@ -22,6 +23,7 @@ interface Props {
   companyLabel?: string;
   defaultSortCol?: SortCol;
   range?: string;
+  linkBasePath?: string;
 }
 
 function toTitleCase(s: string): string {
@@ -110,12 +112,13 @@ function SimpleColHeader({
   );
 }
 
-export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, descriptions, showBeta = true, showSector = true, companyLabel = "Company", defaultSortCol, range }: Props) {
+export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, descriptions, showBeta = true, showSector = true, companyLabel = "Company", defaultSortCol, range, linkBasePath = "/stock" }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const [sortCol, setSortCol] = useState<SortCol | null>(defaultSortCol ?? null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [visibleCount, setVisibleCount] = useState(20);
   const [search, setSearch] = useState("");
+  const router = useRouter();
   const tooltipRefs = useRef<Map<string, TickerTooltipHandle | null>>(new Map());
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -310,6 +313,13 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                 <tr
                   key={stock.ticker}
                   className="border-b border-gray-100 dark:border-gray-800/50 bg-white dark:bg-gray-900/30 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey) {
+                      window.open(`${linkBasePath}/${stock.ticker}`, "_blank");
+                    } else {
+                      router.push(`${linkBasePath}/${stock.ticker}`);
+                    }
+                  }}
                   {...getTooltipCallbacks(stock.ticker)}
                 >
                   <td className="px-3 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
@@ -321,6 +331,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                       price={stock.price}
                       changePercent={stock.changePercent}
                       initialRange={range}
+                      href={`${linkBasePath}/${stock.ticker}`}
                       description={descriptions?.[stock.ticker]}
                     />
                   </td>

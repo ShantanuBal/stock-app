@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useRouter } from "next/navigation";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import type { TickerDetails } from "@/lib/tickerDetails";
 import { useTheme } from "./ThemeProvider";
@@ -21,6 +22,7 @@ interface Props {
   changePercent?: number;
   initialRange?: string;
   description?: string;
+  href?: string;
 }
 
 export interface TickerTooltipHandle {
@@ -46,7 +48,7 @@ function ChartTooltip({ active, payload, label, color, isDark }: any) {
 }
 
 const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTooltip(
-  { ticker, name, price, changePercent, initialRange, description }: Props,
+  { ticker, name, price, changePercent, initialRange, description, href }: Props,
   forwardedRef,
 ) {
   const spanRef = useRef<HTMLSpanElement>(null);
@@ -58,6 +60,7 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
   const [range, setRange] = useState<Range>((initialRange as Range) ?? "1D");
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasFetchedDetails = useRef(false);
+  const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -123,15 +126,10 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
     <>
       <span
         ref={spanRef}
-        className="cursor-pointer"
+        className="cursor-pointer hover:text-emerald-500 transition-colors"
         onClick={(e) => {
           e.stopPropagation();
-          if (rect) {
-            if (hideTimer.current) clearTimeout(hideTimer.current);
-            setRect(null);
-          } else {
-            show();
-          }
+          router.push(href ?? `/stock/${ticker}`);
         }}
       >
         {ticker}

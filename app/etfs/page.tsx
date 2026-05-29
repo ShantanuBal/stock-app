@@ -227,6 +227,7 @@ export default function ETFsPage() {
                     companyLabel="Fund"
                     defaultSortCol="change"
                     range={range}
+                    linkBasePath="/etf"
                   />
                 )}
               </div>
