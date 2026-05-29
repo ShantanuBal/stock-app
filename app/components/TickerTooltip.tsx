@@ -116,8 +116,8 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
       ? Math.min(Math.round(screenWidth * 0.37), screenWidth - effectiveWidth - 8)
       : Math.max(8, Math.min(rect.left, screenWidth - effectiveWidth - 8))
     : 0;
-  const spaceBelow = rect ? (typeof window !== "undefined" ? window.innerHeight : 800) - rect.bottom : 0;
-  const tooltipTop = rect ? (spaceBelow < 620 ? Math.max(8, rect.top - 620) : rect.bottom + 8) : 0;
+  const windowHeight = typeof window !== "undefined" ? window.innerHeight : 800;
+  const tooltipTop = rect ? Math.max(8, Math.round((windowHeight - 580) / 2)) : 0;
 
   return (
     <>
