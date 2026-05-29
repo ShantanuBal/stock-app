@@ -28,7 +28,7 @@ export interface TickerTooltipHandle {
   hide(): void;
 }
 
-const TOOLTIP_WIDTH = 540;
+const TOOLTIP_WIDTH = 900;
 
 function fmtDate(dateStr: string) {
   return new Date(dateStr + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -117,7 +117,7 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
       : Math.max(8, Math.min(rect.left, screenWidth - effectiveWidth - 8))
     : 0;
   const spaceBelow = rect ? (typeof window !== "undefined" ? window.innerHeight : 800) - rect.bottom : 0;
-  const tooltipTop = rect ? (spaceBelow < 400 ? Math.max(8, rect.top - 400) : rect.bottom + 8) : 0;
+  const tooltipTop = rect ? (spaceBelow < 620 ? Math.max(8, rect.top - 620) : rect.bottom + 8) : 0;
 
   return (
     <>
@@ -168,14 +168,14 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
           {/* Chart */}
           <div className="px-2 pt-3">
             {chartLoading ? (
-              <div className="h-36 flex items-center justify-center">
+              <div className="h-72 flex items-center justify-center">
                 <svg className="animate-spin h-4 w-4 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               </div>
             ) : chartData && chartData.points.length > 0 ? (
-              <ResponsiveContainer width="100%" height={140}>
+              <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={chartData.points} margin={{ top: 2, right: 4, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id={`grad-${ticker}`} x1="0" y1="0" x2="0" y2="1">
@@ -190,7 +190,7 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-36 flex items-center justify-center">
+              <div className="h-72 flex items-center justify-center">
                 <p className="text-xs text-gray-400 dark:text-gray-600">No chart data available</p>
               </div>
             )}
@@ -217,7 +217,7 @@ const TickerTooltip = forwardRef<TickerTooltipHandle, Props>(function TickerTool
           <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-3">
             {details || description ? (
               <>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2 max-h-20 overflow-y-auto scrollbar-hide">
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2 max-h-32 overflow-y-auto scrollbar-hide">
                   {details?.description || description}
                 </p>
                 <div className="flex gap-4">
