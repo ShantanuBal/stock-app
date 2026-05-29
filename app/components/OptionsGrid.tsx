@@ -5,14 +5,9 @@ import OptionCard from "./OptionCard";
 import InfoTooltip from "./InfoTooltip";
 import HScrollContainer from "./HScrollContainer";
 import type { OptionData } from "@/lib/polygon-options";
+import { ytdDays } from "@/lib/date-utils";
 
 type Range = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
-
-function ytdDays(): number {
-  const now = new Date();
-  const jan1 = new Date(now.getFullYear(), 0, 1);
-  return Math.ceil((now.getTime() - jan1.getTime()) / (1000 * 60 * 60 * 24));
-}
 
 const RANGES: { label: string; value: Range; days: number }[] = [
   { label: "1 Day",    value: "1D",  days: 1   },

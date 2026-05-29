@@ -1,5 +1,6 @@
 import { docClient, TABLE_NAME as STOCK_PRICES_TABLE } from "./dynamodb";
 import { ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { daysAgo } from "./date-utils";
 
 const CONTRACTS_TABLE = process.env.OPTIONS_CONTRACTS_TABLE_NAME ?? "stock-app-options-contracts";
 const PRICES_TABLE    = process.env.OPTIONS_PRICES_TABLE_NAME    ?? "stock-app-options-prices";
@@ -28,14 +29,6 @@ interface Contract {
   expiry: string;
 }
 
-function today(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
-function daysAgo(n: number): string {
-  return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-}
-
 async function getActiveContracts(): Promise<Contract[]> {
   const res = await docClient.send(new ScanCommand({
     TableName: CONTRACTS_TABLE,
@@ -61,7 +54,7 @@ async function getPriceHistory(ticker: string): Promise<{ date: string; close: n
     ExpressionAttributeValues: {
       ":t":    ticker,
       ":from": daysAgo(SPARKLINE_DAYS + 10),
-      ":to":   today(),
+      ":to":   daysAgo(0),
     },
     ScanIndexForward: true,
   }));
@@ -77,7 +70,7 @@ async function getUnderlyingPrices(underlyings: string[]): Promise<Map<string, n
         IndexName: "ticker-date-index",
         KeyConditionExpression: "ticker = :t AND #d <= :today",
         ExpressionAttributeNames: { "#d": "date" },
-        ExpressionAttributeValues: { ":t": ticker, ":today": today() },
+        ExpressionAttributeValues: { ":t": ticker, ":today": daysAgo(0) },
         ScanIndexForward: false,
         Limit: 1,
       }));

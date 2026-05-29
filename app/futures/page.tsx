@@ -6,14 +6,9 @@ import InfoTooltip from "@/app/components/InfoTooltip";
 import Sparkline from "@/app/components/Sparkline";
 import HScrollContainer from "@/app/components/HScrollContainer";
 import type { FuturesData } from "@/lib/massive-futures";
+import { ytdDays } from "@/lib/date-utils";
 
 type Range = "1M" | "3M" | "6M" | "YTD" | "1Y";
-
-function ytdDays(): number {
-  const now = new Date();
-  const jan1 = new Date(now.getFullYear(), 0, 1);
-  return Math.ceil((now.getTime() - jan1.getTime()) / (1000 * 60 * 60 * 24));
-}
 
 const RANGES: { label: string; value: Range; days: number }[] = [
   { label: "1 Month",  value: "1M",  days: 30  },

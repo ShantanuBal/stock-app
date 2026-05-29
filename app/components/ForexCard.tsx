@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Sparkline from "./Sparkline";
 import type { ForexRate } from "@/lib/polygon-forex";
+import { ytdDays } from "@/lib/date-utils";
 
 interface PairConfig {
   symbol: string;
@@ -12,12 +13,6 @@ interface PairConfig {
 }
 
 type Range = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
-
-function ytdDays(): number {
-  const now = new Date();
-  const jan1 = new Date(now.getFullYear(), 0, 1);
-  return Math.ceil((now.getTime() - jan1.getTime()) / (1000 * 60 * 60 * 24));
-}
 
 const RANGES: { label: string; value: Range; days: number }[] = [
   { label: "1 Day",    value: "1D",  days: 1   },

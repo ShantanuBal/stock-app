@@ -29,10 +29,7 @@ const RANGE_CHANGE_LABELS: Record<string, string> = {
   "1Y": "vs 1 year ago", "YTD": "vs start of year",
 };
 
-function ytdDays(): number {
-  const now = new Date();
-  return Math.ceil((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000);
-}
+import { ytdDays } from "@/lib/date-utils";
 
 function sliceResult(result: IndicatorResult | null, days: number): IndicatorResult | null {
   if (!result) return null;

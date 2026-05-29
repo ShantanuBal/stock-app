@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getCachedSummary, saveSummary } from "@/lib/ai-summaries";
 import { getAllBondData, TREASURY_CONFIGS, CREDIT_CONFIGS } from "@/lib/fred-bonds";
+import { ytdDays } from "@/lib/date-utils";
 
 const client = new Anthropic();
 
@@ -9,11 +10,6 @@ const RANGE_LABELS: Record<string, string> = {
   "1D": "1 day", "3D": "3 days", "1W": "1 week", "1M": "1 month",
   "3M": "3 months", "6M": "6 months", "1Y": "1 year", "YTD": "year to date",
 };
-
-function ytdDays(): number {
-  const now = new Date();
-  return Math.ceil((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000);
-}
 
 function rangeToDays(range: string): number {
   if (range === "YTD") return ytdDays();

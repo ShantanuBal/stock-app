@@ -55,27 +55,6 @@ export async function getTickerDetails(ticker: string): Promise<TickerDetails | 
   return details;
 }
 
-export async function batchGetTickerNames(tickers: string[]): Promise<Map<string, string>> {
-  const nameMap = new Map<string, string>();
-  const chunks: string[][] = [];
-  for (let i = 0; i < tickers.length; i += 100) chunks.push(tickers.slice(i, i + 100));
-
-  const CONCURRENCY = 5;
-  for (let i = 0; i < chunks.length; i += CONCURRENCY) {
-    await Promise.all(
-      chunks.slice(i, i + CONCURRENCY).map(async (chunk) => {
-        const res = await dynamo.send(new BatchGetCommand({
-          RequestItems: { [TABLE]: { Keys: chunk.map((t) => ({ ticker: t })), ProjectionExpression: "ticker, #n", ExpressionAttributeNames: { "#n": "name" } } },
-        }));
-        for (const item of res.Responses?.[TABLE] ?? []) {
-          if (item.ticker && item.name) nameMap.set(item.ticker as string, item.name as string);
-        }
-      })
-    );
-  }
-  return nameMap;
-}
-
 export async function batchGetTickerNamesAndIndustries(tickers: string[]): Promise<Map<string, { name: string; industry?: string }>> {
   const map = new Map<string, { name: string; industry?: string }>();
   const chunks: string[][] = [];

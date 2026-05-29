@@ -1,5 +1,6 @@
 import { docClient } from "./dynamodb";
 import { QueryCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { daysAgo } from "./date-utils";
 
 const API_KEY = process.env.POLYGON_API_KEY!;
 const BASE_URL = "https://api.polygon.io";
@@ -19,10 +20,6 @@ export interface ForexRate {
   change: number;
   changePct: number;
   points: { date: string; value: number }[];
-}
-
-function daysAgo(n: number): string {
-  return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 }
 
 async function getCachedDates(from: string, to: string): Promise<Set<string>> {
