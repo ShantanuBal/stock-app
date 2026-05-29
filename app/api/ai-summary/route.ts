@@ -106,7 +106,7 @@ Be direct and specific. Professional but accessible tone. No disclaimers. Plain 
 ${stockLines}
 
 Write exactly 2 paragraphs separated by a blank line:
-- Paragraph 1: which stocks and industry groups led the gains
+- Paragraph 1: which stocks and industry groups led the gains${marketOpen ? ". Use present tense where appropriate since trading is ongoing" : ""}
 - Paragraph 2: likely macro or sector-specific reasons for the outperformance, drawing on your knowledge of market conditions and economic context for this period
 
 Be direct and specific. Professional but accessible tone. No disclaimers. Plain text only — no markdown, no headers, no bullet points, no bold.`;
