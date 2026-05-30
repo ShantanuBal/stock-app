@@ -187,7 +187,38 @@ async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<Gr
     );
     if (sentinel.Item) {
       console.log(`Stock data for ${date} already in database — skipping Polygon call`);
-      return batchGetTickers(date, tickers);
+      const cached = await batchGetTickers(date, tickers);
+      const found = new Set(cached.map((r) => r.T));
+      const missing = Array.from(tickers).filter((t) => !found.has(t));
+      if (missing.length === 0) return cached;
+
+      // Some tickers were added to our list after this date's sentinel was written.
+      // Fetch them individually from Polygon and persist so future requests are cache hits.
+      console.log(`Fetching ${missing.length} missing tickers for ${date} from Polygon: ${missing.join(", ")}`);
+      const fallback = (
+        await Promise.all(
+          missing.map(async (ticker) => {
+            const res = await fetch(
+              `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${date}/${date}?adjusted=true&apiKey=${API_KEY}`,
+              { cache: "no-store" },
+            );
+            if (!res.ok) return null;
+            const data = await res.json();
+            const bar = data.results?.[0];
+            if (!bar) return null;
+            return { T: ticker, c: bar.c as number, o: bar.o as number, h: bar.h as number, l: bar.l as number, v: bar.v as number, t: bar.t as number };
+          }),
+        )
+      ).filter((r): r is GroupedDailyResult => r !== null);
+
+      if (fallback.length > 0) {
+        console.log(`Persisting ${fallback.length} recovered tickers for ${date} to DynamoDB`);
+        await batchWrite(
+          fallback.map((r) => ({ date, ticker: r.T, c: r.c, o: r.o, h: r.h, l: r.l, v: r.v, t: r.t })),
+        );
+      }
+
+      return [...cached, ...fallback];
     }
   }
 
