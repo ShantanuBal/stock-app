@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useTransition, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import type { IndexKey } from "./api/top-performers/route";
 import IndexChart, { type ChartData } from "./components/IndexChart";
 import IndexChartModal from "./components/IndexChartModal";
@@ -121,8 +123,21 @@ const GICS = [
 ];
 
 export default function Home() {
-  const [index, setIndex] = useState<IndexKey>("sp500");
-  const [range, setRange] = useState<TimeRange>("1D");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const indexParam = searchParams.get("index");
+  const isSummary = !indexParam || indexParam === "overview";
+  const index = (isSummary ? "sp500" : indexParam) as IndexKey;
+  const range = (searchParams.get("range") ?? "1D") as TimeRange;
+
+  function navigate(newIndex: string | null, newRange: string) {
+    const p = new URLSearchParams();
+    if (newIndex) p.set("index", newIndex);
+    p.set("range", newRange);
+    router.replace(`/?${p.toString()}`);
+  }
+
   const [sectors, setSectors] = useState<string[]>([]);
   // null = never loaded yet (show skeleton); [] = loaded but empty
   const [topStocks, setTopStocks] = useState<StockResult[] | null>(null);
@@ -135,7 +150,7 @@ export default function Home() {
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
   const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null; netIncome: number | null; epsGrowth: number | null }> | undefined>(undefined);
-  const [isSummary, setIsSummary] = useState(true);
+
   const [summaryCharts, setSummaryCharts] = useState<Record<string, ChartData | null> | null>(null);
   const [overviewSummary, setOverviewSummary] = useState<string | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
@@ -301,7 +316,7 @@ export default function Home() {
             {RANGES.map((r) => (
               <button
                 key={r.value}
-                onClick={() => setRange(r.value)}
+                onClick={() => navigate(isSummary ? null : index, r.value)}
                 className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                   range === r.value
                     ? "bg-emerald-500 text-white"
@@ -320,15 +335,12 @@ export default function Home() {
           <HScrollContainer variant="card" className="gap-2">
             {/* Overview pill */}
             <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
-              <button
-                onClick={() => setIsSummary(true)}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+              <div className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
                   isSummary
                     ? "bg-emerald-500 text-white shadow"
                     : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                Overview
+                }`}>
+                <Link href={`/?range=${range}`}>Overview</Link>
                 <InfoTooltip element="span">
                   <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                   <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Overview</p>
@@ -336,21 +348,20 @@ export default function Home() {
                     A side-by-side view of all four major US indices — S&amp;P 500, Nasdaq 100, Dow Jones, and Russell 2000 — over the selected time range. Click any chart to drill into that index.
                   </p>
                 </InfoTooltip>
-              </button>
+              </div>
             </div>
             {/* Indexes pill */}
             <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex">
               {INDICES.filter((idx) => idx.value !== "all").map((idx) => (
-                <button
+                <div
                   key={idx.value}
-                  onClick={() => { setIndex(idx.value); setSectors([]); setIsSummary(false); }}
                   className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
                     !isSummary && index === idx.value
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
-                  {idx.label}
+                  <Link href={`/?index=${idx.value}&range=${range}`} onClick={() => setSectors([])}>{idx.label}</Link>
                   <InfoTooltip element="span">
                     <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                     <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
@@ -374,21 +385,18 @@ export default function Home() {
                       Read more on Wikipedia ↗
                     </a>
                   </InfoTooltip>
-                </button>
+                </div>
               ))}
             </div>
             {/* All Stocks pill */}
             {INDICES.filter((idx) => idx.value === "all").map((idx) => (
               <div key={idx.value} className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
-                <button
-                  onClick={() => { setIndex(idx.value); setSectors([]); setIsSummary(false); }}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                <div className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
                     !isSummary && index === idx.value
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  {idx.label}
+                  }`}>
+                  <Link href={`/?index=${idx.value}&range=${range}`} onClick={() => setSectors([])}>{idx.label}</Link>
                   <InfoTooltip element="span">
                     <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                     <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
@@ -412,7 +420,7 @@ export default function Home() {
                       Read more on Wikipedia ↗
                     </a>
                   </InfoTooltip>
-                </button>
+                </div>
               </div>
             ))}
           </HScrollContainer>
@@ -465,7 +473,7 @@ export default function Home() {
                   label={idxInfo.label}
                   loading={summaryCharts === null}
                   gradientId={`summaryGrad-${idx}`}
-                  onClick={() => { setIsSummary(false); setIndex(idx); setSectors([]); }}
+                  onClick={() => { navigate(idx, range); setSectors([]); }}
                 />
               );
             })}
