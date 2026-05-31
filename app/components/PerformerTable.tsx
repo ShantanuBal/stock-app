@@ -281,7 +281,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                     <p><span className="font-medium text-gray-700 dark:text-gray-300">Beta = 1</span> — moves with the market</p>
                     <p><span className="font-medium text-gray-700 dark:text-gray-300">Beta &lt; 1</span> — moves less than the market</p>
                   </div>
-                  <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Calculated from 1 year of daily returns vs SPY.</p>
+                  <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Calculated from 1 year of daily returns vs SPY. Cached for up to 7 days — beta is a slow-moving metric so doesn&apos;t need daily recomputation.</p>
                 </ColHeader>
               )}
               <ColHeader label="Volume" col="volume" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>
