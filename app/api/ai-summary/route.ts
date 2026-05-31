@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getCachedSummary, saveSummary } from "@/lib/ai-summaries";
+import { get1DCacheContext } from "@/lib/date-utils";
 import { SP500_SECTORS } from "@/lib/sp500";
 import { NASDAQ100_SECTORS } from "@/lib/nasdaq100";
 import { DJIA_SECTORS } from "@/lib/djia";
@@ -64,9 +65,14 @@ export async function POST(req: NextRequest) {
   const isWeekday = !["Saturday", "Sunday"].includes(dayOfWeek);
   const marketOpen = isWeekday && (etHour > 9 || (etHour === 9 && parseInt(etMinute, 10) >= 30)) && etHour < 16;
   const marketStatus = marketOpen ? `markets are currently open (${etTimeStr} ET)` : `markets are closed (${etTimeStr} ET)`;
-  const pk = `${index}#${range}#${today}`;
 
-  const cached = await getCachedSummary(pk, range === "1D" ? 60 * 60 : undefined);
+  const oneDCtx = range === "1D" ? get1DCacheContext() : null;
+  const promptDate = oneDCtx?.promptDate ?? today;
+  const promptRangeLabel = oneDCtx != null ? oneDCtx.rangeLabel : (RANGE_LABELS[range] ?? range);
+  const effectiveMarketStatus = oneDCtx?.isWeekend ? oneDCtx.marketStatus : marketStatus;
+  const pk = `${index}#${range}#${oneDCtx?.cacheDate ?? today}`;
+
+  const cached = await getCachedSummary(pk, range === "1D" && !oneDCtx?.skipHourTTL ? 60 * 60 : undefined);
   if (cached) {
     console.log(`AI summary for ${pk} found in DynamoDB — skipping Claude call`);
     return NextResponse.json({ summary: cached, cached: true });
@@ -81,7 +87,7 @@ export async function POST(req: NextRequest) {
       .map(({ label, changePercent }) => `${label}: ${changePercent >= 0 ? "+" : ""}${changePercent.toFixed(2)}%`)
       .join(", ");
 
-    prompt = `You are a concise financial market analyst. The major US equity indices performed as follows for ${RANGE_LABELS[range] ?? range} as of ${today} (${marketStatus}): ${indexLines}.
+    prompt = `You are a concise financial market analyst. The major US equity indices performed as follows for ${promptRangeLabel} as of ${promptDate} (${effectiveMarketStatus}): ${indexLines}.
 
 Write exactly 2 paragraphs separated by a blank line:
 - Paragraph 1: the overall market direction and which indices led or lagged, noting any notable divergences between them${marketOpen ? ". Use present tense where appropriate since trading is ongoing" : ""}
@@ -101,7 +107,7 @@ Be direct and specific. Professional but accessible tone. No disclaimers. Plain 
       })
       .join("\n");
 
-    prompt = `You are a concise financial market analyst. Below are the top-performing stocks in the ${INDEX_LABELS[index as IndexKeyWithoutAll] ?? index} over the past ${RANGE_LABELS[range]} as of ${today} (${marketStatus}).
+    prompt = `You are a concise financial market analyst. Below are the top-performing stocks in the ${INDEX_LABELS[index as IndexKeyWithoutAll] ?? index} over ${promptRangeLabel} as of ${promptDate} (${effectiveMarketStatus}).
 
 ${stockLines}
 

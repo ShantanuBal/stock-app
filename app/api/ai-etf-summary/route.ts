@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getCachedSummary, saveSummary } from "@/lib/ai-summaries";
+import { get1DCacheContext } from "@/lib/date-utils";
 import type { StockResult } from "@/lib/polygon";
 import { CATEGORY_LABELS, type ETFCategory } from "@/lib/etf-config";
 
@@ -42,9 +43,14 @@ export async function POST(req: NextRequest) {
   const isWeekday = !["Saturday", "Sunday"].includes(dayOfWeek);
   const marketOpen = isWeekday && (etHour > 9 || (etHour === 9 && parseInt(etMinute, 10) >= 30)) && etHour < 16;
   const marketStatus = marketOpen ? `markets are currently open (${etTimeStr} ET)` : `markets are closed (${etTimeStr} ET)`;
-  const pk = `etf#${category}#${range}#${today}`;
 
-  const cached = await getCachedSummary(pk, range === "1D" ? 60 * 60 : undefined);
+  const oneDCtx = range === "1D" ? get1DCacheContext() : null;
+  const promptDate = oneDCtx?.promptDate ?? today;
+  const promptRangeLabel = oneDCtx != null ? oneDCtx.rangeLabel : (RANGE_LABELS[range] ?? range);
+  const effectiveMarketStatus = oneDCtx?.isWeekend ? oneDCtx.marketStatus : marketStatus;
+  const pk = `etf#${category}#${range}#${oneDCtx?.cacheDate ?? today}`;
+
+  const cached = await getCachedSummary(pk, range === "1D" && !oneDCtx?.skipHourTTL ? 60 * 60 : undefined);
   if (cached) {
     console.log(`AI ETF summary for ${pk} found in cache`);
     return NextResponse.json({ summary: cached, cached: true });
@@ -62,7 +68,7 @@ export async function POST(req: NextRequest) {
     .join("\n");
 
   const prompt = category === "all"
-    ? `You are a concise financial market analyst. Below are the top-moving ETFs across all categories (broad market, sectors, bonds, commodities, international) over the past ${RANGE_LABELS[range]} as of ${today} (${marketStatus}), sorted by absolute move.
+    ? `You are a concise financial market analyst. Below are the top-moving ETFs across all categories (broad market, sectors, bonds, commodities, international) over ${promptRangeLabel} as of ${promptDate} (${effectiveMarketStatus}), sorted by absolute move.
 
 ${etfLines}
 
@@ -71,7 +77,7 @@ Write exactly 2 paragraphs separated by a blank line:
 - Paragraph 2: the likely macro drivers behind these moves, drawing on your knowledge of market conditions for this period
 
 Be direct and specific. Professional but accessible tone. No disclaimers. Plain text only — no markdown, no headers, no bullet points, no bold.`
-    : `You are a concise financial market analyst. Below are the ${categoryLabel} ETFs ranked by performance over the past ${RANGE_LABELS[range]} as of ${today} (${marketStatus}).
+    : `You are a concise financial market analyst. Below are the ${categoryLabel} ETFs ranked by performance over ${promptRangeLabel} as of ${promptDate} (${effectiveMarketStatus}).
 
 ${etfLines}
 

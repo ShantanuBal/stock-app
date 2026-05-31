@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getCachedSummary, saveSummary } from "@/lib/ai-summaries";
 import { getAllMetalsData, getAllEnergyData, METALS_CONFIGS, ENERGY_CONFIGS } from "@/lib/polygon-commodities";
-import { ytdDays } from "@/lib/date-utils";
+import { ytdDays, get1DCacheContext } from "@/lib/date-utils";
 
 const client = new Anthropic();
 
@@ -28,7 +28,11 @@ export async function GET(req: NextRequest) {
   const isWeekday = !["Saturday", "Sunday"].includes(dayOfWeek);
   const marketOpen = isWeekday && (etHour > 9 || (etHour === 9 && parseInt(etMinute, 10) >= 30)) && etHour < 16;
   const marketStatus = marketOpen ? `US markets are currently open (${etTimeStr} ET)` : `US markets are closed (${etTimeStr} ET)`;
-  const pk = `futures#${range}#${today}`;
+
+  const oneDCtx = range === "1D" ? get1DCacheContext() : null;
+  const promptDate = oneDCtx?.promptDate ?? today;
+  const effectiveMarketStatus = oneDCtx?.isWeekend ? oneDCtx.marketStatus : marketStatus;
+  const pk = `futures#${range}#${oneDCtx?.cacheDate ?? today}`;
 
   const cached = await getCachedSummary(pk);
   if (cached) {
@@ -64,7 +68,7 @@ export async function GET(req: NextRequest) {
     return `${config.name}: $${d.price.toFixed(2)}${unit} (${sign}${changePct.toFixed(2)}% over ${rangeLabel})`;
   }).filter(Boolean).join("\n");
 
-  const prompt = `You are a concise commodity markets analyst. Below is today's (${today}, ${marketStatus}) snapshot of precious metals and energy prices over the past ${rangeLabel}.
+  const prompt = `You are a concise commodity markets analyst. Below is the (${promptDate}, ${effectiveMarketStatus}) snapshot of precious metals and energy prices over ${rangeLabel}.
 
 Precious Metals (spot prices, USD per troy oz):
 ${metalsLines}
