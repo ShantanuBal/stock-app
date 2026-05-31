@@ -265,7 +265,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function FlowDiagram({ content }: { content: string }) {
   return (
-    <pre className="text-xs font-mono bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 overflow-x-auto text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre">
+    <pre className="text-sm font-mono bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 overflow-x-auto text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre">
       {content}
     </pre>
   );
@@ -316,7 +316,7 @@ function Markets101() {
                   {m.size}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{m.insight}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{m.insight}</p>
             </div>
           </Card>
         ))}
@@ -356,7 +356,7 @@ function DeepDives() {
             </div>
             <ul className="space-y-1.5">
               {d.points.map((p, i) => (
-                <li key={i} className="flex gap-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                <li key={i} className="flex gap-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                   <span className="shrink-0 text-emerald-500 mt-0.5">·</span>
                   <span>{p}</span>
                 </li>
@@ -387,12 +387,12 @@ function ReserveCurrency() {
       {/* What is a reserve currency */}
       <Card>
         <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">What does &quot;reserve currency&quot; mean?</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
+        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
           When countries trade internationally, they need a common currency to settle transactions. The reserve
           currency is that agreed-upon universal medium — the world&apos;s money.
         </p>
         <CalloutBox>
-          <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
             <span className="font-semibold">Example:</span> A Brazilian coffee exporter selling to a Japanese buyer
             settles the transaction in US dollars — even though neither party is American. That&apos;s reserve currency
             status in action.
@@ -416,7 +416,7 @@ function ReserveCurrency() {
             <tbody>
               {RESERVE_CURRENCY_TABLE.map((row, i) => (
                 <tr key={row.currency} className={i < RESERVE_CURRENCY_TABLE.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}>
-                  <td className="px-4 py-3 text-xs text-gray-700 dark:text-gray-300">
+                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                     <span className="mr-2">{row.flag}</span>{row.currency}
                     {i === 0 && <span className="ml-2 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-500">~3× the next</span>}
                   </td>
@@ -454,7 +454,7 @@ function ReserveCurrency() {
           ].map((h) => (
             <Card key={h.era}>
               <p className="text-xs font-semibold text-emerald-500 dark:text-emerald-400 mb-1.5">{h.era}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{h.body}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{h.body}</p>
             </Card>
           ))}
         </div>
@@ -466,7 +466,7 @@ function ReserveCurrency() {
           The Bond Market Connection — The Key Insight
         </p>
         <Card className="mb-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
             Countries holding dollar reserves don&apos;t just stuff cash under a mattress. They invest those dollars in
             the safest dollar asset available: <span className="font-semibold text-gray-700 dark:text-gray-300">US Treasury Bonds.</span>
           </p>
@@ -476,7 +476,7 @@ function ReserveCurrency() {
           <p className="text-xs font-semibold text-gray-900 dark:text-white mb-1.5">
             &quot;Exorbitant Privilege&quot;
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
             This term was coined by French Finance Minister Valéry Giscard d&apos;Estaing in the 1960s. He was furious
             that America could print dollars, buy real goods from France, and France had to recycle those dollars
             back into US bonds. The privilege persists today — the US can run deficits no other country could sustain.
@@ -497,7 +497,7 @@ function ReserveCurrency() {
               "Geopolitical leverage — can weaponise dollar access (SWIFT exclusion, sanctions)",
               "Estimated to be worth trillions annually to the US economy",
             ].map((a, i) => (
-              <li key={i} className="flex gap-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              <li key={i} className="flex gap-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                 <span className="shrink-0 text-emerald-500 mt-0.5">·</span>
                 <span>{a}</span>
               </li>
@@ -514,7 +514,7 @@ function ReserveCurrency() {
               "Bitcoin / crypto: fixed supply, no single country controls it — but volatility limits reserve viability",
               "Ray Dalio: 'Reserve currencies follow a cycle. Dutch guilder → British pound → US dollar. Each lasts ~80–100 years.'",
             ].map((a, i) => (
-              <li key={i} className="flex gap-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              <li key={i} className="flex gap-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                 <span className="shrink-0 text-gray-400 mt-0.5">·</span>
                 <span>{a}</span>
               </li>
@@ -570,7 +570,7 @@ function Geopolitics() {
         ].map((m) => (
           <Card key={m.title}>
             <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{m.title}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{m.body}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{m.body}</p>
           </Card>
         ))}
       </div>
@@ -587,7 +587,7 @@ function Geopolitics() {
           ].map((e) => (
             <div key={e.event} className="border-l-2 border-emerald-500/30 pl-3">
               <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-0.5">{e.event}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{e.impact}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{e.impact}</p>
             </div>
           ))}
         </div>
@@ -624,7 +624,7 @@ function CaseStudies() {
 
         <Card>
           <p className="text-xs font-semibold text-emerald-500 mb-2">Background</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
             Liz Truss became UK Prime Minister in September 2022 during already-elevated inflation. She appointed
             Kwasi Kwarteng as Chancellor and together they announced what became known as the &quot;mini-budget&quot; —
             the largest unfunded tax cuts in 50 years (£45 billion): abolishing the 45p top income tax rate, cutting
@@ -671,7 +671,7 @@ function CaseStudies() {
                 "Most policies reversed immediately by successor Rishi Sunak",
                 "Bond market had effectively fired the Prime Minister",
               ].map((p, i) => (
-                <li key={i} className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <li key={i} className="flex gap-2 text-sm text-gray-500 dark:text-gray-400">
                   <span className="shrink-0 text-emerald-500 mt-0.5">·</span>
                   <span>{p}</span>
                 </li>
@@ -680,7 +680,7 @@ function CaseStudies() {
           </Card>
           <CalloutBox>
             <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-2">The Key Lesson</p>
-            <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
               Bond markets are the world&apos;s most powerful check on government irresponsibility. They move faster
               than elections, harder than protests, and more decisively than any court.
             </p>
@@ -710,7 +710,7 @@ function CaseStudies() {
                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{c.title}</p>
                 <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-400 dark:text-gray-500">Coming soon</span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{c.teaser}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{c.teaser}</p>
             </Card>
           ))}
         </div>
@@ -725,7 +725,7 @@ export default function LearnContent() {
   const [activeSection, setActiveSection] = useState("markets-101");
 
   return (
-    <div>
+    <div className="font-[family-name:var(--font-inter)]">
       <div className="mb-6">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
           Learning Centre
