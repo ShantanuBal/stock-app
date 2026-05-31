@@ -62,7 +62,7 @@ const FEATURES = [
 
 export default function AboutPage() {
   return (
-    <div className="max-w-2xl pt-6">
+    <div className="max-w-2xl pt-6 font-[family-name:var(--font-inter)]">
 
       {/* Mission */}
       <div className="mb-12">
@@ -82,25 +82,25 @@ export default function AboutPage() {
         <div className="space-y-4">
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
             <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1.5">Invest in what you know</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
               Sound investing starts with understanding. I believe in long-term positions in companies and industries you genuinely understand — businesses whose products you use, whose economics you can reason about, and whose long-term prospects you can evaluate with confidence. Horizon is built to deepen that understanding, not replace it — while also helping investors learn about the full range of financial instruments available to them, so they can make sound decisions and build long-term wealth.
             </p>
           </div>
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
             <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1.5">Markets are connected</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
               A rate decision by the Fed ripples into bond yields, which moves the dollar, which affects commodity prices, which feeds into inflation data, which shapes corporate earnings. Geopolitical events move energy markets; energy moves inflation; inflation moves central banks. Horizon exists to help investors see these connections — so that when something moves, you have a framework for understanding why.
             </p>
           </div>
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
             <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1.5">Always evolving</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
               Horizon is a continuous work in progress. Markets evolve, data sources improve, and new tools emerge. The goal is to keep building — adding depth, improving clarity, and expanding coverage — so the platform grows alongside the investors who use it. But growth will never come at the cost of simplicity. Financial data can be overwhelming; the whole point is to make it approachable.
             </p>
           </div>
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4">
             <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1.5">Broad markets beat most stock pickers</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
               For new investors or those sensitive to volatility, broad index funds — accessible through ETFs like SPY or QQQ — remain the most reliable path to long-term wealth. Low cost, diversified, and historically resilient. Individual stock picking is best approached only once you have a strong grasp of the underlying businesses and your own risk tolerance.
             </p>
           </div>
@@ -124,7 +124,7 @@ export default function AboutPage() {
                   <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-400 dark:text-gray-500">Coming soon</span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{f.description}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{f.description}</p>
             </div>
           ))}
         </div>
@@ -136,7 +136,7 @@ export default function AboutPage() {
         <div className="flex items-start gap-4">
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Shantanu Bal</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
               Software engineer with a passion for financial markets. Horizon started as a personal project to make market data more accessible and understandable — the kind of dashboard he always wanted but couldn&apos;t find.
             </p>
             <div className="flex flex-wrap gap-3">
