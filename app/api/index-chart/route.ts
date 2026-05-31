@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
         const prev = scale === 1 ? prevRaw : prevRaw.map((p) => ({ ...p, close: p.close * scale }));
         if (prev.length > 0) {
           changePercent = ((points[0].close - prev[0].close) / prev[0].close) * 100;
+          points.unshift(prev[0]);
           break;
         }
       }

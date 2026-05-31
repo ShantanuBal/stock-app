@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
         const prev = await getIndexBars(ticker, formatDate(prevDay), formatDate(prevDay));
         if (prev.length > 0) {
           changePercent = ((points[0].close - prev[0].close) / prev[0].close) * 100;
+          points.unshift(prev[0]);
           break;
         }
       }
