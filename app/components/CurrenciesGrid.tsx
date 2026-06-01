@@ -18,7 +18,7 @@ interface PairConfig {
 type Range = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "YTD";
 
 const RANGES: { label: string; value: Range; days: number }[] = [
-  { label: "1 Day",    value: "1D",  days: 1   },
+  { label: "1 Day",    value: "1D",  days: 2   },
   { label: "3 Days",   value: "3D",  days: 3   },
   { label: "1 Week",   value: "1W",  days: 7   },
   { label: "1 Month",  value: "1M",  days: 30  },
