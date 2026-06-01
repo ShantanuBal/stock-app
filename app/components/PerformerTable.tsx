@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, type ReactNode } from "react";
+import { useState, useMemo, useRef, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { StockResult } from "@/lib/polygon";
 import InfoTooltip from "./InfoTooltip";
@@ -8,6 +8,8 @@ import TickerTooltip, { type TickerTooltipHandle } from "./TickerTooltip";
 
 type SortCol = "price" | "change" | "marketCap" | "pe" | "peg" | "beta" | "volume";
 type SortDir = "asc" | "desc";
+
+export interface WatchListMeta { listId: string; name: string; }
 
 interface Props {
   title: string;
@@ -24,6 +26,11 @@ interface Props {
   defaultSortCol?: SortCol;
   range?: string;
   linkBasePath?: string;
+  // Watchlist support
+  watchlists?: WatchListMeta[];
+  activeListId?: string;
+  onAddToList?: (ticker: string, listId: string) => void;
+  onRemoveFromList?: (ticker: string) => void;
 }
 
 function toTitleCase(s: string): string {
@@ -112,7 +119,60 @@ function SimpleColHeader({
   );
 }
 
-export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, descriptions, showBeta = true, showSector = true, companyLabel = "Company", defaultSortCol, range, linkBasePath = "/stock" }: Props) {
+function WatchlistButton({ ticker, watchlists, onAdd }: {
+  ticker: string;
+  watchlists: WatchListMeta[];
+  onAdd: (ticker: string, listId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+        title="Add to watchlist"
+      >
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          <line x1="12" y1="9" x2="12" y2="15" />
+          <line x1="9" y1="12" x2="15" y2="12" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-7 z-30 w-44 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
+          <p className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+            Add to list
+          </p>
+          {watchlists.length === 0 ? (
+            <p className="px-3 py-2.5 text-xs text-gray-400 dark:text-gray-500">No lists yet</p>
+          ) : (
+            watchlists.map((list) => (
+              <button
+                key={list.listId}
+                onClick={(e) => { e.stopPropagation(); onAdd(ticker, list.listId); setOpen(false); }}
+                className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                {list.name}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, descriptions, showBeta = true, showSector = true, companyLabel = "Company", defaultSortCol, range, linkBasePath = "/stock", watchlists, activeListId, onAddToList, onRemoveFromList }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const [sortCol, setSortCol] = useState<SortCol | null>(defaultSortCol ?? null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -289,6 +349,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                   The number of shares traded on the most recent trading day. High volume on a price move signals stronger conviction — low volume may suggest the move is less reliable.
                 </p>
               </ColHeader>
+              {watchlists !== undefined && <th className="px-2 py-3 w-8" />}
             </tr>
           </thead>
           <tbody>
@@ -394,6 +455,28 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                   <td className="px-3 py-3 text-right text-gray-500 dark:text-gray-400 tabular-nums">
                     {formatVolume(stock.volume)}
                   </td>
+                  {watchlists !== undefined && (
+                    <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
+                      {activeListId ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onRemoveFromList?.(stock.ticker); }}
+                          className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                          title="Remove from watchlist"
+                        >
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                            <line x1="9" y1="12" x2="15" y2="12" />
+                          </svg>
+                        </button>
+                      ) : (
+                        <WatchlistButton
+                          ticker={stock.ticker}
+                          watchlists={watchlists}
+                          onAdd={onAddToList ?? (() => {})}
+                        />
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}

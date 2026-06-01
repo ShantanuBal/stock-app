@@ -1,19 +1,20 @@
 "use client";
 
-import { useState, useEffect, useTransition, useMemo } from "react";
+import { useState, useEffect, useTransition, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { IndexKey } from "./api/top-performers/route";
 import IndexChart, { type ChartData } from "./components/IndexChart";
 import IndexChartModal from "./components/IndexChartModal";
 import InfoTooltip from "./components/InfoTooltip";
-import PerformerTable from "./components/PerformerTable";
+import PerformerTable, { type WatchListMeta } from "./components/PerformerTable";
 import type { StockResult } from "@/lib/polygon";
 import { SP500_SECTORS } from "@/lib/sp500";
 import { NASDAQ100_SECTORS } from "@/lib/nasdaq100";
 import { DJIA_SECTORS } from "@/lib/djia";
 import { RUSSELL2000_SECTORS } from "@/lib/russell2000";
 import HScrollContainer from "./components/HScrollContainer";
+import { addToWatchList, removeFromWatchList } from "./actions/watchlists";
 
 type TimeRange = "1D" | "3D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" | "YTD";
 
@@ -127,13 +128,19 @@ export default function Home() {
   const router = useRouter();
 
   const indexParam = searchParams.get("index");
-  const isSummary = !indexParam || indexParam === "overview";
+  const watchlistParam = searchParams.get("watchlist");
+  const isWatchlistView = !!watchlistParam;
+  const isSummary = !indexParam && !watchlistParam || indexParam === "overview";
   const index = (isSummary ? "sp500" : indexParam) as IndexKey;
   const range = (searchParams.get("range") ?? "1D") as TimeRange;
 
-  function navigate(newIndex: string | null, newRange: string) {
+  function navigate(newIndex: string | null, newRange: string, watchlistId?: string) {
     const p = new URLSearchParams();
-    if (newIndex) p.set("index", newIndex);
+    if (watchlistId) {
+      p.set("watchlist", watchlistId);
+    } else if (newIndex) {
+      p.set("index", newIndex);
+    }
     p.set("range", newRange);
     router.replace(`/?${p.toString()}`);
   }
@@ -156,7 +163,14 @@ export default function Home() {
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewExpanded, setOverviewExpanded] = useState(false);
 
-  const isAllStocks = !isSummary && index === "all";
+  // Watchlists
+  const [watchlists, setWatchlists] = useState<WatchListMeta[]>([]);
+  const [watchlistAuthenticated, setWatchlistAuthenticated] = useState(false);
+  const [watchlistStocks, setWatchlistStocks] = useState<StockResult[] | null>(null);
+  const [watchlistName, setWatchlistName] = useState<string>("");
+  const [watchlistError, setWatchlistError] = useState<string | null>(null);
+
+  const isAllStocks = !isSummary && !isWatchlistView && index === "all";
   const currentIndex = INDICES.find((i) => i.value === index) ?? null;
   // Show skeleton on first load (null) or while a transition is in flight
   const loading = topStocks === null || isPending;
@@ -267,6 +281,43 @@ export default function Home() {
     ).then((results) => setSummaryCharts(Object.fromEntries(results)));
   }, [isSummary, range]);
 
+  // Fetch user's watchlists once on mount
+  useEffect(() => {
+    fetch("/api/watchlists")
+      .then((r) => r.json())
+      .then((d) => {
+        setWatchlists(d.lists ?? []);
+        setWatchlistAuthenticated(d.authenticated ?? false);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch stocks for the active watchlist when param or range changes
+  useEffect(() => {
+    if (!watchlistParam) { setWatchlistStocks(null); return; }
+    setWatchlistStocks(null);
+    setWatchlistError(null);
+    fetch(`/api/watchlist-stocks?listId=${watchlistParam}&range=${range}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.error) { setWatchlistError(d.error); setWatchlistStocks([]); return; }
+        setWatchlistStocks(d.stocks ?? []);
+        setWatchlistName(d.listName ?? "");
+      })
+      .catch(() => { setWatchlistStocks([]); setWatchlistError("Could not load watchlist data."); });
+  }, [watchlistParam, range]);
+
+  const handleAddToList = useCallback(async (ticker: string, listId: string) => {
+    await addToWatchList(listId, ticker);
+    // Optimistically update the in-memory tickers count isn't needed since WatchListMeta has no tickers
+  }, []);
+
+  const handleRemoveFromList = useCallback(async (ticker: string) => {
+    if (!watchlistParam) return;
+    await removeFromWatchList(watchlistParam, ticker);
+    setWatchlistStocks((prev) => prev?.filter((s) => s.ticker !== ticker) ?? null);
+  }, [watchlistParam]);
+
   useEffect(() => {
     if (!isSummary || !summaryCharts) return;
     const indices = SUMMARY_INDICES.map((idx) => {
@@ -364,7 +415,7 @@ export default function Home() {
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
-                  <Link href={`/?index=${idx.value}&range=${range}`} onClick={() => setSectors([])}>{idx.label}</Link>
+                  <Link href={`/?index=${idx.value}&range=${range}`} onClick={() => setSectors([])} className="whitespace-nowrap">{idx.label}</Link>
                   <InfoTooltip element="span">
                     <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                     <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
@@ -395,11 +446,11 @@ export default function Home() {
             {INDICES.filter((idx) => idx.value === "all").map((idx) => (
               <div key={idx.value} className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
                 <div className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
-                    !isSummary && index === idx.value
+                    !isSummary && !isWatchlistView && index === idx.value
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}>
-                  <Link href={`/?index=${idx.value}&range=${range}`} onClick={() => setSectors([])}>{idx.label}</Link>
+                  <Link href={`/?index=${idx.value}&range=${range}`} onClick={() => setSectors([])} className="whitespace-nowrap">{idx.label}</Link>
                   <InfoTooltip element="span">
                     <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                     <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
@@ -426,6 +477,32 @@ export default function Home() {
                 </div>
               </div>
             ))}
+
+            {/* Watchlist tabs — only shown when authenticated */}
+            {watchlistAuthenticated && (
+              <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex items-center">
+                {watchlists.map((list) => (
+                  <Link
+                    key={list.listId}
+                    href={`/?watchlist=${list.listId}&range=${range}`}
+                    className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+                      watchlistParam === list.listId
+                        ? "bg-emerald-500 text-white shadow"
+                        : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    {list.name}
+                  </Link>
+                ))}
+                <Link
+                  href="/watchlists"
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
+                  title="Manage watchlists"
+                >
+                  {watchlists.length === 0 ? "+ New list" : "+"}
+                </Link>
+              </div>
+            )}
           </HScrollContainer>
         </div>
 
@@ -484,7 +561,7 @@ export default function Home() {
         )}
 
         {/* Chart — hidden for All Stocks and Summary */}
-        {!isSummary && !isAllStocks && currentIndex && (
+        {!isSummary && !isWatchlistView && !isAllStocks && currentIndex && (
           <>
             <IndexChart data={chartData} label={currentIndex.label} loading={loading} onClick={() => setChartModalOpen(true)} range={range} />
             <IndexChartModal
@@ -498,7 +575,7 @@ export default function Home() {
         )}
 
         {/* AI Summary — hidden for All Stocks and Summary */}
-        {!isSummary && !isAllStocks && ((topStocks !== null && !loading && summary === null) || summaryLoading) ? (
+        {!isSummary && !isWatchlistView && !isAllStocks && ((topStocks !== null && !loading && summary === null) || summaryLoading) ? (
           <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 flex items-center gap-3">
             <svg className="animate-spin h-4 w-4 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -506,7 +583,7 @@ export default function Home() {
             </svg>
             <span className="text-sm text-gray-500 dark:text-gray-400">Generating AI summary…</span>
           </div>
-        ) : !isSummary && !isAllStocks && summary ? (
+        ) : !isSummary && !isWatchlistView && !isAllStocks && summary ? (
           <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
             <div className="flex items-center gap-2 mb-2.5">
               <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Summary</span>
@@ -529,7 +606,7 @@ export default function Home() {
         ) : null}
 
         {/* Sector filter tabs — hidden for All Stocks and Summary */}
-        {!isSummary && !isAllStocks && <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
+        {!isSummary && !isWatchlistView && !isAllStocks && <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
           <div className="flex items-center gap-1.5 mb-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Industry</p>
             <InfoTooltip>
@@ -578,11 +655,47 @@ export default function Home() {
           </HScrollContainer>
         </div>}
 
-        {!isSummary && error ? (
+        {/* Watchlist view */}
+        {isWatchlistView && (
+          watchlistStocks === null ? (
+            <div className="space-y-2">
+              <div className="h-5 w-36 rounded bg-gray-200 dark:bg-gray-800/50 animate-pulse mb-3" />
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-11 rounded-lg bg-gray-200 dark:bg-gray-800/50 animate-pulse" />
+              ))}
+            </div>
+          ) : watchlistError ? (
+            <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
+              {watchlistError}
+            </div>
+          ) : watchlistStocks.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 p-10 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">This list is empty.</p>
+              <p className="text-xs text-gray-400 dark:text-gray-600">Use the <span className="font-medium">+</span> button on any stock row to add tickers.</p>
+            </div>
+          ) : (
+            <PerformerTable
+              key={`watchlist-${watchlistParam}-${range}`}
+              title={watchlistName}
+              accent="emerald"
+              stocks={watchlistStocks}
+              sectors={Object.fromEntries(watchlistStocks.filter((s) => s.industry).map((s) => [s.ticker, s.industry!]))}
+              showBeta={false}
+              defaultSortCol="change"
+              range={range}
+              watchlists={watchlists}
+              activeListId={watchlistParam ?? undefined}
+              onAddToList={handleAddToList}
+              onRemoveFromList={handleRemoveFromList}
+            />
+          )
+        )}
+
+        {!isWatchlistView && !isSummary && error ? (
           <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
             {error}
           </div>
-        ) : !isSummary && (loading || (isAllStocks && marketCapShares === undefined)) ? (
+        ) : !isWatchlistView && !isSummary && (loading || (isAllStocks && marketCapShares === undefined)) ? (
           <div className="space-y-2">
             {isAllStocks && (
               <div className="flex items-center gap-2 mb-3 px-1">
@@ -600,7 +713,7 @@ export default function Home() {
               <div key={i} className="h-11 rounded-lg bg-gray-200 dark:bg-gray-800/50 animate-pulse" />
             ))}
           </div>
-        ) : !isSummary ? (
+        ) : !isWatchlistView && !isSummary ? (
           <>
             <PerformerTable
               key={`${index}-${range}-${sectors.join(",")}`}
@@ -613,6 +726,8 @@ export default function Home() {
               defaultSortCol={isAllStocks ? "marketCap" : "change"}
               marketCapShares={marketCapShares}
               range={range}
+              watchlists={watchlistAuthenticated ? watchlists : undefined}
+              onAddToList={handleAddToList}
             />
           </>
         ) : null}
