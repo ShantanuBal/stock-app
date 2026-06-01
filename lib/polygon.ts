@@ -398,101 +398,112 @@ export async function getIndexBars(
   from: string,
   to: string,
 ): Promise<ChartPoint[]> {
-  // Query the GSI to find all stored bars for this ticker in the date range.
+  const todayStr = formatDate(getTodayET());
+  const needsToday = to >= todayStr;
+
+  // Never cache today's intraday price in DynamoDB — it changes throughout the day
+  // and would go stale. Historical bars only go up to yesterday.
+  const histTo = needsToday ? formatDate(getPreviousTradingDay(getTodayET(), 1)) : to;
+
+  // Query DynamoDB for historical bars only.
   const existing = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
       IndexName: "ticker-date-index",
       KeyConditionExpression: "ticker = :ticker AND #d BETWEEN :from AND :to",
       ExpressionAttributeNames: { "#d": "date" },
-      ExpressionAttributeValues: { ":ticker": ticker, ":from": from, ":to": to },
+      ExpressionAttributeValues: { ":ticker": ticker, ":from": from, ":to": histTo },
     }),
   );
 
   // Allow an 80% threshold to account for market holidays (~10/year).
-  // If stored rows fall below it, the range has expanded (e.g. 1W → 1M) and
-  // we need a fresh Polygon fetch to fill the gap.
-  const expectedDays = countWeekdays(from, to);
+  const expectedDays = countWeekdays(from, histTo);
   const hasCompleteData = (existing.Items?.length ?? 0) >= expectedDays * 0.8;
+
+  let historicalPoints: ChartPoint[] = [];
 
   if (hasCompleteData) {
     console.log(`Chart data for ${ticker} already in database (${existing.Items!.length}/${expectedDays} trading days) — skipping Polygon call`);
-    return existing.Items!.map((item) => ({
+    historicalPoints = existing.Items!.map((item) => ({
       date: item.date as string,
       close: item.c as number,
     })).sort((a, b) => a.date.localeCompare(b.date));
+  } else {
+    if (existing.Items && existing.Items.length > 0) {
+      console.log(`Incomplete chart data for ${ticker} in database (${existing.Items.length}/${expectedDays} trading days) — fetching full range from Polygon`);
+    }
+
+    // Fetch historical bars from Polygon (up to yesterday) and persist them.
+    console.log(`Fetching historical chart data for ${ticker} from Polygon (${from} → ${histTo})`);
+    const url = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${histTo}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`;
+    let res = await fetch(url, { cache: "no-store" });
+    if (res.status === 429) {
+      console.log(`Polygon rate limit for ${ticker} — retrying in 2s`);
+      await new Promise((r) => setTimeout(r, 2000));
+      res = await fetch(url, { cache: "no-store" });
+    }
+    if (!res.ok) throw new Error(`Polygon error: ${res.status}`);
+    const data = await res.json();
+    const bars: Array<{ t: number; c: number; o: number; h: number; l: number; v: number }> =
+      data.results ?? [];
+    console.log(`Polygon returned ${bars.length} historical bars for ${ticker}`);
+
+    // Retry with wider start if no bars (holiday at start date).
+    if (bars.length === 0 && from !== histTo) {
+      const extStart = new Date(from + "T12:00:00Z");
+      extStart.setDate(extStart.getDate() - 7);
+      const extFrom = extStart.toISOString().split("T")[0];
+      const retryRes = await fetch(
+        `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${extFrom}/${histTo}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`,
+        { cache: "no-store" }
+      );
+      if (retryRes.ok) {
+        bars.push(...((await retryRes.json()).results ?? []));
+      }
+    }
+
+    if (bars.length > 0) {
+      await Promise.all(
+        bars.map((b) =>
+          docClient.send(
+            new PutCommand({
+              TableName: TABLE_NAME,
+              Item: {
+                date: new Date(b.t).toISOString().split("T")[0],
+                ticker,
+                c: b.c, o: b.o, h: b.h, l: b.l, v: b.v, t: b.t,
+              },
+            }),
+          ),
+        ),
+      );
+      console.log(`Saved ${bars.length} historical days for ${ticker} to database`);
+    }
+
+    historicalPoints = bars
+      .map((b) => ({ date: new Date(b.t).toISOString().split("T")[0], close: b.c }))
+      .filter((p) => p.date >= from && p.date <= histTo)
+      .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  if (existing.Items && existing.Items.length > 0) {
-    console.log(`Incomplete chart data for ${ticker} in database (${existing.Items.length}/${expectedDays} trading days) — fetching full range from Polygon`);
-  }
-
-  // Not in DB (or incomplete) — fetch from Polygon then persist.
-  console.log(`No chart data found for ${ticker} — fetching from Polygon (${from} → ${to})`);
-  const url = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`;
-  let res = await fetch(url, { cache: "no-store" });
-  if (res.status === 429) {
-    console.log(`Polygon rate limit for ${ticker} — retrying in 2s`);
-    await new Promise((r) => setTimeout(r, 2000));
-    res = await fetch(url, { cache: "no-store" });
-  }
-  if (!res.ok) throw new Error(`Polygon error: ${res.status}`);
-  const data = await res.json();
-  const bars: Array<{ t: number; c: number; o: number; h: number; l: number; v: number }> =
-    data.results ?? [];
-  console.log(`Polygon returned ${bars.length} bars for ${ticker} (status: ${data.status}, resultsCount: ${data.resultsCount ?? "n/a"})`);
-
-  // If 0 bars, the from date may be a market holiday — retry with a 7-day wider start.
-  if (bars.length === 0) {
-    const extStart = new Date(from + "T12:00:00Z");
-    extStart.setDate(extStart.getDate() - 7);
-    const extFrom = extStart.toISOString().split("T")[0];
-    console.log(`No bars for ${ticker} — retrying with extended range (${extFrom} → ${to})`);
-    const retryRes = await fetch(
-      `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${extFrom}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${API_KEY}`,
-      { cache: "no-store" }
-    );
-    if (retryRes.ok) {
-      const retryData = await retryRes.json();
-      bars.push(...(retryData.results ?? []));
-      console.log(`Retry returned ${bars.length} bars for ${ticker}`);
+  // Fetch today's bar fresh with edge caching (15 min) — never persist to DynamoDB.
+  if (needsToday) {
+    const todayUrl = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${todayStr}/${todayStr}?adjusted=true&sort=asc&limit=1&apiKey=${API_KEY}`;
+    try {
+      const todayRes = await fetch(todayUrl, { next: { revalidate: 900 } });
+      if (todayRes.ok) {
+        const todayData = await todayRes.json();
+        const todayBars: Array<{ t: number; c: number }> = todayData.results ?? [];
+        if (todayBars.length > 0) {
+          historicalPoints.push({ date: todayStr, close: todayBars[todayBars.length - 1].c });
+        }
+      }
+    } catch (e) {
+      console.log(`Could not fetch today's bar for ${ticker}: ${e}`);
     }
   }
 
-  if (bars.length > 0) {
-    await Promise.all(
-      bars.map((b) =>
-        docClient.send(
-          new PutCommand({
-            TableName: TABLE_NAME,
-            Item: {
-              date: new Date(b.t).toISOString().split("T")[0],
-              ticker,
-              c: b.c,
-              o: b.o,
-              h: b.h,
-              l: b.l,
-              v: b.v,
-              t: b.t,
-            },
-          }),
-        ),
-      ),
-    );
-    console.log(`Saved ${bars.length} days of chart data for ${ticker} — future requests will be served from database`);
-  }
+  if (historicalPoints.length > 0) return historicalPoints;
 
-  // Store all fetched bars (including any from the wider retry range) but only
-  // return bars within the originally requested window so callers get the right slice.
-  const allMapped = bars
-    .map((b) => ({ date: new Date(b.t).toISOString().split("T")[0], close: b.c }))
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  const inRange = allMapped.filter((p) => p.date >= from && p.date <= to);
-  if (inRange.length > 0) return inRange;
-
-  // No bars fell within the requested window (e.g. today's data not yet on free tier) —
-  // return the single most recent bar we do have so the chart isn't blank.
-  const fallback = [...allMapped].reverse().find((p) => p.date <= to);
-  return fallback ? [fallback] : [];
+  return [];
 }

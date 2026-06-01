@@ -344,8 +344,11 @@ export default function Home() {
                 <InfoTooltip element="span">
                   <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                   <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Overview</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
                     A side-by-side view of all four major US indices — S&amp;P 500, Nasdaq 100, Dow Jones, and Russell 2000 — over the selected time range. Click any chart to drill into that index.
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                    Charts use ETF proxies scaled to approximate index levels — <span className="text-gray-600 dark:text-gray-300">SPY</span> (S&amp;P 500), <span className="text-gray-600 dark:text-gray-300">QQQ</span> (Nasdaq 100), <span className="text-gray-600 dark:text-gray-300">DIA</span> (Dow Jones), <span className="text-gray-600 dark:text-gray-300">IWM</span> (Russell 2000).
                   </p>
                 </InfoTooltip>
               </div>
