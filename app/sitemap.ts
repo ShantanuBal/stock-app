@@ -13,7 +13,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/bonds",       priority: 0.8, changeFrequency: "daily"   as const },
     { path: "/economy",     priority: 0.8, changeFrequency: "daily"   as const },
     { path: "/global",      priority: 0.8, changeFrequency: "daily"   as const },
+    { path: "/learn",       priority: 0.7, changeFrequency: "monthly" as const },
     { path: "/about",       priority: 0.5, changeFrequency: "monthly" as const },
+    { path: "/contact",     priority: 0.4, changeFrequency: "yearly"  as const },
+    { path: "/privacy",     priority: 0.3, changeFrequency: "yearly"  as const },
   ];
 
   return routes.map(({ path, priority, changeFrequency }) => ({

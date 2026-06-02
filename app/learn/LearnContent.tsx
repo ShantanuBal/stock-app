@@ -728,7 +728,7 @@ export default function LearnContent() {
     <div className="font-[family-name:var(--font-inter)]">
       <div className="mb-6">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 mb-1">
-          Learning Centre
+          Horizon University
         </h2>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           How global financial markets work — from first principles

@@ -14,7 +14,7 @@ const NAV_TABS = [
   { label: "Commodities",  href: "/commodities"  },
   { label: "Economy",      href: "/economy"      },
   { label: "Global",       href: "/global"       },
-  { label: "Learn",        href: "/learn"        },
+  { label: "University",   href: "/learn"        },
 ];
 
 export default function NavTabs() {
