@@ -29,12 +29,7 @@ function FuturesCard({ f, pageRange }: { f: FuturesData; pageRange: Range }) {
     return () => document.removeEventListener("keydown", handler);
   }, [expanded]);
 
-  const isUp = f.changePercent >= 0;
-  const sign = isUp ? "+" : "";
-  const changeColor = isUp
-    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
-    : "text-red-600 dark:text-red-400 bg-red-500/10";
-  const sparkColor = isUp ? "#10b981" : "#f87171";
+
 
   const formatPrice = (p: number) => {
     if (f.unit === "pts") return p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -57,6 +52,9 @@ function FuturesCard({ f, pageRange }: { f: FuturesData; pageRange: Range }) {
 
   const pageDays = pageRange === "YTD" ? ytdDays() : (RANGES.find((r) => r.value === pageRange)?.days ?? 90);
   const cardPoints = allPoints.slice(-pageDays);
+  const cardChangePct = cardPoints.length >= 2
+    ? ((cardPoints[cardPoints.length - 1].value - cardPoints[0].value) / cardPoints[0].value) * 100
+    : f.changePercent;
 
   return (
     <>
@@ -82,12 +80,12 @@ function FuturesCard({ f, pageRange }: { f: FuturesData; pageRange: Range }) {
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">{f.unit}</p>
           </div>
-          <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${changeColor}`}>
-            {sign}{f.changePercent.toFixed(2)}%
+          <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${cardChangePct >= 0 ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
+            {cardChangePct >= 0 ? "+" : ""}{cardChangePct.toFixed(2)}%
           </span>
         </div>
         {cardPoints.length > 1 && (
-          <Sparkline points={cardPoints} color={sparkColor} height={60} />
+          <Sparkline points={cardPoints} color={cardChangePct >= 0 ? "#10b981" : "#f87171"} height={60} />
         )}
       </div>
 
@@ -148,7 +146,7 @@ function FuturesCard({ f, pageRange }: { f: FuturesData; pageRange: Range }) {
 
             {/* Large chart */}
             {filteredPoints.length > 1
-              ? <Sparkline points={filteredPoints} color={sparkColor} height={340} />
+              ? <Sparkline points={filteredPoints} color={modalIsUp ? "#10b981" : "#f87171"} height={340} />
               : <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">No historical data available</p>
             }
 

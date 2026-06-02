@@ -326,7 +326,7 @@ export async function getAllFuturesData(): Promise<FuturesData[]> {
     }
 
     const price = todayBar.close;
-    const prevSettlement = prevBar?.settlement_price ?? prevBar?.close ?? price;
+    const prevSettlement = prevBar?.settlement_price || prevBar?.close || price;
     const change = price - prevSettlement;
     const changePercent = prevSettlement !== 0 ? (change / prevSettlement) * 100 : 0;
     const points = await getHistoricalPoints(ticker);
