@@ -736,7 +736,7 @@ export default function LearnContent() {
       </div>
 
       {/* Section tabs */}
-      <div className="sticky top-12 z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 pb-2 mb-6">
+      <div className="sticky top-[48px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 pb-2 mb-6">
         <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1 w-fit max-w-full overflow-x-auto">
           <div className="flex gap-1 px-1">
             {SECTIONS.map((s) => (
