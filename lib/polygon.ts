@@ -177,7 +177,7 @@ export async function fetchGroupedDailyForBackfill(date: string): Promise<number
 }
 
 async function fetchGroupedDaily(date: string, tickers: Set<string>): Promise<GroupedDailyResult[]> {
-  const isToday = date === formatDate(new Date());
+  const isToday = date === formatDate(getTodayET());
 
   // Historical dates: check DynamoDB permanent cache first.
   // Today's data: skip DynamoDB — use Next.js edge cache (revalidate: 900) to avoid write amplification.
