@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  font-size: 18px;
+}
+
 @variant dark (&:where(.dark, .dark *));
 
 @theme inline {
