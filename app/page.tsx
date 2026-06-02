@@ -131,7 +131,7 @@ export default function Home() {
   const watchlistParam = searchParams.get("watchlist");
   const isWatchlistView = !!watchlistParam;
   const isSummary = !indexParam && !watchlistParam || indexParam === "overview";
-  const index = (isSummary ? "sp500" : indexParam) as IndexKey;
+  const index = (isSummary || !indexParam ? "sp500" : indexParam) as IndexKey;
   const range = (searchParams.get("range") ?? "1D") as TimeRange;
 
   function navigate(newIndex: string | null, newRange: string, watchlistId?: string) {
@@ -198,7 +198,7 @@ export default function Home() {
   }, [topStocks, sectors, sectorMap]);
 
   useEffect(() => {
-    if (!topStocks || topStocks.length === 0 || isAllStocks) return;
+    if (!topStocks || topStocks.length === 0 || isAllStocks || isWatchlistView) return;
     setBetas(undefined);
     fetch("/api/beta", {
       method: "POST",
@@ -208,10 +208,10 @@ export default function Home() {
       .then((r) => r.json())
       .then((d) => setBetas(d.betas ?? {}))
       .catch(() => setBetas({}));
-  }, [topStocks, isAllStocks]);
+  }, [topStocks, isAllStocks, isWatchlistView]);
 
   useEffect(() => {
-    if (!topStocks || topStocks.length === 0) return;
+    if (!topStocks || topStocks.length === 0 || isWatchlistView) return;
     setMarketCapShares(undefined);
     fetch("/api/market-caps", {
       method: "POST",
@@ -221,10 +221,10 @@ export default function Home() {
       .then((r) => r.json())
       .then((d) => setMarketCapShares(d.marketCapShares ?? {}))
       .catch(() => setMarketCapShares({}));
-  }, [topStocks]);
+  }, [topStocks, isWatchlistView]);
 
   useEffect(() => {
-    if (!topStocks || topStocks.length === 0 || isAllStocks) return;
+    if (!topStocks || topStocks.length === 0 || isAllStocks || isWatchlistView) return;
     setSummary(null);
     setSummaryLoading(true);
     const controller = new AbortController();
@@ -239,9 +239,10 @@ export default function Home() {
       .catch((e) => { if (e.name !== "AbortError") setSummary(null); })
       .finally(() => setSummaryLoading(false));
     return () => controller.abort();
-  }, [topStocks, index, range, isAllStocks]);
+  }, [topStocks, index, range, isAllStocks, isWatchlistView]);
 
   useEffect(() => {
+    if (isWatchlistView) return;
     startTransition(async () => {
       setError(null);
       try {
@@ -261,7 +262,7 @@ export default function Home() {
         setTopStocks((prev) => prev ?? []);
       }
     });
-  }, [index, range, isAllStocks]);
+  }, [index, range, isAllStocks, isWatchlistView]);
 
   useEffect(() => {
     if (!isSummary) return;
@@ -385,8 +386,8 @@ export default function Home() {
         <div className="sticky top-[84px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 pb-3 mb-2">
           <HScrollContainer variant="card" className="gap-2">
             {/* Overview pill */}
-            <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
-              <div className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+            <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
+              <div className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                   isSummary
                     ? "bg-emerald-500 text-white shadow"
                     : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
@@ -405,12 +406,12 @@ export default function Home() {
               </div>
             </div>
             {/* Indexes pill */}
-            <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex">
+            <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex">
               {INDICES.filter((idx) => idx.value !== "all").map((idx) => (
                 <div
                   key={idx.value}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
-                    !isSummary && index === idx.value
+                  className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+                    !isSummary && !isWatchlistView && index === idx.value
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
@@ -444,8 +445,8 @@ export default function Home() {
             </div>
             {/* All Stocks pill */}
             {INDICES.filter((idx) => idx.value === "all").map((idx) => (
-              <div key={idx.value} className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
-                <div className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+              <div key={idx.value} className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
+                <div className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                     !isSummary && !isWatchlistView && index === idx.value
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
@@ -480,7 +481,7 @@ export default function Home() {
 
             {/* Watchlist tabs — only shown when authenticated */}
             {watchlistAuthenticated && (
-              <div className="rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex items-center">
+              <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex items-center">
                 {watchlists.map((list) => (
                   <Link
                     key={list.listId}

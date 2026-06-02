@@ -45,3 +45,4 @@ next-env.d.ts
 # cdk
 /cdk/cdk.out
 /cdk/cdk.context.json
+.claude/

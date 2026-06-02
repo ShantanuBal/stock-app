@@ -139,14 +139,10 @@ function WatchlistButton({ ticker, watchlists, onAdd }: {
     <div ref={ref} className="relative">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
-        className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+        className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors text-sm font-semibold"
         title="Add to watchlist"
       >
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          <line x1="12" y1="9" x2="12" y2="15" />
-          <line x1="9" y1="12" x2="15" y2="12" />
-        </svg>
+        +
       </button>
       {open && (
         <div className="absolute right-0 top-7 z-30 w-44 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
@@ -460,13 +456,10 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                       {activeListId ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); onRemoveFromList?.(stock.ticker); }}
-                          className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                          className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors text-sm font-semibold"
                           title="Remove from watchlist"
                         >
-                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                            <line x1="9" y1="12" x2="15" y2="12" />
-                          </svg>
+                          −
                         </button>
                       ) : (
                         <WatchlistButton

@@ -161,12 +161,10 @@ export default function WatchlistsClient({ initialLists }: { initialLists: Watch
                       <button
                         onClick={() => handleRemoveTicker(list.listId, ticker)}
                         disabled={isPending}
-                        className="text-gray-400 hover:text-red-500 transition-colors ml-0.5"
+                        className="text-gray-400 hover:text-red-500 transition-colors ml-0.5 text-xs font-semibold leading-none"
                         aria-label={`Remove ${ticker}`}
                       >
-                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <path d="M18 6 6 18M6 6l12 12" />
-                        </svg>
+                        −
                       </button>
                     </span>
                   ))}
