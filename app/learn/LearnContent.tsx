@@ -247,6 +247,68 @@ Bank of England forced to raise rates
        ↓
 Higher mortgage costs → economy contracts`;
 
+const BRETTON_WOODS_CHAIN = `US holds 2/3 of world's gold after WW2
+              ↓
+44 nations meet at Bretton Woods, New Hampshire (July 1944)
+              ↓
+Agreement: USD pegged to gold at $35/oz
+              ↓
+All other currencies pegged to USD
+              ↓
+USD becomes the world's reserve currency
+              ↓
+US gains "Exorbitant Privilege" — borrows cheaply, runs deficits freely
+              ↓
+The world holds dollars. The world buys US Treasury bonds.`;
+
+const NIXON_ROT_CHAIN = `Vietnam War + Great Society social programs
+              ↓
+US government spending far exceeds tax revenue
+              ↓
+Federal Reserve prints dollars to fund the deficit
+              ↓
+More dollars in circulation than gold to back them
+              ↓
+France under De Gaulle grows suspicious
+              ↓
+France sends ships to New York to redeem $300M in dollars for gold
+              ↓
+Other nations follow — a run on US gold begins
+              ↓
+Fort Knox gold reserves draining rapidly`;
+
+const NIXON_SHOCK_CHAIN = `August 15, 1971 — Sunday night address to the nation
+              ↓
+Nixon announces: US will no longer convert dollars to gold
+              ↓
+"Closing the gold window" — effective immediately
+              ↓
+No warning. No international consultation. Done.
+              ↓
+The Bretton Woods system collapses overnight
+              ↓
+Every currency in the world suddenly has no anchor`;
+
+const FOREX_BORN_CHAIN = `Currencies unpegged from gold and USD (1971–1973)
+              ↓
+Exchange rates begin to float freely against each other
+              ↓
+EUR/USD, USD/JPY, GBP/USD start moving daily
+              ↓
+Corporations with foreign revenues need to hedge currency risk
+              ↓
+Banks start quoting two-way prices on currency pairs
+              ↓
+Speculators see profit opportunity in exchange rate movements
+              ↓
+The interbank forex market emerges organically
+              ↓
+By the 1980s: the world's largest financial market
+              ↓
+Today: $7.5 trillion traded every single day
+              ↓
+Nobody designed it. Nixon accidentally created it.`;
+
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 ${className}`}>
@@ -599,6 +661,9 @@ function Geopolitics() {
 // ─── Section: Case Studies ───────────────────────────────────────────────────
 
 function CaseStudies() {
+  const [trussOpen, setTrussOpen] = useState(false);
+  const [forexOpen, setForexOpen] = useState(false);
+
   return (
     <div className="space-y-8">
       <div>
@@ -614,13 +679,21 @@ function CaseStudies() {
 
       {/* Liz Truss */}
       <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <span className="text-lg">🇬🇧</span>
-          <div>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">The Liz Truss Pound Collapse (2022)</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">How an unfunded tax cut fired a Prime Minister in 45 days</p>
+        <button
+          onClick={() => setTrussOpen((o) => !o)}
+          className="w-full flex items-center justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 hover:border-gray-300 dark:hover:border-gray-700 transition-colors text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-lg">🇬🇧</span>
+            <div>
+              <p className="text-sm font-bold text-gray-900 dark:text-white">The Liz Truss Pound Collapse (2022)</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">How an unfunded tax cut fired a Prime Minister in 45 days</p>
+            </div>
           </div>
-        </div>
+          <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${trussOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+
+        {trussOpen && <div className="space-y-4">
 
         <Card>
           <p className="text-xs font-semibold text-emerald-500 mb-2">Background</p>
@@ -690,6 +763,118 @@ function CaseStudies() {
             </p>
           </CalloutBox>
         </div>
+        </div>}
+      </div>
+
+      {/* Nixon Shock */}
+      <div className="space-y-4">
+        <button
+          onClick={() => setForexOpen((o) => !o)}
+          className="w-full flex items-center justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 p-4 hover:border-gray-300 dark:hover:border-gray-700 transition-colors text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-lg">🇺🇸</span>
+            <div>
+              <p className="text-sm font-bold text-gray-900 dark:text-white">The Accidental Birth of Forex (1944–1973)</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">How closing a gold window accidentally created the world&apos;s largest market</p>
+            </div>
+          </div>
+          <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${forexOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+
+        {forexOpen && <div className="space-y-4">
+
+        <Card>
+          <p className="text-xs font-semibold text-emerald-500 mb-2">The Setup: Bretton Woods (1944)</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            After World War 2, the US held two-thirds of the world&apos;s gold and had emerged as the undisputed economic superpower.
+            At a hotel in Bretton Woods, New Hampshire, 44 nations agreed on a new monetary order: the US dollar would be pegged
+            to gold at $35 per ounce, and every other currency would be pegged to the dollar. The world&apos;s currencies were now
+            anchored to each other through the dollar. Exchange rates were fixed. There was nothing to trade.
+          </p>
+        </Card>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">
+            The Bretton Woods Arrangement
+          </p>
+          <FlowDiagram content={BRETTON_WOODS_CHAIN} />
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">
+            The System Starts to Crack (1960s)
+          </p>
+          <FlowDiagram content={NIXON_ROT_CHAIN} />
+        </div>
+
+        <Card>
+          <p className="text-xs font-semibold text-emerald-500 mb-2">De Gaulle&apos;s Gold Play</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            French President Charles de Gaulle was openly contemptuous of the dollar&apos;s privileged status. In 1965 he gave a
+            famous press conference denouncing the &quot;Exorbitant Privilege&quot; — France was earning dollars through exports,
+            but those dollars were just paper backed by American promises. He directed the Banque de France to convert France&apos;s
+            dollar reserves into gold, sending ships to New York to physically collect it. Other nations watched — and followed.
+          </p>
+        </Card>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">
+            The Nixon Shock — August 15, 1971
+          </p>
+          <FlowDiagram content={NIXON_SHOCK_CHAIN} />
+        </div>
+
+        <Card>
+          <p className="text-xs font-semibold text-emerald-500 mb-2">The Sunday Night Announcement</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            Nixon chose a Sunday night deliberately — markets were closed. He pre-empted the popular TV show
+            &quot;Bonanza&quot; to address the nation. He framed the decision as protecting the dollar from &quot;international
+            money speculators.&quot; In reality, the US was admitting it couldn&apos;t honour its promise to exchange dollars for gold.
+            The Bretton Woods system, which had governed global finance for 27 years, ended in a 15-minute television address.
+          </p>
+        </Card>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">
+            The Accident: The Forex Market is Born (1971–1973)
+          </p>
+          <FlowDiagram content={FOREX_BORN_CHAIN} />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Why It Was Unintended</p>
+            <ul className="space-y-1.5">
+              {[
+                "Nixon's goal was to stop the gold drain — not to create a new market",
+                "The Smithsonian Agreement (Dec 1971) tried to re-fix exchange rates — it failed within 14 months",
+                "By March 1973, floating exchange rates became the permanent reality",
+                "No government, central bank, or institution designed the forex market",
+                "It emerged from millions of banks, corporations, and traders independently trying to hedge risk",
+              ].map((p, i) => (
+                <li key={i} className="flex gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  <span className="shrink-0 text-emerald-500 mt-0.5">·</span>
+                  <span>{p}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+          <CalloutBox>
+            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-2">The Key Lesson</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              The world&apos;s largest financial market — $7.5 trillion traded every day — was not invented.
+              It was an emergent consequence of a president trying to plug a gold drain. The forex market
+              is a reminder that the most consequential financial systems are often accidents of history,
+              not products of design.
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed italic">
+              &quot;We are all Keynesians now.&quot; — Nixon, just before abandoning the gold standard that Keynesian
+              economists had long questioned.
+            </p>
+          </CalloutBox>
+        </div>
+        </div>}
       </div>
 
       {/* Other case studies teaser */}
