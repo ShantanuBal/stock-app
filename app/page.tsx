@@ -384,7 +384,8 @@ export default function Home() {
 
         {/* Index selector */}
         <div className="sticky top-[84px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 pb-3 mb-2">
-          <HScrollContainer variant="card" className="gap-2">
+          <div className="flex items-center gap-2">
+          <HScrollContainer variant="card" className="gap-2 flex-1">
             {/* Overview pill */}
             <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
               <div className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
@@ -479,32 +480,47 @@ export default function Home() {
               </div>
             ))}
 
-            {/* Watchlist tabs — only shown when authenticated */}
-            {watchlistAuthenticated && (
-              <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex items-center">
-                {watchlists.map((list) => (
-                  <Link
-                    key={list.listId}
-                    href={`/?watchlist=${list.listId}&range=${range}`}
-                    className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
-                      watchlistParam === list.listId
-                        ? "bg-emerald-500 text-white shadow"
-                        : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {list.name}
-                  </Link>
-                ))}
-                <Link
-                  href="/watchlists"
-                  className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
-                  title="Manage watchlists"
+          </HScrollContainer>
+
+          {/* Watchlist tabs — outside HScrollContainer so tooltip isn't clipped by overflow */}
+          <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex items-center">
+            {watchlistAuthenticated && watchlists.map((list) => (
+              <Link
+                key={list.listId}
+                href={`/?watchlist=${list.listId}&range=${range}`}
+                className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+                  watchlistParam === list.listId
+                    ? "bg-emerald-500 text-white shadow"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                {list.name}
+              </Link>
+            ))}
+            {watchlistAuthenticated ? (
+              <Link
+                href="/watchlists"
+                className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
+                title="Manage watchlists"
+              >
+                {watchlists.length === 0 ? "+ New list" : "+"}
+              </Link>
+            ) : (
+              <div className="relative group">
+                <button
+                  disabled
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 cursor-not-allowed"
                 >
-                  {watchlists.length === 0 ? "+ New list" : "+"}
-                </Link>
+                  + New list
+                </button>
+                <div className="pointer-events-none absolute left-0 top-full mt-2 z-50 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 invisible group-hover:visible whitespace-nowrap">
+                  <div className="absolute -top-1.5 left-4 w-3 h-3 rotate-45 bg-white dark:bg-gray-900 border-l border-t border-gray-200 dark:border-gray-700" />
+                  <Link href="/login" className="pointer-events-auto text-emerald-500 hover:text-emerald-400 font-medium">Sign in</Link> to create watchlists
+                </div>
               </div>
             )}
-          </HScrollContainer>
+          </div>
+          </div>
         </div>
 
         {/* Summary view — AI overview */}
@@ -727,7 +743,8 @@ export default function Home() {
               defaultSortCol={isAllStocks ? "marketCap" : "change"}
               marketCapShares={marketCapShares}
               range={range}
-              watchlists={watchlistAuthenticated ? watchlists : undefined}
+              watchlists={watchlists}
+              watchlistAuthenticated={watchlistAuthenticated}
               onAddToList={handleAddToList}
             />
           </>

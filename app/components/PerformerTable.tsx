@@ -28,6 +28,7 @@ interface Props {
   linkBasePath?: string;
   // Watchlist support
   watchlists?: WatchListMeta[];
+  watchlistAuthenticated?: boolean;
   activeListId?: string;
   onAddToList?: (ticker: string, listId: string) => void;
   onRemoveFromList?: (ticker: string) => void;
@@ -168,7 +169,7 @@ function WatchlistButton({ ticker, watchlists, onAdd }: {
   );
 }
 
-export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, descriptions, showBeta = true, showSector = true, companyLabel = "Company", defaultSortCol, range, linkBasePath = "/stock", watchlists, activeListId, onAddToList, onRemoveFromList }: Props) {
+export default function PerformerTable({ title, titleExtra, accent, stocks, sectors, betas, marketCapShares, descriptions, showBeta = true, showSector = true, companyLabel = "Company", defaultSortCol, range, linkBasePath = "/stock", watchlists, watchlistAuthenticated, activeListId, onAddToList, onRemoveFromList }: Props) {
   const accentColor = accent === "emerald" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const [sortCol, setSortCol] = useState<SortCol | null>(defaultSortCol ?? null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -345,7 +346,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                   The number of shares traded on the most recent trading day. High volume on a price move signals stronger conviction — low volume may suggest the move is less reliable.
                 </p>
               </ColHeader>
-              {watchlists !== undefined && <th className="px-2 py-3 w-8" />}
+              {watchlistAuthenticated !== undefined && <th className="px-2 py-3 w-8" />}
             </tr>
           </thead>
           <tbody>
@@ -451,7 +452,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                   <td className="px-3 py-3 text-right text-gray-500 dark:text-gray-400 tabular-nums">
                     {formatVolume(stock.volume)}
                   </td>
-                  {watchlists !== undefined && (
+                  {watchlistAuthenticated !== undefined && (
                     <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
                       {activeListId ? (
                         <button
@@ -461,12 +462,25 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                         >
                           −
                         </button>
-                      ) : (
+                      ) : watchlistAuthenticated ? (
                         <WatchlistButton
                           ticker={stock.ticker}
-                          watchlists={watchlists}
+                          watchlists={watchlists ?? []}
                           onAdd={onAddToList ?? (() => {})}
                         />
+                      ) : (
+                        <div className="relative group">
+                          <button
+                            disabled
+                            className="w-6 h-6 flex items-center justify-center rounded text-gray-300 dark:text-gray-600 cursor-not-allowed text-sm font-semibold"
+                          >
+                            +
+                          </button>
+                          <div className="pointer-events-none absolute right-0 bottom-full mb-2 z-50 w-44 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 invisible group-hover:visible whitespace-nowrap">
+                            <div className="absolute -bottom-1.5 right-2 w-3 h-3 rotate-45 bg-white dark:bg-gray-900 border-r border-b border-gray-200 dark:border-gray-700" />
+                            <a href="/login" className="pointer-events-auto text-emerald-500 hover:text-emerald-400 font-medium">Sign in</a> to save watchlists
+                          </div>
+                        </div>
                       )}
                     </td>
                   )}
