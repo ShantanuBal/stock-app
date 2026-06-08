@@ -166,6 +166,7 @@ export default function Home() {
   // Watchlists
   const [watchlists, setWatchlists] = useState<WatchListMeta[]>([]);
   const [watchlistAuthenticated, setWatchlistAuthenticated] = useState(false);
+  const [newListTooltip, setNewListTooltip] = useState<{ x: number; y: number } | null>(null);
   const [watchlistStocks, setWatchlistStocks] = useState<StockResult[] | null>(null);
   const [watchlistName, setWatchlistName] = useState<string>("");
   const [watchlistError, setWatchlistError] = useState<string | null>(null);
@@ -384,8 +385,7 @@ export default function Home() {
 
         {/* Index selector */}
         <div className="sticky top-[84px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 pb-3 mb-2">
-          <div className="flex items-center gap-2">
-          <HScrollContainer variant="card" className="gap-2 flex-1">
+          <HScrollContainer variant="card" className="gap-2">
             {/* Overview pill */}
             <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
               <div className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
@@ -480,48 +480,56 @@ export default function Home() {
               </div>
             ))}
 
-          </HScrollContainer>
-
-          {/* Watchlist tabs — outside HScrollContainer so tooltip isn't clipped by overflow */}
-          <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex items-center">
-            {watchlistAuthenticated && watchlists.map((list) => (
-              <Link
-                key={list.listId}
-                href={`/?watchlist=${list.listId}&range=${range}`}
-                className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
-                  watchlistParam === list.listId
-                    ? "bg-emerald-500 text-white shadow"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                {list.name}
-              </Link>
-            ))}
-            {watchlistAuthenticated ? (
-              <Link
-                href="/watchlists"
-                className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
-                title="Manage watchlists"
-              >
-                {watchlists.length === 0 ? "+ New list" : "+"}
-              </Link>
-            ) : (
-              <div className="relative group">
+            {/* Watchlist tabs — inside HScrollContainer so they scroll with the other tabs */}
+            <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex items-center">
+              {watchlistAuthenticated && watchlists.map((list) => (
+                <Link
+                  key={list.listId}
+                  href={`/?watchlist=${list.listId}&range=${range}`}
+                  className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+                    watchlistParam === list.listId
+                      ? "bg-emerald-500 text-white shadow"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  {list.name}
+                </Link>
+              ))}
+              {watchlistAuthenticated ? (
+                <Link
+                  href="/watchlists"
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
+                  title="Manage watchlists"
+                >
+                  {watchlists.length === 0 ? "+ New list" : "+"}
+                </Link>
+              ) : (
                 <button
                   disabled
                   className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                  onMouseEnter={(e) => {
+                    const r = e.currentTarget.getBoundingClientRect();
+                    setNewListTooltip({ x: r.left, y: r.bottom + 8 });
+                  }}
+                  onMouseLeave={() => setNewListTooltip(null)}
                 >
                   + New list
                 </button>
-                <div className="pointer-events-none absolute left-0 top-full mt-2 z-50 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 invisible group-hover:visible whitespace-nowrap">
-                  <div className="absolute -top-1.5 left-4 w-3 h-3 rotate-45 bg-white dark:bg-gray-900 border-l border-t border-gray-200 dark:border-gray-700" />
-                  <Link href="/login" className="pointer-events-auto text-emerald-500 hover:text-emerald-400 font-medium">Sign in</Link> to create watchlists
-                </div>
-              </div>
-            )}
-          </div>
-          </div>
+              )}
+            </div>
+          </HScrollContainer>
         </div>
+
+        {/* Fixed-position tooltip — escapes overflow clipping */}
+        {newListTooltip && (
+          <div
+            className="fixed z-50 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 pointer-events-none"
+            style={{ left: newListTooltip.x, top: newListTooltip.y }}
+          >
+            <div className="absolute -top-1.5 left-4 w-3 h-3 rotate-45 bg-white dark:bg-gray-900 border-l border-t border-gray-200 dark:border-gray-700" />
+            <Link href="/login" className="pointer-events-auto text-emerald-500 hover:text-emerald-400 font-medium">Sign in</Link> to create watchlists
+          </div>
+        )}
 
         {/* Summary view — AI overview */}
         {isSummary && (overviewLoading || overviewSummary) && (
