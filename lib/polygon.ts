@@ -266,14 +266,60 @@ async function findMostRecentTradingData(
   throw new Error("Could not find recent trading data");
 }
 
+// Fetches current-day prices via Polygon's snapshot endpoint, which is available immediately
+// after market close (unlike grouped daily, which can lag by 1-2 hours).
+async function fetchSnapshotPrices(tickers: string[]): Promise<GroupedDailyResult[]> {
+  const CHUNK_SIZE = 252;
+  const results: GroupedDailyResult[] = [];
+
+  for (let i = 0; i < tickers.length; i += CHUNK_SIZE) {
+    const chunk = tickers.slice(i, i + CHUNK_SIZE);
+    const url = `${BASE_URL}/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${chunk.join(",")}&apiKey=${API_KEY}`;
+    try {
+      const res = await fetch(url, { next: { revalidate: 60 } });
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const t of (data.tickers ?? [])) {
+        const c = t.day?.c ?? 0;
+        if (c > 0) {
+          results.push({
+            T: t.ticker,
+            c,
+            o: t.day?.o ?? 0,
+            h: t.day?.h ?? 0,
+            l: t.day?.l ?? 0,
+            v: t.day?.v ?? 0,
+            t: t.day?.t ?? Date.now(),
+          });
+        }
+      }
+    } catch (e) {
+      console.log(`Snapshot fetch failed for chunk ${i}: ${e}`);
+    }
+  }
+
+  return results;
+}
+
 export async function getTopPerformers(
   range: TimeRange,
   tickers: Set<string>,
   tickerNames: Record<string, string>,
 ): Promise<StockResult[]> {
-  // Resolve current data first — it may fall back to a prior date (weekend, pre-market, no data yet).
-  // Start date must be computed from the resolved date so "1D" always means one trading day prior.
-  const currentData = await findMostRecentTradingData(new Date(), tickers);
+  const todayStr = formatDate(getTodayET());
+
+  // Try grouped daily first. If today's data isn't ready (Polygon can lag 1-2 hrs after close),
+  // fall back to the snapshot endpoint which is always up-to-date.
+  let currentData = await findMostRecentTradingData(new Date(), tickers);
+  if (currentData.date !== todayStr) {
+    console.log(`Today's grouped daily not yet available — falling back to snapshot for current prices`);
+    const snapshotResults = await fetchSnapshotPrices(Array.from(tickers));
+    if (snapshotResults.length > 0) {
+      console.log(`Snapshot returned ${snapshotResults.length} prices for today`);
+      currentData = { date: todayStr, results: snapshotResults };
+    }
+  }
+
   const resolvedDate = new Date(currentData.date + "T12:00:00Z");
   const startDate = getStartDate(range, resolvedDate);
   const startData = await findMostRecentTradingData(startDate, tickers);
