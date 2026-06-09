@@ -166,7 +166,7 @@ export default function Home() {
   // Watchlists
   const [watchlists, setWatchlists] = useState<WatchListMeta[]>([]);
   const [watchlistAuthenticated, setWatchlistAuthenticated] = useState(false);
-  const [newListTooltip, setNewListTooltip] = useState<{ x: number; y: number } | null>(null);
+  const [newListTooltip, setNewListTooltip] = useState<{ right: number; y: number } | null>(null);
   const [watchlistStocks, setWatchlistStocks] = useState<StockResult[] | null>(null);
   const [watchlistName, setWatchlistName] = useState<string>("");
   const [watchlistError, setWatchlistError] = useState<string | null>(null);
@@ -504,17 +504,21 @@ export default function Home() {
                   {watchlists.length === 0 ? "+ New list" : "+"}
                 </Link>
               ) : (
-                <button
-                  disabled
-                  className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                <span
+                  className="cursor-not-allowed"
                   onMouseEnter={(e) => {
                     const r = e.currentTarget.getBoundingClientRect();
-                    setNewListTooltip({ x: r.left, y: r.bottom + 8 });
+                    setNewListTooltip({ right: window.innerWidth - r.right, y: r.bottom + 8 });
                   }}
                   onMouseLeave={() => setNewListTooltip(null)}
                 >
-                  + New list
-                </button>
+                  <button
+                    disabled
+                    className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 pointer-events-none"
+                  >
+                    + New list
+                  </button>
+                </span>
               )}
             </div>
           </HScrollContainer>
@@ -523,10 +527,10 @@ export default function Home() {
         {/* Fixed-position tooltip — escapes overflow clipping */}
         {newListTooltip && (
           <div
-            className="fixed z-50 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 pointer-events-none"
-            style={{ left: newListTooltip.x, top: newListTooltip.y }}
+            className="fixed z-50 w-max rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 pointer-events-none"
+            style={{ right: newListTooltip.right, top: newListTooltip.y }}
           >
-            <div className="absolute -top-1.5 left-4 w-3 h-3 rotate-45 bg-white dark:bg-gray-900 border-l border-t border-gray-200 dark:border-gray-700" />
+            <div className="absolute -top-1.5 right-4 w-3 h-3 rotate-45 bg-white dark:bg-gray-900 border-l border-t border-gray-200 dark:border-gray-700" />
             <Link href="/login" className="pointer-events-auto text-emerald-500 hover:text-emerald-400 font-medium">Sign in</Link> to create watchlists
           </div>
         )}
