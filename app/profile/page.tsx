@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getUser } from "@/lib/users";
-import { logout } from "@/app/actions/auth";
+import SignOutButton from "@/app/components/SignOutButton";
 
 export const metadata = {
   title: "Profile · Horizon",
@@ -65,14 +65,9 @@ export default async function ProfilePage() {
         )}
 
         {/* Sign out */}
-        <form action={logout}>
-          <button
-            type="submit"
-            className="w-full py-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900 transition-colors"
-          >
-            Sign out
-          </button>
-        </form>
+        <SignOutButton className="w-full py-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900 transition-colors">
+          Sign out
+        </SignOutButton>
       </div>
     </div>
   );

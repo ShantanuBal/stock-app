@@ -57,6 +57,6 @@ export async function loginAsGuest() {
 }
 
 export async function logout() {
+  console.log(`[logout] deleting session`);
   await deleteSession();
-  redirect("/login");
 }
