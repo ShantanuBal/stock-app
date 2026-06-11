@@ -181,6 +181,23 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeTicker = useRef<string | null>(null);
 
+  // Guest sign-in tooltip — fixed-position so it escapes the table's overflow clipping,
+  // with a delayed hide so the cursor can travel into it to click "Sign in"
+  const [signinTooltip, setSigninTooltip] = useState<{ right: number; y: number } | null>(null);
+  const signinTooltipHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function cancelSigninTooltipHide() {
+    if (signinTooltipHideTimer.current) {
+      clearTimeout(signinTooltipHideTimer.current);
+      signinTooltipHideTimer.current = null;
+    }
+  }
+
+  function scheduleSigninTooltipHide() {
+    cancelSigninTooltipHide();
+    signinTooltipHideTimer.current = setTimeout(() => setSigninTooltip(null), 300);
+  }
+
   function getTooltipCallbacks(ticker: string) {
     return {
       onMouseEnter: () => {
@@ -367,6 +384,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
               const marketCap = capShares != null ? capShares * stock.price : null;
               const pe = marketCap != null && capData?.netIncome ? marketCap / capData.netIncome : null;
               const peg = pe != null && capData?.epsGrowth != null && capData.epsGrowth > 0 ? pe / capData.epsGrowth : null;
+              const rowTooltip = getTooltipCallbacks(stock.ticker);
               return (
                 <tr
                   key={stock.ticker}
@@ -378,7 +396,7 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                       router.push(`${linkBasePath}/${stock.ticker}`);
                     }
                   }}
-                  {...getTooltipCallbacks(stock.ticker)}
+                  {...rowTooltip}
                 >
                   <td className="px-3 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
                   <td className="px-3 py-3 font-bold text-gray-900 dark:text-white">
@@ -453,7 +471,13 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                     {formatVolume(stock.volume)}
                   </td>
                   {watchlistAuthenticated !== undefined && (
-                    <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
+                    <td
+                      className="px-2 py-3"
+                      onClick={(e) => e.stopPropagation()}
+                      // Suppress the row's chart tooltip while over this cell; re-arm it on the way out
+                      onMouseEnter={rowTooltip.onMouseLeave}
+                      onMouseLeave={rowTooltip.onMouseEnter}
+                    >
                       {activeListId ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); onRemoveFromList?.(stock.ticker); }}
@@ -469,18 +493,22 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                           onAdd={onAddToList ?? (() => {})}
                         />
                       ) : (
-                        <div className="relative group">
+                        <span
+                          className="cursor-not-allowed"
+                          onMouseEnter={(e) => {
+                            cancelSigninTooltipHide();
+                            const r = e.currentTarget.getBoundingClientRect();
+                            setSigninTooltip({ right: window.innerWidth - r.right, y: r.bottom + 8 });
+                          }}
+                          onMouseLeave={scheduleSigninTooltipHide}
+                        >
                           <button
                             disabled
-                            className="w-6 h-6 flex items-center justify-center rounded text-gray-300 dark:text-gray-600 cursor-not-allowed text-sm font-semibold"
+                            className="w-6 h-6 flex items-center justify-center rounded text-gray-300 dark:text-gray-600 pointer-events-none text-sm font-semibold"
                           >
                             +
                           </button>
-                          <div className="pointer-events-none absolute right-0 bottom-full mb-2 z-50 w-44 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 invisible group-hover:visible whitespace-nowrap">
-                            <div className="absolute -bottom-1.5 right-2 w-3 h-3 rotate-45 bg-white dark:bg-gray-900 border-r border-b border-gray-200 dark:border-gray-700" />
-                            <a href="/login" className="pointer-events-auto text-emerald-500 hover:text-emerald-400 font-medium">Sign in</a> to save watchlists
-                          </div>
-                        </div>
+                        </span>
                       )}
                     </td>
                   )}
@@ -490,6 +518,18 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
           </tbody>
         </table>
       </div>
+      {/* Fixed-position tooltip — escapes overflow clipping */}
+      {signinTooltip && (
+        <div
+          className="fixed z-50 w-max rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 pointer-events-auto"
+          style={{ right: signinTooltip.right, top: signinTooltip.y }}
+          onMouseEnter={cancelSigninTooltipHide}
+          onMouseLeave={scheduleSigninTooltipHide}
+        >
+          <div className="absolute -top-1.5 right-4 w-3 h-3 rotate-45 bg-white dark:bg-gray-900 border-l border-t border-gray-200 dark:border-gray-700" />
+          <a href="/login" className="text-emerald-500 hover:text-emerald-400 font-medium">Sign in</a> to save watchlists
+        </div>
+      )}
       {sortedStocks.length > visibleCount && (
         <button
           onClick={() => setVisibleCount((c) => c + 30)}

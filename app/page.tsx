@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition, useMemo, useCallback } from "react";
+import { useState, useEffect, useTransition, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { IndexKey } from "./api/top-performers/route";
@@ -167,6 +167,18 @@ export default function Home() {
   const [watchlists, setWatchlists] = useState<WatchListMeta[]>([]);
   const [watchlistAuthenticated, setWatchlistAuthenticated] = useState(false);
   const [newListTooltip, setNewListTooltip] = useState<{ right: number; y: number } | null>(null);
+  // Delay hiding so the cursor can travel into the tooltip to click "Sign in"
+  const newListTooltipHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelNewListTooltipHide = useCallback(() => {
+    if (newListTooltipHideTimer.current) {
+      clearTimeout(newListTooltipHideTimer.current);
+      newListTooltipHideTimer.current = null;
+    }
+  }, []);
+  const scheduleNewListTooltipHide = useCallback(() => {
+    cancelNewListTooltipHide();
+    newListTooltipHideTimer.current = setTimeout(() => setNewListTooltip(null), 300);
+  }, [cancelNewListTooltipHide]);
   const [watchlistStocks, setWatchlistStocks] = useState<StockResult[] | null>(null);
   const [watchlistName, setWatchlistName] = useState<string>("");
   const [watchlistError, setWatchlistError] = useState<string | null>(null);
@@ -507,10 +519,11 @@ export default function Home() {
                 <span
                   className="cursor-not-allowed"
                   onMouseEnter={(e) => {
+                    cancelNewListTooltipHide();
                     const r = e.currentTarget.getBoundingClientRect();
                     setNewListTooltip({ right: window.innerWidth - r.right, y: r.bottom + 8 });
                   }}
-                  onMouseLeave={() => setNewListTooltip(null)}
+                  onMouseLeave={scheduleNewListTooltipHide}
                 >
                   <button
                     disabled
@@ -527,8 +540,10 @@ export default function Home() {
         {/* Fixed-position tooltip — escapes overflow clipping */}
         {newListTooltip && (
           <div
-            className="fixed z-50 w-max rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 pointer-events-none"
+            className="fixed z-50 w-max rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 pointer-events-auto"
             style={{ right: newListTooltip.right, top: newListTooltip.y }}
+            onMouseEnter={cancelNewListTooltipHide}
+            onMouseLeave={scheduleNewListTooltipHide}
           >
             <div className="absolute -top-1.5 right-4 w-3 h-3 rotate-45 bg-white dark:bg-gray-900 border-l border-t border-gray-200 dark:border-gray-700" />
             <Link href="/login" className="pointer-events-auto text-emerald-500 hover:text-emerald-400 font-medium">Sign in</Link> to create watchlists
