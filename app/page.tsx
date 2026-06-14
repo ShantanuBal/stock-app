@@ -381,7 +381,7 @@ export default function Home() {
             {RANGES.map((r) => (
               <button
                 key={r.value}
-                onClick={() => navigate(isSummary ? null : index, r.value)}
+                onClick={() => navigate(isWatchlistView ? null : isSummary ? null : index, r.value, isWatchlistView ? watchlistParam! : undefined)}
                 className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                   range === r.value
                     ? "bg-emerald-500 text-white"
