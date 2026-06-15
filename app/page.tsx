@@ -327,6 +327,33 @@ export default function Home() {
 
   useEffect(() => { loadWatchlistStocks(true); }, [loadWatchlistStocks]);
 
+  // Watchlist: fetch Beta + Market Cap / P/E / PEG columns for parity with the index tabs
+  useEffect(() => {
+    if (!isWatchlistView || !watchlistStocks || watchlistStocks.length === 0) return;
+    setBetas(undefined);
+    fetch("/api/beta", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tickers: watchlistStocks.map((s) => s.ticker) }),
+    })
+      .then((r) => r.json())
+      .then((d) => setBetas(d.betas ?? {}))
+      .catch(() => setBetas({}));
+  }, [isWatchlistView, watchlistStocks]);
+
+  useEffect(() => {
+    if (!isWatchlistView || !watchlistStocks || watchlistStocks.length === 0) return;
+    setMarketCapShares(undefined);
+    fetch("/api/market-caps", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tickers: watchlistStocks.map((s) => s.ticker) }),
+    })
+      .then((r) => r.json())
+      .then((d) => setMarketCapShares(d.marketCapShares ?? {}))
+      .catch(() => setMarketCapShares({}));
+  }, [isWatchlistView, watchlistStocks]);
+
   const handleAddToList = useCallback(async (ticker: string, listId: string) => {
     await addToWatchList(listId, ticker);
     // Optimistically update the in-memory tickers count isn't needed since WatchListMeta has no tickers
@@ -740,7 +767,9 @@ export default function Home() {
                 accent="emerald"
                 stocks={watchlistStocks}
                 sectors={Object.fromEntries(watchlistStocks.filter((s) => s.industry).map((s) => [s.ticker, s.industry!]))}
-                showBeta={false}
+                betas={betas}
+                showBeta={true}
+                marketCapShares={marketCapShares}
                 defaultSortCol="change"
                 range={range}
                 watchlists={watchlists}
