@@ -257,15 +257,15 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
         const db = marketCapShares?.[b.ticker];
         const mcA = da ? (da.weighted ?? da.shares) != null ? (da.weighted ?? da.shares)! * a.price : null : null;
         const mcB = db ? (db.weighted ?? db.shares) != null ? (db.weighted ?? db.shares)! * b.price : null : null;
-        av = mcA != null && da?.netIncome ? mcA / da.netIncome : null;
-        bv = mcB != null && db?.netIncome ? mcB / db.netIncome : null;
+        av = mcA != null && da?.netIncome != null && da.netIncome > 0 ? mcA / da.netIncome : null;
+        bv = mcB != null && db?.netIncome != null && db.netIncome > 0 ? mcB / db.netIncome : null;
       } else if (sortCol === "peg") {
         const da = marketCapShares?.[a.ticker];
         const db = marketCapShares?.[b.ticker];
         const mcA = da ? (da.weighted ?? da.shares) != null ? (da.weighted ?? da.shares)! * a.price : null : null;
         const mcB = db ? (db.weighted ?? db.shares) != null ? (db.weighted ?? db.shares)! * b.price : null : null;
-        const peA = mcA != null && da?.netIncome ? mcA / da.netIncome : null;
-        const peB = mcB != null && db?.netIncome ? mcB / db.netIncome : null;
+        const peA = mcA != null && da?.netIncome != null && da.netIncome > 0 ? mcA / da.netIncome : null;
+        const peB = mcB != null && db?.netIncome != null && db.netIncome > 0 ? mcB / db.netIncome : null;
         av = peA != null && da?.epsGrowth != null && da.epsGrowth > 0 ? peA / da.epsGrowth : null;
         bv = peB != null && db?.epsGrowth != null && db.epsGrowth > 0 ? peB / db.epsGrowth : null;
       }
@@ -382,7 +382,9 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
               const capData = marketCapShares?.[stock.ticker];
               const capShares = capData ? (capData.weighted ?? capData.shares) : null;
               const marketCap = capShares != null ? capShares * stock.price : null;
-              const pe = marketCap != null && capData?.netIncome ? marketCap / capData.netIncome : null;
+              // P/E is only meaningful with positive trailing earnings; negative
+              // net income (e.g. post-spinoff like SNDK) is reported as N/A.
+              const pe = marketCap != null && capData?.netIncome != null && capData.netIncome > 0 ? marketCap / capData.netIncome : null;
               const peg = pe != null && capData?.epsGrowth != null && capData.epsGrowth > 0 ? pe / capData.epsGrowth : null;
               const rowTooltip = getTooltipCallbacks(stock.ticker);
               return (
@@ -440,8 +442,6 @@ export default function PerformerTable({ title, titleExtra, accent, stocks, sect
                     <td className="px-3 py-3 text-right tabular-nums text-gray-600 dark:text-gray-300">
                       {pe == null ? (
                         <span className="text-gray-400 dark:text-gray-600">—</span>
-                      ) : pe < 0 ? (
-                        <span className="text-red-400 dark:text-red-500">{pe.toFixed(1)}x</span>
                       ) : (
                         <span>{pe.toFixed(1)}x</span>
                       )}
