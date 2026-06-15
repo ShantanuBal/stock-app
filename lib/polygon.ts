@@ -420,6 +420,34 @@ export async function getAllStocks(range: TimeRange): Promise<StockResult[]> {
   return sorted.filter((s) => s.name !== "");
 }
 
+export interface TickerSearchResult {
+  ticker: string;
+  name: string;
+}
+
+// Search active US stocks/ETFs by ticker symbol or company name via Polygon's
+// reference endpoint. Used by the watchlist page's add-ticker search box.
+export async function searchTickers(query: string): Promise<TickerSearchResult[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  const url = `${BASE_URL}/v3/reference/tickers?search=${encodeURIComponent(q)}&market=stocks&active=true&limit=10&apiKey=${API_KEY}`;
+  console.log(`[searchTickers] query="${q}"`);
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.error(`[searchTickers] Polygon error ${res.status} for query="${q}"`);
+    return [];
+  }
+
+  const data = await res.json();
+  const results: TickerSearchResult[] = (data.results ?? []).map(
+    (t: { ticker: string; name?: string }) => ({ ticker: t.ticker, name: t.name ?? "" })
+  );
+  console.log(`[searchTickers] ${results.length} results for query="${q}"`);
+  return results;
+}
+
 export interface ChartPoint {
   date: string;
   close: number;

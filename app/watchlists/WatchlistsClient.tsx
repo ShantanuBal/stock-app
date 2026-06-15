@@ -6,6 +6,7 @@ import type { WatchList } from "@/lib/watchlists";
 import {
   createWatchList, deleteWatchList, renameWatchList, removeFromWatchList,
 } from "@/app/actions/watchlists";
+import AddTickerSearch from "@/app/components/AddTickerSearch";
 
 export default function WatchlistsClient({ initialLists }: { initialLists: WatchList[] }) {
   const [lists, setLists] = useState<WatchList[]>(initialLists);
@@ -147,7 +148,7 @@ export default function WatchlistsClient({ initialLists }: { initialLists: Watch
               {/* Tickers */}
               {list.tickers.length === 0 ? (
                 <p className="text-xs text-gray-400 dark:text-gray-600 italic">
-                  No tickers yet — add them from the{" "}
+                  No tickers yet — search below to add them, or from the{" "}
                   <Link href="/" className="text-emerald-500 hover:text-emerald-400 underline underline-offset-2">Equities tab</Link>.
                 </p>
               ) : (
@@ -170,6 +171,18 @@ export default function WatchlistsClient({ initialLists }: { initialLists: Watch
                   ))}
                 </div>
               )}
+
+              {/* Add tickers via search */}
+              <AddTickerSearch
+                listId={list.listId}
+                existing={list.tickers}
+                disabled={isPending}
+                onAdded={(ticker) =>
+                  setLists((prev) => prev.map((l) =>
+                    l.listId === list.listId ? { ...l, tickers: [...l.tickers, ticker] } : l
+                  ))
+                }
+              />
             </div>
           ))}
         </div>

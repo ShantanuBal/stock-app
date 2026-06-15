@@ -8,6 +8,7 @@ import IndexChart, { type ChartData } from "./components/IndexChart";
 import IndexChartModal from "./components/IndexChartModal";
 import InfoTooltip from "./components/InfoTooltip";
 import PerformerTable, { type WatchListMeta } from "./components/PerformerTable";
+import AddTickerSearch from "./components/AddTickerSearch";
 import type { StockResult } from "@/lib/polygon";
 import { SP500_SECTORS } from "@/lib/sp500";
 import { NASDAQ100_SECTORS } from "@/lib/nasdaq100";
@@ -306,20 +307,25 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  // Fetch stocks for the active watchlist when param or range changes
-  useEffect(() => {
+  // Fetch stocks for the active watchlist. showSkeleton=false refreshes in place
+  // (e.g. after adding a ticker) without flashing the loading skeleton.
+  const loadWatchlistStocks = useCallback(async (showSkeleton = true) => {
     if (!watchlistParam) { setWatchlistStocks(null); return; }
-    setWatchlistStocks(null);
+    if (showSkeleton) setWatchlistStocks(null);
     setWatchlistError(null);
-    fetch(`/api/watchlist-stocks?listId=${watchlistParam}&range=${range}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) { setWatchlistError(d.error); setWatchlistStocks([]); return; }
-        setWatchlistStocks(d.stocks ?? []);
-        setWatchlistName(d.listName ?? "");
-      })
-      .catch(() => { setWatchlistStocks([]); setWatchlistError("Could not load watchlist data."); });
+    try {
+      const r = await fetch(`/api/watchlist-stocks?listId=${watchlistParam}&range=${range}`);
+      const d = await r.json();
+      if (d.error) { setWatchlistError(d.error); setWatchlistStocks([]); return; }
+      setWatchlistStocks(d.stocks ?? []);
+      setWatchlistName(d.listName ?? "");
+    } catch {
+      setWatchlistStocks([]);
+      setWatchlistError("Could not load watchlist data.");
+    }
   }, [watchlistParam, range]);
+
+  useEffect(() => { loadWatchlistStocks(true); }, [loadWatchlistStocks]);
 
   const handleAddToList = useCallback(async (ticker: string, listId: string) => {
     await addToWatchList(listId, ticker);
@@ -701,38 +707,49 @@ export default function Home() {
 
         {/* Watchlist view */}
         {isWatchlistView && (
-          watchlistStocks === null ? (
-            <div className="space-y-2">
-              <div className="h-5 w-36 rounded bg-gray-200 dark:bg-gray-800/50 animate-pulse mb-3" />
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-11 rounded-lg bg-gray-200 dark:bg-gray-800/50 animate-pulse" />
-              ))}
-            </div>
-          ) : watchlistError ? (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
-              {watchlistError}
-            </div>
-          ) : watchlistStocks.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 p-10 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">This list is empty.</p>
-              <p className="text-xs text-gray-400 dark:text-gray-600">Use the <span className="font-medium">+</span> button on any stock row to add tickers.</p>
-            </div>
-          ) : (
-            <PerformerTable
-              key={`watchlist-${watchlistParam}-${range}`}
-              title={watchlistName}
-              accent="emerald"
-              stocks={watchlistStocks}
-              sectors={Object.fromEntries(watchlistStocks.filter((s) => s.industry).map((s) => [s.ticker, s.industry!]))}
-              showBeta={false}
-              defaultSortCol="change"
-              range={range}
-              watchlists={watchlists}
-              activeListId={watchlistParam ?? undefined}
-              onAddToList={handleAddToList}
-              onRemoveFromList={handleRemoveFromList}
-            />
-          )
+          <div>
+            {/* Add tickers via search — shown once the list has loaded */}
+            {watchlistStocks !== null && !watchlistError && watchlistParam && (
+              <AddTickerSearch
+                listId={watchlistParam}
+                existing={watchlistStocks.map((s) => s.ticker)}
+                onAdded={() => loadWatchlistStocks(false)}
+                className="mb-4 max-w-md"
+              />
+            )}
+            {watchlistStocks === null ? (
+              <div className="space-y-2">
+                <div className="h-5 w-36 rounded bg-gray-200 dark:bg-gray-800/50 animate-pulse mb-3" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-11 rounded-lg bg-gray-200 dark:bg-gray-800/50 animate-pulse" />
+                ))}
+              </div>
+            ) : watchlistError ? (
+              <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
+                {watchlistError}
+              </div>
+            ) : watchlistStocks.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 p-10 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">This list is empty.</p>
+                <p className="text-xs text-gray-400 dark:text-gray-600">Use the search box above, or the <span className="font-medium">+</span> button on any stock row, to add tickers.</p>
+              </div>
+            ) : (
+              <PerformerTable
+                key={`watchlist-${watchlistParam}-${range}`}
+                title={watchlistName}
+                accent="emerald"
+                stocks={watchlistStocks}
+                sectors={Object.fromEntries(watchlistStocks.filter((s) => s.industry).map((s) => [s.ticker, s.industry!]))}
+                showBeta={false}
+                defaultSortCol="change"
+                range={range}
+                watchlists={watchlists}
+                activeListId={watchlistParam ?? undefined}
+                onAddToList={handleAddToList}
+                onRemoveFromList={handleRemoveFromList}
+              />
+            )}
+          </div>
         )}
 
         {!isWatchlistView && !isSummary && error ? (
