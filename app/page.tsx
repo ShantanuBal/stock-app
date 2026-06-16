@@ -143,7 +143,7 @@ export default function Home() {
       p.set("index", newIndex);
     }
     p.set("range", newRange);
-    router.replace(`/?${p.toString()}`);
+    router.replace(`/?${p.toString()}`, { scroll: false });
   }
 
   const [sectors, setSectors] = useState<string[]>([]);
@@ -438,7 +438,7 @@ export default function Home() {
                     ? "bg-emerald-500 text-white shadow"
                     : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 }`}>
-                <Link href={`/?range=${range}`}>Overview</Link>
+                <Link href={`/?range=${range}`} scroll={false}>Overview</Link>
                 <InfoTooltip element="span">
                   <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                   <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Overview</p>
@@ -462,7 +462,7 @@ export default function Home() {
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
-                  <Link href={`/?index=${idx.value}&range=${range}`} onClick={() => setSectors([])} className="whitespace-nowrap">{idx.label}</Link>
+                  <Link href={`/?index=${idx.value}&range=${range}`} scroll={false} onClick={() => setSectors([])} className="whitespace-nowrap">{idx.label}</Link>
                   <InfoTooltip element="span">
                     <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                     <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
@@ -497,7 +497,7 @@ export default function Home() {
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}>
-                  <Link href={`/?index=${idx.value}&range=${range}`} onClick={() => setSectors([])} className="whitespace-nowrap">{idx.label}</Link>
+                  <Link href={`/?index=${idx.value}&range=${range}`} scroll={false} onClick={() => setSectors([])} className="whitespace-nowrap">{idx.label}</Link>
                   <InfoTooltip element="span">
                     <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
                     <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">{idx.label}</p>
@@ -531,6 +531,7 @@ export default function Home() {
                 <Link
                   key={list.listId}
                   href={`/?watchlist=${list.listId}&range=${range}`}
+                  scroll={false}
                   className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                     watchlistParam === list.listId
                       ? "bg-emerald-500 text-white shadow"
@@ -785,7 +786,8 @@ export default function Home() {
           <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
             {error}
           </div>
-        ) : !isWatchlistView && !isSummary && (loading || (isAllStocks && marketCapShares === undefined)) ? (
+        ) : !isWatchlistView && !isSummary && topStocks === null ? (
+          // Full skeleton only on the very first load (no data to show yet)
           <div className="space-y-2">
             {isAllStocks && (
               <div className="flex items-center gap-2 mb-3 px-1">
@@ -793,9 +795,7 @@ export default function Home() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {loading ? "Fetching stock data…" : "Fetching market cap data…"}
-                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Fetching stock data…</span>
               </div>
             )}
             <div className="h-5 w-36 rounded bg-gray-200 dark:bg-gray-800/50 animate-pulse mb-3" />
@@ -804,7 +804,9 @@ export default function Home() {
             ))}
           </div>
         ) : !isWatchlistView && !isSummary ? (
-          <>
+          // Subsequent index/range switches: keep the table visible, just dim it
+          // while the new data loads, so it updates in place instead of flashing.
+          <div className={`transition-opacity duration-200 ${(isPending || (isAllStocks && marketCapShares === undefined)) ? "opacity-50 pointer-events-none" : ""}`}>
             <PerformerTable
               key={`${index}-${range}-${sectors.join(",")}`}
               title="Companies"
@@ -820,7 +822,7 @@ export default function Home() {
               watchlistAuthenticated={watchlistAuthenticated}
               onAddToList={handleAddToList}
             />
-          </>
+          </div>
         ) : null}
 
     </div>
