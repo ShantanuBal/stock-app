@@ -4,8 +4,9 @@ import { useState, useEffect, useTransition, useMemo, useCallback, useRef } from
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { IndexKey } from "./api/top-performers/route";
-import IndexChart, { type ChartData } from "./components/IndexChart";
+import { type ChartData } from "./components/IndexChart";
 import IndexChartModal from "./components/IndexChartModal";
+import MiniSparkline from "./components/MiniSparkline";
 import InfoTooltip from "./components/InfoTooltip";
 import PerformerTable, { type WatchListMeta } from "./components/PerformerTable";
 import AddTickerSearch from "./components/AddTickerSearch";
@@ -131,8 +132,8 @@ export default function Home() {
   const indexParam = searchParams.get("index");
   const watchlistParam = searchParams.get("watchlist");
   const isWatchlistView = !!watchlistParam;
-  const isSummary = !indexParam && !watchlistParam || indexParam === "overview";
-  const index = (isSummary || !indexParam ? "sp500" : indexParam) as IndexKey;
+  // No index param (or a legacy "overview" link) defaults to the S&P 500 view
+  const index = (!indexParam || indexParam === "overview" ? "sp500" : indexParam) as IndexKey;
   const range = (searchParams.get("range") ?? "1D") as TimeRange;
 
   function navigate(newIndex: string | null, newRange: string, watchlistId?: string) {
@@ -149,20 +150,18 @@ export default function Home() {
   const [sectors, setSectors] = useState<string[]>([]);
   // null = never loaded yet (show skeleton); [] = loaded but empty
   const [topStocks, setTopStocks] = useState<StockResult[] | null>(null);
-  const [chartData, setChartData] = useState<ChartData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
-  const [chartModalOpen, setChartModalOpen] = useState(false);
+  // Which index's chart is blown up in the modal (null = closed)
+  const [modalIndex, setModalIndex] = useState<IndexKey | null>(null);
   const [betas, setBetas] = useState<Record<string, number | null> | undefined>(undefined);
   const [marketCapShares, setMarketCapShares] = useState<Record<string, { weighted: number | null; shares: number | null; netIncome: number | null; epsGrowth: number | null }> | undefined>(undefined);
 
+  // Per-index performance snapshot — % change for each index over the selected range
   const [summaryCharts, setSummaryCharts] = useState<Record<string, ChartData | null> | null>(null);
-  const [overviewSummary, setOverviewSummary] = useState<string | null>(null);
-  const [overviewLoading, setOverviewLoading] = useState(false);
-  const [overviewExpanded, setOverviewExpanded] = useState(false);
 
   // Watchlists
   const [watchlists, setWatchlists] = useState<WatchListMeta[]>([]);
@@ -184,8 +183,7 @@ export default function Home() {
   const [watchlistName, setWatchlistName] = useState<string>("");
   const [watchlistError, setWatchlistError] = useState<string | null>(null);
 
-  const isAllStocks = !isSummary && !isWatchlistView && index === "all";
-  const currentIndex = INDICES.find((i) => i.value === index) ?? null;
+  const isAllStocks = !isWatchlistView && index === "all";
   // Show skeleton on first load (null) or while a transition is in flight
   const loading = topStocks === null || isPending;
 
@@ -260,29 +258,21 @@ export default function Home() {
     startTransition(async () => {
       setError(null);
       try {
-        const fetchChart = !isAllStocks;
-        const [stocksRes, chartRes] = await Promise.all([
-          fetch(`/api/top-performers?range=${range}&index=${index}`),
-          fetchChart ? fetch(`/api/index-chart?range=${range}&index=${index}`) : Promise.resolve(null),
-        ]);
+        const stocksRes = await fetch(`/api/top-performers?range=${range}&index=${index}`);
         if (!stocksRes.ok) throw new Error("Failed to fetch");
         const stocksJson = await stocksRes.json();
-        const chartJson = chartRes && chartRes.ok ? await chartRes.json() : null;
         setTopStocks(stocksJson.all);
-        setChartData(fetchChart ? chartJson : null);
         setSectors([]);
       } catch {
         setError("Could not load stock data. Please try again.");
         setTopStocks((prev) => prev ?? []);
       }
     });
-  }, [index, range, isAllStocks, isWatchlistView]);
+  }, [index, range, isWatchlistView]);
 
+  // Snapshot strip: fetch each index's chart (for its % change) whenever range changes
   useEffect(() => {
-    if (!isSummary) return;
     setSummaryCharts(null);
-    setOverviewSummary(null);
-    setOverviewExpanded(false);
     Promise.all(
       SUMMARY_INDICES.map(async (idx) => {
         try {
@@ -294,7 +284,7 @@ export default function Home() {
         }
       })
     ).then((results) => setSummaryCharts(Object.fromEntries(results)));
-  }, [isSummary, range]);
+  }, [range]);
 
   // Fetch user's watchlists once on mount
   useEffect(() => {
@@ -365,24 +355,6 @@ export default function Home() {
     setWatchlistStocks((prev) => prev?.filter((s) => s.ticker !== ticker) ?? null);
   }, [watchlistParam]);
 
-  useEffect(() => {
-    if (!isSummary || !summaryCharts) return;
-    const indices = SUMMARY_INDICES.map((idx) => {
-      const idxInfo = INDICES.find((i) => i.value === idx)!;
-      return { label: idxInfo.label, changePercent: summaryCharts[idx]?.changePercent ?? 0 };
-    });
-    setOverviewLoading(true);
-    fetch("/api/ai-summary", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ index: "summary", range, indices }),
-    })
-      .then((r) => r.json())
-      .then((d) => setOverviewSummary(d.summary ?? null))
-      .catch(() => setOverviewSummary(null))
-      .finally(() => setOverviewLoading(false));
-  }, [isSummary, summaryCharts, range]);
-
   return (
     <div>
       <div className="mb-6">
@@ -414,7 +386,7 @@ export default function Home() {
             {RANGES.map((r) => (
               <button
                 key={r.value}
-                onClick={() => navigate(isWatchlistView ? null : isSummary ? null : index, r.value, isWatchlistView ? watchlistParam! : undefined)}
+                onClick={() => navigate(isWatchlistView ? null : index, r.value, isWatchlistView ? watchlistParam! : undefined)}
                 className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                   range === r.value
                     ? "bg-emerald-500 text-white"
@@ -428,36 +400,54 @@ export default function Home() {
           </HScrollContainer>
         </div>
 
+        {/* Four-index performance snapshot — click a card to blow up its chart */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+          {SUMMARY_INDICES.map((idx) => {
+            const idxInfo = INDICES.find((i) => i.value === idx)!;
+            const chart = summaryCharts?.[idx];
+            const cp = chart?.changePercent;
+            const pos = cp != null && cp >= 0;
+            return (
+              <button
+                key={idx}
+                onClick={() => setModalIndex(idx)}
+                title={`${idxInfo.label} — click to enlarge`}
+                className="text-left rounded-xl border px-3 py-2 transition-colors border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 hover:border-gray-300 dark:hover:border-gray-700"
+              >
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">{idxInfo.label}</p>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  {summaryCharts === null || cp == null ? (
+                    <p className="text-sm font-bold tabular-nums text-gray-300 dark:text-gray-600">···</p>
+                  ) : (
+                    <p className={`text-sm font-bold tabular-nums ${pos ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                      {pos ? "▲" : "▼"} {Math.abs(cp).toFixed(2)}%
+                    </p>
+                  )}
+                  {chart?.points && chart.points.length > 1 && (
+                    <MiniSparkline
+                      points={chart.points}
+                      color={pos ? "#10b981" : "#ef4444"}
+                      width={72}
+                      height={26}
+                      className="shrink-0"
+                    />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Index selector */}
         <div className="sticky top-[84px] z-10 bg-slate-50 dark:bg-gray-950 -mx-4 px-4 pb-3 mb-2">
           <HScrollContainer variant="card" className="gap-2">
-            {/* Overview pill */}
-            <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
-              <div className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
-                  isSummary
-                    ? "bg-emerald-500 text-white shadow"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}>
-                <Link href={`/?range=${range}`} scroll={false}>Overview</Link>
-                <InfoTooltip element="span">
-                  <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">About</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Overview</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
-                    A side-by-side view of all four major US indices — S&amp;P 500, Nasdaq 100, Dow Jones, and Russell 2000 — over the selected time range. Click any chart to drill into that index.
-                  </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
-                    Charts use ETF proxies scaled to approximate index levels — <span className="text-gray-600 dark:text-gray-300">SPY</span> (S&amp;P 500), <span className="text-gray-600 dark:text-gray-300">QQQ</span> (Nasdaq 100), <span className="text-gray-600 dark:text-gray-300">DIA</span> (Dow Jones), <span className="text-gray-600 dark:text-gray-300">IWM</span> (Russell 2000).
-                  </p>
-                </InfoTooltip>
-              </div>
-            </div>
             {/* Indexes pill */}
             <div className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1 flex">
               {INDICES.filter((idx) => idx.value !== "all").map((idx) => (
                 <div
                   key={idx.value}
                   className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
-                    !isSummary && !isWatchlistView && index === idx.value
+                    !isWatchlistView && index === idx.value
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
@@ -493,7 +483,7 @@ export default function Home() {
             {INDICES.filter((idx) => idx.value === "all").map((idx) => (
               <div key={idx.value} className="shrink-0 rounded-xl bg-gray-100 dark:bg-gray-900 py-1">
                 <div className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
-                    !isSummary && !isWatchlistView && index === idx.value
+                    !isWatchlistView && index === idx.value
                       ? "bg-emerald-500 text-white shadow"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}>
@@ -584,76 +574,17 @@ export default function Home() {
           </div>
         )}
 
-        {/* Summary view — AI overview */}
-        {isSummary && (overviewLoading || overviewSummary) && (
-          <div className="mb-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Overview</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">· Claude · Not financial advice</span>
-            </div>
-            {overviewLoading && !overviewSummary ? (
-              <div className="flex items-center gap-2">
-                <svg className="animate-spin h-3.5 w-3.5 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                <span className="text-sm text-gray-500 dark:text-gray-400">Generating overview…</span>
-              </div>
-            ) : (
-              <>
-                <div className={`space-y-3 ${overviewExpanded ? "" : "line-clamp-5"}`}>
-                  {(overviewSummary ?? "").split("\n\n").map((para, i) => (
-                    <p key={i} className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-[family-name:var(--font-inter)]">
-                      {para.trim()}
-                    </p>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setOverviewExpanded((e) => !e)}
-                  className="mt-2 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
-                >
-                  {overviewExpanded ? "Show less" : "Read more"}
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Summary view — 2×2 index chart grid */}
-        {isSummary && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {SUMMARY_INDICES.map((idx) => {
-              const idxInfo = INDICES.find((i) => i.value === idx)!;
-              return (
-                <IndexChart
-                  key={idx}
-                  data={summaryCharts?.[idx] ?? null}
-                  label={idxInfo.label}
-                  loading={summaryCharts === null}
-                  gradientId={`summaryGrad-${idx}`}
-                  onClick={() => { navigate(idx, range); setSectors([]); }}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        {/* Chart — hidden for All Stocks and Summary */}
-        {!isSummary && !isWatchlistView && !isAllStocks && currentIndex && (
-          <>
-            <IndexChart data={chartData} label={currentIndex.label} loading={loading} onClick={() => setChartModalOpen(true)} range={range} />
-            <IndexChartModal
-              isOpen={chartModalOpen}
-              onClose={() => setChartModalOpen(false)}
-              label={currentIndex.label}
-              index={index}
-              initialRange={range}
-            />
-          </>
-        )}
+        {/* Blow-up chart modal — opened by clicking a snapshot card */}
+        <IndexChartModal
+          isOpen={modalIndex !== null}
+          onClose={() => setModalIndex(null)}
+          label={INDICES.find((i) => i.value === modalIndex)?.label ?? ""}
+          index={modalIndex ?? undefined}
+          initialRange={range}
+        />
 
         {/* AI Summary — hidden for All Stocks and Summary */}
-        {!isSummary && !isWatchlistView && !isAllStocks && ((topStocks !== null && !loading && summary === null) || summaryLoading) ? (
+        {!isWatchlistView && !isAllStocks && ((topStocks !== null && !loading && summary === null) || summaryLoading) ? (
           <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 flex items-center gap-3">
             <svg className="animate-spin h-4 w-4 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -661,7 +592,7 @@ export default function Home() {
             </svg>
             <span className="text-sm text-gray-500 dark:text-gray-400">Generating AI summary…</span>
           </div>
-        ) : !isSummary && !isWatchlistView && !isAllStocks && summary ? (
+        ) : !isWatchlistView && !isAllStocks && summary ? (
           <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
             <div className="flex items-center gap-2 mb-2.5">
               <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">AI Summary</span>
@@ -684,7 +615,7 @@ export default function Home() {
         ) : null}
 
         {/* Sector filter tabs — hidden for All Stocks and Summary */}
-        {!isSummary && !isWatchlistView && !isAllStocks && <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
+        {!isWatchlistView && !isAllStocks && <div className="mb-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-3">
           <div className="flex items-center gap-1.5 mb-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Industry</p>
             <InfoTooltip>
@@ -782,11 +713,11 @@ export default function Home() {
           </div>
         )}
 
-        {!isWatchlistView && !isSummary && error ? (
+        {!isWatchlistView && error ? (
           <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 text-red-700 dark:text-red-300 text-sm">
             {error}
           </div>
-        ) : !isWatchlistView && !isSummary && topStocks === null ? (
+        ) : !isWatchlistView && topStocks === null ? (
           // Full skeleton only on the very first load (no data to show yet)
           <div className="space-y-2">
             {isAllStocks && (
@@ -803,7 +734,7 @@ export default function Home() {
               <div key={i} className="h-11 rounded-lg bg-gray-200 dark:bg-gray-800/50 animate-pulse" />
             ))}
           </div>
-        ) : !isWatchlistView && !isSummary ? (
+        ) : !isWatchlistView ? (
           // Subsequent index/range switches: keep the table visible, just dim it
           // while the new data loads, so it updates in place instead of flashing.
           <div className={`transition-opacity duration-200 ${(isPending || (isAllStocks && marketCapShares === undefined)) ? "opacity-50 pointer-events-none" : ""}`}>
