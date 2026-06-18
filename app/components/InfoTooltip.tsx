@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useLayoutEffect } from "react";
 
 interface Props {
   children: React.ReactNode;
@@ -10,7 +10,9 @@ interface Props {
 
 export default function InfoTooltip({ children, width = "w-96", element = "button" }: Props) {
   const ref = useRef<HTMLButtonElement | HTMLSpanElement>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const [pos, setPos] = useState<{ left: number; top?: number; bottom?: number } | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function show() {
@@ -19,8 +21,21 @@ export default function InfoTooltip({ children, width = "w-96", element = "butto
   }
 
   function hide() {
-    hideTimer.current = setTimeout(() => setRect(null), 150);
+    hideTimer.current = setTimeout(() => { setRect(null); setPos(null); }, 150);
   }
+
+  // Position after render so we can measure the tooltip's actual width and clamp
+  // it inside the viewport (prevents the box from spilling off the right edge).
+  useLayoutEffect(() => {
+    if (!rect) { setPos(null); return; }
+    const w = tipRef.current?.offsetWidth ?? 384;
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - w - 8));
+    setPos(
+      rect.bottom > window.innerHeight * 0.65
+        ? { left, bottom: window.innerHeight - rect.top + 8 }
+        : { left, top: rect.bottom + 8 }
+    );
+  }, [rect]);
 
   const Tag = element;
   return (
@@ -36,12 +51,9 @@ export default function InfoTooltip({ children, width = "w-96", element = "butto
       </svg>
       {rect && (
         <div
-          className={`fixed z-50 ${width} max-h-[70vh] overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-left shadow-xl font-normal normal-case tracking-normal text-gray-900 dark:text-white font-[family-name:var(--font-inter)]`}
-          style={
-            rect.bottom > window.innerHeight * 0.65
-              ? { bottom: window.innerHeight - rect.top + 8, left: Math.min(rect.left, window.innerWidth - 384 - 8) }
-              : { top: rect.bottom + 8, left: Math.min(rect.left, window.innerWidth - 384 - 8) }
-          }
+          ref={tipRef}
+          className={`fixed z-50 ${width} max-w-[calc(100vw-1rem)] max-h-[70vh] overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-left shadow-xl font-normal normal-case tracking-normal whitespace-normal break-words text-gray-900 dark:text-white font-[family-name:var(--font-inter)] ${pos ? "" : "opacity-0"}`}
+          style={pos ? { left: pos.left, top: pos.top, bottom: pos.bottom } : { left: 0, top: rect.bottom + 8 }}
           onMouseEnter={show}
           onMouseLeave={hide}
         >
