@@ -414,23 +414,33 @@ export default function Home() {
                 title={`${idxInfo.label} — click to enlarge`}
                 className="text-left rounded-xl border px-3 py-2 transition-colors border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/30 hover:border-gray-300 dark:hover:border-gray-700"
               >
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">{idxInfo.label}</p>
-                <div className="mt-1 flex items-center justify-between gap-2">
-                  {summaryCharts === null || cp == null ? (
-                    <p className="text-sm font-bold tabular-nums text-gray-300 dark:text-gray-600">···</p>
-                  ) : (
-                    <p className={`text-sm font-bold tabular-nums ${pos ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                      {pos ? "▲" : "▼"} {Math.abs(cp).toFixed(2)}%
-                    </p>
-                  )}
-                  {chart?.points && chart.points.length > 1 && (
-                    <MiniSparkline
-                      points={chart.points}
-                      color={pos ? "#10b981" : "#ef4444"}
-                      width={72}
-                      height={26}
-                      className="shrink-0"
-                    />
+                <div className="flex items-start justify-between gap-2">
+                  {/* Left: label + value */}
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">{idxInfo.label}</p>
+                    {summaryCharts === null || cp == null ? (
+                      <p className="mt-1 text-sm font-bold tabular-nums text-gray-300 dark:text-gray-600">···</p>
+                    ) : chart?.currentValue != null ? (
+                      <p className="mt-1 text-sm font-bold tabular-nums text-gray-900 dark:text-white leading-tight">
+                        {chart.currentValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    ) : null}
+                  </div>
+                  {/* Right: % change above the sparkline */}
+                  {summaryCharts !== null && cp != null && (
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <p className={`text-xs font-semibold tabular-nums ${pos ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                        {pos ? "▲" : "▼"} {Math.abs(cp).toFixed(2)}%
+                      </p>
+                      {chart?.points && chart.points.length > 1 && (
+                        <MiniSparkline
+                          points={chart.points}
+                          color={pos ? "#10b981" : "#ef4444"}
+                          width={84}
+                          height={26}
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
               </button>
