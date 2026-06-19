@@ -18,6 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://usehorizon.dev"),
   title: "Horizon",
   description: "Financial foresight for everyone — track markets, the economy, and more.",
   verification: {
