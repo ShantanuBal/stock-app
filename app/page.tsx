@@ -15,6 +15,7 @@ import { SP500_SECTORS } from "@/lib/sp500";
 import { NASDAQ100_SECTORS } from "@/lib/nasdaq100";
 import { DJIA_SECTORS } from "@/lib/djia";
 import { RUSSELL2000_SECTORS } from "@/lib/russell2000";
+import { isMarketOpenET } from "@/lib/date-utils";
 import HScrollContainer from "./components/HScrollContainer";
 import { addToWatchList, removeFromWatchList } from "./actions/watchlists";
 
@@ -253,7 +254,7 @@ export default function Home() {
     return () => controller.abort();
   }, [topStocks, index, range, isAllStocks, isWatchlistView]);
 
-  useEffect(() => {
+  const loadTopStocks = useCallback(async () => {
     if (isWatchlistView) return;
     startTransition(async () => {
       setError(null);
@@ -270,10 +271,13 @@ export default function Home() {
     });
   }, [index, range, isWatchlistView]);
 
-  // Snapshot strip: fetch each index's chart (for its % change) whenever range changes
-  useEffect(() => {
-    setSummaryCharts(null);
-    Promise.all(
+  useEffect(() => { loadTopStocks(); }, [loadTopStocks]);
+
+  // Snapshot strip: fetch each index's chart (for its % change). showSkeleton=false
+  // refreshes in place (e.g. during live polling) without flashing the loading state.
+  const loadSummaryCharts = useCallback(async (showSkeleton = true) => {
+    if (showSkeleton) setSummaryCharts(null);
+    const results = await Promise.all(
       SUMMARY_INDICES.map(async (idx) => {
         try {
           const res = await fetch(`/api/index-chart?range=${range}&index=${idx}`);
@@ -283,8 +287,11 @@ export default function Home() {
           return [idx, null] as [string, null];
         }
       })
-    ).then((results) => setSummaryCharts(Object.fromEntries(results)));
+    );
+    setSummaryCharts(Object.fromEntries(results));
   }, [range]);
+
+  useEffect(() => { loadSummaryCharts(true); }, [loadSummaryCharts]);
 
   // Fetch user's watchlists once on mount
   useEffect(() => {
@@ -316,6 +323,25 @@ export default function Home() {
   }, [watchlistParam, range]);
 
   useEffect(() => { loadWatchlistStocks(true); }, [loadWatchlistStocks]);
+
+  // Live price polling: while the tab is visible and the market is open, refresh
+  // prices in place every 60s (matches the backend snapshot cache). Also refreshes
+  // immediately when the user returns to the tab. Refreshes the always-visible index
+  // snapshot strip plus whichever list is active (watchlist or the performers table).
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState !== "visible" || !isMarketOpenET()) return;
+      loadSummaryCharts(false);
+      if (isWatchlistView) loadWatchlistStocks(false);
+      else loadTopStocks();
+    };
+    const interval = setInterval(refresh, 60_000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [loadSummaryCharts, loadTopStocks, loadWatchlistStocks, isWatchlistView]);
 
   // Watchlist: fetch Beta + Market Cap / P/E / PEG columns for parity with the index tabs
   useEffect(() => {

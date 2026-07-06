@@ -7,6 +7,19 @@ export function daysAgo(n: number): string {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 }
 
+// True during regular US equity trading hours (Mon–Fri, 9:30am–4:00pm ET).
+// Does not account for market holidays — on a holiday the backend simply serves
+// the same cached prior-day prices, so a wasted poll is harmless, not incorrect.
+export function isMarketOpenET(): boolean {
+  const now = new Date();
+  const dayOfWeek = now.toLocaleString("en-US", { timeZone: "America/New_York", weekday: "long" });
+  if (dayOfWeek === "Saturday" || dayOfWeek === "Sunday") return false;
+  const etHour = parseInt(now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }), 10);
+  const etMinute = parseInt(now.toLocaleString("en-US", { timeZone: "America/New_York", minute: "numeric" }), 10);
+  const mins = etHour * 60 + etMinute;
+  return mins >= 9 * 60 + 30 && mins < 16 * 60;
+}
+
 // Returns cache key info for the 1D AI summary period.
 // On weekends: falls back to last Friday's post-close key so Claude is not
 // called repeatedly for stale intraday data and prompt language says "Friday".
