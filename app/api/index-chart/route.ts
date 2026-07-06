@@ -3,12 +3,14 @@ import { getIndexBars, getStartDate, formatDate, TimeRange, getPreviousTradingDa
 import type { IndexKey } from "../top-performers/route";
 
 // All major index data requires a paid Polygon license, so we use ETF proxies
-// and scale them back to approximate index-level values.
+// and scale them back to approximate index-level values. Scale factors are the
+// index / ETF ratio, calibrated against FRED index levels on 2026-07-02. These
+// drift over months as the ETFs diverge from their indices — re-check periodically.
 const INDEX_CONFIG: Record<Exclude<IndexKey, "all">, { ticker: string; scale: number }> = {
-  sp500:       { ticker: "SPY",   scale: 10  }, // SPY ≈ SPX / 10
-  nasdaq100:   { ticker: "QQQ",   scale: 40  }, // QQQ ≈ NDX / 40
-  djia:        { ticker: "DIA",   scale: 100 }, // DIA ≈ DJIA / 100
-  russell2000: { ticker: "IWM",   scale: 10  }, // IWM ≈ RUT / 10
+  sp500:       { ticker: "SPY",   scale: 10.05  }, // SPX / SPY ≈ 10.048
+  nasdaq100:   { ticker: "QQQ",   scale: 41.16  }, // NDX / QQQ ≈ 41.16
+  djia:        { ticker: "DIA",   scale: 100.21 }, // DJIA / DIA ≈ 100.21
+  russell2000: { ticker: "IWM",   scale: 10.01  }, // RUT / IWM ≈ 10.014
 };
 
 const VALID_RANGES: TimeRange[] = ["1D", "3D", "1W", "1M", "3M", "6M", "1Y", "5Y", "YTD"];
