@@ -560,11 +560,12 @@ export async function getIndexBars(
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  // Fetch today's bar fresh with edge caching (15 min) — never persist to DynamoDB.
+  // Fetch today's bar fresh with edge caching (60s) — never persist to DynamoDB.
+  // Matches the 60s client poll so the index snapshot strip ticks live intraday.
   if (needsToday) {
     const todayUrl = `${BASE_URL}/v2/aggs/ticker/${ticker}/range/1/day/${todayStr}/${todayStr}?adjusted=true&sort=asc&limit=1&apiKey=${API_KEY}`;
     try {
-      const todayRes = await fetch(todayUrl, { next: { revalidate: 900 } });
+      const todayRes = await fetch(todayUrl, { next: { revalidate: 60 } });
       if (todayRes.ok) {
         const todayData = await todayRes.json();
         const todayBars: Array<{ t: number; c: number }> = todayData.results ?? [];
