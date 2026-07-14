@@ -311,7 +311,12 @@ export async function getTopPerformers(
   // Try grouped daily first. If today's data isn't ready (Polygon can lag 1-2 hrs after close),
   // fall back to the snapshot endpoint which is always up-to-date.
   let currentData = await findMostRecentTradingData(new Date(), tickers);
-  if (currentData.date !== todayStr) {
+  // On a weekday, if today's grouped daily hasn't posted yet (Polygon can lag 1-2 hrs after
+  // close), fall back to the live snapshot for current prices. On weekends there is no session
+  // today, so keep the most recent trading day (Friday) — this lets 1D show Friday's actual
+  // move (Fri vs Thu) instead of comparing Friday's close to itself and getting 0.00%.
+  const todayIsWeekday = ![0, 6].includes(getTodayET().getDay());
+  if (todayIsWeekday && currentData.date !== todayStr) {
     console.log(`Today's grouped daily not yet available — falling back to snapshot for current prices`);
     const snapshotResults = await fetchSnapshotPrices(Array.from(tickers));
     if (snapshotResults.length > 0) {
