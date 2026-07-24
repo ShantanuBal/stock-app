@@ -6,7 +6,6 @@ import InfoTooltip from "@/app/components/InfoTooltip";
 import Sparkline from "@/app/components/Sparkline";
 import HScrollContainer from "@/app/components/HScrollContainer";
 import type { FuturesData } from "@/lib/massive-futures";
-import { ytdDays } from "@/lib/date-utils";
 
 type Range = "1M" | "3M" | "6M" | "YTD" | "1Y";
 
@@ -17,6 +16,17 @@ const RANGES: { label: string; value: Range; days: number }[] = [
   { label: "YTD",      value: "YTD", days: 0   },
   { label: "1 Year",   value: "1Y",  days: 365 },
 ];
+
+// Inclusive cutoff date (YYYY-MM-DD) for a range. Points are filtered by actual
+// date rather than array position, so uneven history — gaps and varying point
+// density across contracts — still maps to the correct calendar window.
+function rangeCutoff(range: Range): string {
+  const d = new Date();
+  if (range === "YTD") return `${d.getFullYear()}-01-01`;
+  const days = RANGES.find((r) => r.value === range)?.days ?? 90;
+  d.setDate(d.getDate() - days);
+  return d.toISOString().split("T")[0];
+}
 
 function FuturesCard({ f, pageRange }: { f: FuturesData; pageRange: Range }) {
   const [expanded, setExpanded] = useState(false);
@@ -38,8 +48,7 @@ function FuturesCard({ f, pageRange }: { f: FuturesData; pageRange: Range }) {
   };
 
   const allPoints = f.points ?? [];
-  const selectedDays = range === "YTD" ? ytdDays() : (RANGES.find((r) => r.value === range)?.days ?? 90);
-  const filteredPoints = allPoints.slice(-selectedDays);
+  const filteredPoints = allPoints.filter((p) => p.date >= rangeCutoff(range));
 
   const modalChangePct = filteredPoints.length >= 2
     ? ((filteredPoints[filteredPoints.length - 1].value - filteredPoints[0].value) / filteredPoints[0].value) * 100
@@ -50,8 +59,7 @@ function FuturesCard({ f, pageRange }: { f: FuturesData; pageRange: Range }) {
     : "text-red-600 dark:text-red-400 bg-red-500/10";
   const rangeLabel = RANGES.find((r) => r.value === range)?.label ?? range;
 
-  const pageDays = pageRange === "YTD" ? ytdDays() : (RANGES.find((r) => r.value === pageRange)?.days ?? 90);
-  const cardPoints = allPoints.slice(-pageDays);
+  const cardPoints = allPoints.filter((p) => p.date >= rangeCutoff(pageRange));
   const cardChangePct = cardPoints.length >= 2
     ? ((cardPoints[cardPoints.length - 1].value - cardPoints[0].value) / cardPoints[0].value) * 100
     : f.changePercent;

@@ -16,7 +16,7 @@
  */
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, BatchWriteCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 const TABLE_NAME = process.env.FUTURES_CACHE_TABLE_NAME ?? "stock-app-FuturesCache";
 const API_KEY = process.env.POLYGON_API_KEY!;
@@ -117,12 +117,24 @@ function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-async function isAlreadyCached(ticker: string, date: string): Promise<boolean> {
-  const res = await docClient.send(new GetCommand({
+// Days of history already cached for a ticker (today − earliest stored date).
+// Checking just today's bar is unreliable: the runtime path (getAllFuturesData)
+// writes today's bar on every page load, so a freshly-rolled contract can have
+// today cached while missing nearly all of its history. Depth is the honest signal.
+async function cachedHistoryDays(ticker: string): Promise<number> {
+  const res = await docClient.send(new QueryCommand({
     TableName: TABLE_NAME,
-    Key: { ticker, date },
+    KeyConditionExpression: "ticker = :t",
+    ExpressionAttributeValues: { ":t": ticker },
+    ProjectionExpression: "#d",
+    ExpressionAttributeNames: { "#d": "date" },
+    ScanIndexForward: true,
+    Limit: 1,
   }));
-  return !!res.Item;
+  const earliest = res.Items?.[0]?.date as string | undefined;
+  if (!earliest) return 0;
+  const ms = Date.now() - new Date(earliest + "T00:00:00Z").getTime();
+  return Math.floor(ms / (24 * 60 * 60 * 1000));
 }
 
 interface SessionBar {
@@ -204,11 +216,13 @@ async function storeSessions(ticker: string, sessions: SessionBar[]): Promise<nu
     const ticker = getFrontMonthTicker(config);
     process.stdout.write(`[${ticker}] `);
 
-    // Check if today is already cached — quick proxy for "already done"
-    const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
-    const alreadyCached = await isAlreadyCached(ticker, today);
-    if (alreadyCached) {
-      console.log(`already up to date — skipped`);
+    // Skip only if the contract already has real historical depth. A recently
+    // rolled contract may have today's bar (written by the runtime) yet almost
+    // no history, so we check how far back the cache actually goes.
+    const MIN_HISTORY_DAYS = 60;
+    const haveDays = await cachedHistoryDays(ticker);
+    if (haveDays >= MIN_HISTORY_DAYS) {
+      console.log(`already has ${haveDays}d of history — skipped`);
       continue;
     }
 
