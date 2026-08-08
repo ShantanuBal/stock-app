@@ -19,7 +19,9 @@ function makeFmtDate(points: { date: string }[]) {
   const first = new Date(points[0].date + "T12:00:00");
   const last  = new Date(points[points.length - 1].date + "T12:00:00");
   const spanDays = (last.getTime() - first.getTime()) / (1000 * 60 * 60 * 24);
-  const useMonthDay = spanDays < 90;
+  // Show month+day for spans up to ~1 year (all futures ranges); reserve the
+  // month+year format for the multi-year Economy/FRED charts that also use this.
+  const useMonthDay = spanDays < 400;
   return (dateStr: string) => {
     const d = new Date(dateStr + "T12:00:00");
     return useMonthDay
